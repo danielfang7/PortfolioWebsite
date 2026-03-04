@@ -1,0 +1,90 @@
+---
+import Nav from "@/components/Nav.astro";
+import Footer from "@/components/Footer.astro";
+import "@/styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  noindex?: boolean;
+}
+
+const {
+  title = "Daniel Fang — Frontend Engineer",
+  description = "Frontend engineer building thoughtful digital experiences. Showcasing creative projects, investment activity, and written content.",
+  ogImage = "/og-default.png",
+  noindex = false,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const fullTitle = title.includes("Daniel Fang")
+  ? title
+  : `${title} — Daniel Fang`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Primary meta -->
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site)} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@danielfang" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(ogImage, Astro.site)} />
+
+    <!-- Structured data: Person -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Daniel Fang",
+        "url": "https://danielfang.me",
+        "sameAs": [
+          "https://github.com/danielfang",
+          "https://linkedin.com/in/danielfang",
+          "https://twitter.com/danielfang"
+        ],
+        "jobTitle": "Frontend Engineer"
+      }
+    </script>
+
+    <!-- Font preload hints -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  </head>
+
+  <body>
+    <!-- Skip to content for accessibility -->
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
+
+    <Nav />
+
+    <main id="main-content" tabindex="-1">
+      <slot />
+    </main>
+
+    <Footer />
+  </body>
+</html>

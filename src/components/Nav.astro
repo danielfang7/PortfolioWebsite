@@ -1,0 +1,167 @@
+---
+const navLinks = [
+  { label: "Works", href: "/works" },
+  { label: "Investments", href: "/investments" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/contact" },
+];
+
+const { pathname } = Astro.url;
+---
+
+<header
+  id="site-nav"
+  class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+  aria-label="Site navigation"
+>
+  <div class="container-content">
+    <nav class="flex items-center justify-between h-16 md:h-20">
+      <!-- Logo / Wordmark -->
+      <a
+        href="/"
+        class="font-display font-bold text-base tracking-tight text-text-primary hover:text-accent transition-colors duration-200"
+        aria-label="Daniel Fang — home"
+      >
+        Daniel Fang
+      </a>
+
+      <!-- Desktop nav links -->
+      <ul class="hidden md:flex items-center gap-8" role="list">
+        {
+          navLinks.map(({ label, href }) => {
+            const isActive =
+              href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(href);
+            return (
+              <li>
+                <a
+                  href={href}
+                  class:list={[
+                    "text-sm font-medium tracking-wide transition-colors duration-200 relative group",
+                    isActive
+                      ? "text-text-primary"
+                      : "text-text-secondary hover:text-text-primary",
+                  ]}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  {label}
+                  <span
+                    class:list={[
+                      "absolute -bottom-0.5 left-0 h-px bg-accent transition-all duration-300 ease-out-expo",
+                      isActive ? "w-full" : "w-0 group-hover:w-full",
+                    ]}
+                  />
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+
+      <!-- Mobile menu button -->
+      <button
+        id="mobile-menu-btn"
+        class="md:hidden flex flex-col justify-center items-center w-10 h-10 gap-1.5 text-text-secondary hover:text-text-primary transition-colors"
+        aria-label="Toggle mobile menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
+        <span class="mobile-bar w-6 h-px bg-current transition-all duration-300 origin-center" />
+        <span class="mobile-bar w-6 h-px bg-current transition-all duration-300 origin-center" />
+        <span class="mobile-bar w-4 h-px bg-current transition-all duration-300 origin-center" />
+      </button>
+    </nav>
+  </div>
+
+  <!-- Mobile menu -->
+  <div
+    id="mobile-menu"
+    class="md:hidden hidden border-t border-border-subtle"
+    role="dialog"
+    aria-label="Mobile navigation"
+  >
+    <ul class="container-content py-6 flex flex-col gap-5" role="list">
+      {
+        navLinks.map(({ label, href }) => {
+          const isActive =
+            href === "/" ? pathname === "/" : pathname.startsWith(href);
+          return (
+            <li>
+              <a
+                href={href}
+                class:list={[
+                  "font-display text-2xl font-semibold tracking-tight transition-colors duration-200",
+                  isActive
+                    ? "text-text-primary"
+                    : "text-text-secondary hover:text-text-primary",
+                ]}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {label}
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </div>
+</header>
+
+<script>
+  const nav = document.getElementById("site-nav")!;
+  const menuBtn = document.getElementById("mobile-menu-btn")!;
+  const mobileMenu = document.getElementById("mobile-menu")!;
+  const bars = menuBtn.querySelectorAll(".mobile-bar");
+
+  // Scroll-based nav background
+  let lastScroll = 0;
+  const onScroll = () => {
+    const scrollY = window.scrollY;
+    if (scrollY > 60) {
+      nav.style.backdropFilter = "blur(16px)";
+      nav.style.background = "rgba(10,10,10,0.85)";
+      nav.style.borderBottom = "1px solid #222222";
+    } else {
+      nav.style.backdropFilter = "";
+      nav.style.background = "";
+      nav.style.borderBottom = "";
+    }
+    lastScroll = scrollY;
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  // Mobile menu toggle
+  let isOpen = false;
+  menuBtn.addEventListener("click", () => {
+    isOpen = !isOpen;
+    menuBtn.setAttribute("aria-expanded", String(isOpen));
+    mobileMenu.classList.toggle("hidden", !isOpen);
+
+    if (isOpen) {
+      (bars[0] as HTMLElement).style.transform = "translateY(7px) rotate(45deg)";
+      (bars[1] as HTMLElement).style.transform = "translateY(-7px) rotate(-45deg)";
+      (bars[2] as HTMLElement).style.opacity = "0";
+      (bars[2] as HTMLElement).style.transform = "scaleX(0)";
+    } else {
+      (bars[0] as HTMLElement).style.transform = "";
+      (bars[1] as HTMLElement).style.transform = "";
+      (bars[2] as HTMLElement).style.opacity = "";
+      (bars[2] as HTMLElement).style.transform = "";
+    }
+  });
+
+  // Close menu on link click
+  mobileMenu.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+      isOpen = false;
+      menuBtn.setAttribute("aria-expanded", "false");
+      mobileMenu.classList.add("hidden");
+      (bars[0] as HTMLElement).style.transform = "";
+      (bars[1] as HTMLElement).style.transform = "";
+      (bars[2] as HTMLElement).style.opacity = "";
+      (bars[2] as HTMLElement).style.transform = "";
+    });
+  });
+</script>

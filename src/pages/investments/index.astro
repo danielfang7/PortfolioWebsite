@@ -1,0 +1,126 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+const investments = (await getCollection("investments")).sort(
+  (a, b) => b.data.year - a.data.year
+);
+---
+
+<BaseLayout
+  title="Investments"
+  description="A curated portfolio of companies and projects I've invested in across early-stage startups and technology ventures."
+>
+  <div class="pt-32 section-padding">
+    <div class="container-content">
+      <!-- Section header -->
+      <div class="mb-16 max-w-2xl">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="accent-line" aria-hidden="true" />
+          <span class="text-sm font-medium tracking-widest text-accent uppercase">Portfolio</span>
+        </div>
+        <h1 class="font-display text-display-lg font-bold text-text-primary mb-4">
+          Investment Activity
+        </h1>
+        <p class="text-lg text-text-secondary leading-relaxed">
+          I back exceptional founders building the next generation of software,
+          infrastructure, and consumer products. Here's where I've put conviction to work.
+        </p>
+      </div>
+
+      <!-- Investment grid -->
+      {investments.length === 0 ? (
+        <div class="rounded-2xl border border-border-subtle p-16 text-center">
+          <p class="text-text-muted text-sm">Investment data coming soon.</p>
+        </div>
+      ) : (
+        <ul class="grid gap-5 md:grid-cols-2 lg:grid-cols-3" role="list">
+          {investments.map((inv) => (
+            <li class="investment-card anim-fade-up">
+              <a
+                href={inv.data.url ?? "#"}
+                target={inv.data.url ? "_blank" : undefined}
+                rel={inv.data.url ? "noopener noreferrer" : undefined}
+                class="group flex flex-col gap-4 p-6 rounded-2xl border border-border-subtle bg-bg-surface hover:border-border hover:-translate-y-1 transition-all duration-300 ease-out-expo"
+              >
+                <div class="flex items-start justify-between gap-4">
+                  <div class="w-10 h-10 rounded-xl bg-bg-elevated border border-border-subtle flex items-center justify-center overflow-hidden shrink-0">
+                    {inv.data.logo ? (
+                      <img
+                        src={inv.data.logo}
+                        alt={`${inv.data.company} logo`}
+                        class="w-full h-full object-cover"
+                        width="40"
+                        height="40"
+                      />
+                    ) : (
+                      <span class="font-display font-bold text-sm text-accent">
+                        {inv.data.company.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+                  <span class="text-xs text-text-muted mt-1">{inv.data.year}</span>
+                </div>
+
+                <div>
+                  <h2 class="font-display font-semibold text-text-primary mb-1.5 group-hover:text-accent transition-colors duration-200">
+                    {inv.data.company}
+                  </h2>
+                  <p class="text-sm text-text-secondary line-clamp-2">
+                    {inv.data.description}
+                  </p>
+                </div>
+
+                <div class="flex items-center gap-2 mt-auto">
+                  <span class="text-xs px-2.5 py-1 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
+                    {inv.data.sector}
+                  </span>
+                  <span class="text-xs px-2.5 py-1 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
+                    {inv.data.stage}
+                  </span>
+                </div>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  if (!prefersReducedMotion) {
+    gsap.utils.toArray<HTMLElement>(".investment-card").forEach((card, i) => {
+      gsap.fromTo(
+        card,
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          delay: (i % 3) * 0.08,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: card,
+            start: "top 88%",
+            toggleActions: "play none none none",
+          },
+        }
+      );
+    });
+  } else {
+    document.querySelectorAll<HTMLElement>(".investment-card").forEach((el) => {
+      el.style.opacity = "1";
+      el.style.transform = "none";
+    });
+  }
+</script>

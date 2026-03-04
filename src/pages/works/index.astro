@@ -1,0 +1,83 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+const works = (await getCollection("works")).sort(
+  (a, b) => a.data.order - b.data.order
+);
+---
+
+<BaseLayout
+  title="Works"
+  description="A collection of projects I've designed and built — exploring the intersection of craft, engineering, and product thinking."
+>
+  <div class="pt-32 section-padding">
+    <div class="container-content">
+      <!-- Section header -->
+      <div class="mb-16 max-w-2xl">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="accent-line" aria-hidden="true" />
+          <span class="text-sm font-medium tracking-widest text-accent uppercase">Selected Works</span>
+        </div>
+        <h1 class="font-display text-display-lg font-bold text-text-primary mb-4">
+          Things I've Built
+        </h1>
+        <p class="text-lg text-text-secondary leading-relaxed">
+          A curated set of projects across product, tooling, and experimentation.
+          Each one reflects a focus on quality and intentional design.
+        </p>
+      </div>
+
+      <!-- Projects grid (placeholder until carousel is implemented) -->
+      {works.length === 0 ? (
+        <div class="rounded-2xl border border-border-subtle p-16 text-center">
+          <p class="text-text-muted text-sm">Projects coming soon.</p>
+        </div>
+      ) : (
+        <ul class="grid gap-8 md:grid-cols-2 lg:grid-cols-3" role="list">
+          {works.map((work) => (
+            <li>
+              <a
+                href={`/works/${work.id.replace(/\.(md|mdx)$/, "")}`}
+                class="group block rounded-2xl border border-border-subtle bg-bg-surface overflow-hidden hover:border-border transition-colors duration-300"
+              >
+                <div class="aspect-video bg-bg-elevated overflow-hidden">
+                  <img
+                    src={work.data.thumbnail}
+                    alt={`${work.data.title} screenshot`}
+                    class="w-full h-full object-cover transition-transform duration-500 ease-out-expo group-hover:scale-105"
+                    loading="lazy"
+                    width="640"
+                    height="360"
+                  />
+                </div>
+                <div class="p-6">
+                  <div class="flex items-start justify-between gap-4 mb-2">
+                    <h2 class="font-display font-semibold text-text-primary group-hover:text-accent transition-colors duration-200">
+                      {work.data.title}
+                    </h2>
+                    <span class="text-xs text-text-muted shrink-0 mt-1">
+                      {work.data.year}
+                    </span>
+                  </div>
+                  <p class="text-sm text-text-secondary mb-4 line-clamp-2">
+                    {work.data.description}
+                  </p>
+                  <ul class="flex flex-wrap gap-2" role="list" aria-label="Tech stack">
+                    {work.data.stack.slice(0, 4).map((tech) => (
+                      <li>
+                        <span class="text-xs px-2.5 py-1 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
+                          {tech}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+</BaseLayout>
