@@ -1,0 +1,29 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="404 — Page Not Found"
+  description="This page doesn't exist."
+  noindex
+>
+  <div class="min-h-screen flex items-center justify-center">
+    <div class="container-content text-center">
+      <span class="font-display text-[10rem] font-bold leading-none text-border select-none" aria-hidden="true">
+        404
+      </span>
+      <h1 class="font-display text-display-md font-bold text-text-primary mb-4 -mt-4">
+        Page not found
+      </h1>
+      <p class="text-text-secondary mb-8 max-w-sm mx-auto">
+        The page you're looking for doesn't exist or has been moved.
+      </p>
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-accent text-white font-semibold text-sm hover:bg-accent-hover transition-colors duration-200"
+      >
+        Go home
+      </a>
+    </div>
+  </div>
+</BaseLayout>

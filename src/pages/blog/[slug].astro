@@ -1,0 +1,223 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  return posts.map((post) => ({
+    params: { slug: post.id.replace(/\.(md|mdx)$/, "") },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+const allPosts = (await getCollection("blog")).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+const slug = (id: string) => id.replace(/\.(md|mdx)$/, "");
+const currentIndex = allPosts.findIndex((p) => p.id === post.id);
+const prevPost = allPosts[currentIndex + 1] ?? null;
+const nextPost = allPosts[currentIndex - 1] ?? null;
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.excerpt}
+>
+  <article class="pt-32 section-padding">
+    <div class="container-content max-w-3xl">
+      <!-- Back -->
+      <a
+        href="/blog"
+        class="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors duration-200 mb-12 group"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M13 8H3M7 12L3 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Back to Blog
+      </a>
+
+      <!-- Post header -->
+      <header class="mb-12">
+        <div class="flex items-center gap-4 mb-4">
+          <time
+            class="text-sm text-text-muted"
+            datetime={post.data.date.toISOString()}
+          >
+            {formatDate(post.data.date)}
+          </time>
+          {post.data.readingTime && (
+            <span class="text-sm text-text-muted">{post.data.readingTime}</span>
+          )}
+        </div>
+        <h1 class="font-display text-display-md font-bold text-text-primary mb-4 text-balance">
+          {post.data.title}
+        </h1>
+        <p class="text-lg text-text-secondary leading-relaxed">
+          {post.data.excerpt}
+        </p>
+
+        {post.data.tags.length > 0 && (
+          <ul class="flex flex-wrap gap-2 mt-5" role="list" aria-label="Post tags">
+            {post.data.tags.map((tag) => (
+              <li>
+                <span class="text-xs px-2.5 py-1 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
+                  {tag}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </header>
+
+      <hr class="border-border-subtle mb-12" />
+
+      <!-- Post content -->
+      <div class="prose-blog">
+        <Content />
+      </div>
+
+      <hr class="border-border-subtle mt-16 mb-12" />
+
+      <!-- Prev / Next -->
+      <nav aria-label="Post navigation" class="grid grid-cols-2 gap-6">
+        {prevPost ? (
+          <a
+            href={`/blog/${slug(prevPost.id)}`}
+            class="group flex flex-col gap-1 p-5 rounded-xl border border-border-subtle hover:border-border transition-colors duration-200"
+          >
+            <span class="text-xs text-text-muted">← Previous</span>
+            <span class="text-sm font-medium text-text-primary group-hover:text-accent transition-colors duration-200 line-clamp-2">
+              {prevPost.data.title}
+            </span>
+          </a>
+        ) : <div />}
+
+        {nextPost ? (
+          <a
+            href={`/blog/${slug(nextPost.id)}`}
+            class="group flex flex-col gap-1 p-5 rounded-xl border border-border-subtle hover:border-border transition-colors duration-200 text-right ml-auto w-full"
+          >
+            <span class="text-xs text-text-muted">Next →</span>
+            <span class="text-sm font-medium text-text-primary group-hover:text-accent transition-colors duration-200 line-clamp-2">
+              {nextPost.data.title}
+            </span>
+          </a>
+        ) : <div />}
+      </nav>
+    </div>
+  </article>
+</BaseLayout>
+
+<style is:global>
+  .prose-blog {
+    color: var(--color-text-secondary);
+    line-height: 1.8;
+    font-size: 1.0625rem;
+  }
+
+  .prose-blog > * + * {
+    margin-top: 1.25em;
+  }
+
+  .prose-blog h2 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-top: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose-blog h3 {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose-blog p { margin-bottom: 1.25rem; }
+
+  .prose-blog a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(108, 99, 255, 0.4);
+    transition: text-decoration-color 200ms;
+  }
+
+  .prose-blog a:hover {
+    text-decoration-color: var(--color-accent);
+  }
+
+  .prose-blog strong {
+    color: var(--color-text-primary);
+    font-weight: 600;
+  }
+
+  .prose-blog ul, .prose-blog ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .prose-blog ul { list-style: disc; }
+  .prose-blog ol { list-style: decimal; }
+
+  .prose-blog li + li { margin-top: 0.4rem; }
+
+  .prose-blog blockquote {
+    border-left: 2px solid var(--color-accent);
+    padding-left: 1.25rem;
+    color: var(--color-text-secondary);
+    font-style: italic;
+    margin-block: 1.5rem;
+  }
+
+  .prose-blog code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background: var(--color-bg-elevated);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--color-border-subtle);
+  }
+
+  .prose-blog pre {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    margin-block: 1.5rem;
+  }
+
+  .prose-blog pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.875rem;
+  }
+
+  .prose-blog hr {
+    border-color: var(--color-border-subtle);
+    margin-block: 2.5rem;
+  }
+
+  .prose-blog img {
+    border-radius: 12px;
+    border: 1px solid var(--color-border-subtle);
+    margin-block: 1.5rem;
+  }
+</style>

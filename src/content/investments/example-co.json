@@ -1,0 +1,9 @@
+{
+  "company": "Example Co",
+  "description": "Building the next generation of developer tooling.",
+  "sector": "Dev Tools",
+  "stage": "Seed",
+  "year": 2023,
+  "url": "https://example.com",
+  "featured": true
+}

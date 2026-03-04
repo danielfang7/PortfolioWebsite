@@ -1,0 +1,166 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const works = await getCollection("works");
+  return works.map((work) => ({
+    params: { slug: work.id.replace(/\.(md|mdx)$/, "") },
+    props: { work },
+  }));
+}
+
+const { work } = Astro.props;
+const { Content } = await work.render();
+---
+
+<BaseLayout
+  title={work.data.title}
+  description={work.data.description}
+  ogImage={work.data.thumbnail}
+>
+  <article class="pt-32 section-padding">
+    <div class="container-content max-w-4xl">
+      <!-- Back link -->
+      <a
+        href="/works"
+        class="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors duration-200 mb-12 group"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M13 8H3M7 12L3 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Back to Works
+      </a>
+
+      <!-- Header -->
+      <header class="mb-12">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="accent-line" aria-hidden="true" />
+          <span class="text-sm font-medium tracking-widest text-accent uppercase">
+            {work.data.role} · {work.data.year}
+          </span>
+        </div>
+        <h1 class="font-display text-display-lg font-bold text-text-primary mb-4">
+          {work.data.title}
+        </h1>
+        <p class="text-xl text-text-secondary max-w-2xl leading-relaxed">
+          {work.data.description}
+        </p>
+
+        <!-- Stack tags -->
+        <ul class="flex flex-wrap gap-2 mt-6" role="list" aria-label="Tech stack">
+          {work.data.stack.map((tech) => (
+            <li>
+              <span class="text-xs px-3 py-1.5 rounded-full bg-bg-elevated text-text-secondary border border-border-subtle">
+                {tech}
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <!-- Links -->
+        <div class="flex flex-wrap gap-4 mt-6">
+          {work.data.liveUrl && (
+            <a
+              href={work.data.liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white font-semibold text-sm hover:bg-accent-hover transition-colors duration-200"
+            >
+              View Live
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </a>
+          )}
+          {work.data.sourceUrl && (
+            <a
+              href={work.data.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border text-text-secondary hover:text-text-primary hover:border-border-subtle transition-colors duration-200 text-sm font-medium"
+            >
+              Source Code
+            </a>
+          )}
+        </div>
+      </header>
+
+      <!-- Thumbnail -->
+      <div class="rounded-2xl overflow-hidden border border-border-subtle mb-12 aspect-video bg-bg-elevated">
+        <img
+          src={work.data.thumbnail}
+          alt={`${work.data.title} screenshot`}
+          class="w-full h-full object-cover"
+          width="1280"
+          height="720"
+        />
+      </div>
+
+      <!-- Content -->
+      <div class="prose prose-project">
+        <Content />
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style is:global>
+  .prose-project {
+    color: var(--color-text-secondary);
+    max-width: 70ch;
+    line-height: 1.75;
+  }
+
+  .prose-project h2 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .prose-project h3 {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose-project p {
+    margin-bottom: 1.25rem;
+  }
+
+  .prose-project a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .prose-project code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background: var(--color-bg-elevated);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    border: 1px solid var(--color-border-subtle);
+  }
+
+  .prose-project pre {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+  }
+
+  .prose-project pre code {
+    background: none;
+    border: none;
+    padding: 0;
+  }
+</style>
