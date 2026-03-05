@@ -147,15 +147,10 @@
     text-wrap: balance;
   }
 
-  /* Animation initial states (before JS hydrates) */
-  .anim-fade-up {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-
-  .anim-fade-in {
-    opacity: 0;
-  }
+  /* Animation classes — initial hidden state is set programmatically by GSAP
+     so content is always visible if JS doesn't run or fires late on soft-nav. */
+  .anim-fade-up {}
+  .anim-fade-in {}
 
   /* Active state after animation triggers */
   .anim-visible {

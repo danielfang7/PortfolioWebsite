@@ -3,15 +3,67 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 
 export async function getStaticPaths() {
-  const works = await getCollection("works");
-  return works.map((work) => ({
+  const works = (await getCollection("works")).sort(
+    (a, b) => a.data.order - b.data.order
+  );
+  return works.map((work, i) => ({
     params: { slug: work.id.replace(/\.(md|mdx)$/, "") },
-    props: { work },
+    props: {
+      work,
+      prevWork: i > 0 ? works[i - 1] : null,
+      nextWork: i < works.length - 1 ? works[i + 1] : null,
+    },
   }));
 }
 
-const { work } = Astro.props;
+const { work, prevWork, nextWork } = Astro.props;
 const { Content } = await work.render();
+
+function slugify(id: string) {
+  return id.replace(/\.(md|mdx)$/, "");
+}
+
+const currentSlug = slugify(work.id);
+
+// Match the carousel gradient palette (same order as WorksCarousel)
+const gradients: [string, string][] = [
+  ["#6C63FF", "#A78BFA"],
+  ["#06B6D4", "#3B82F6"],
+  ["#10B981", "#06B6D4"],
+  ["#F59E0B", "#EF4444"],
+  ["#EC4899", "#8B5CF6"],
+];
+const gi = Math.max(0, work.data.order - 1) % gradients.length;
+const [gradFrom, gradTo] = gradients[gi];
+
+// Build gallery items: real images padded with gradient placeholders
+interface GalleryItem {
+  type: "image" | "gradient";
+  src?: string;
+  alt?: string;
+  gradFrom?: string;
+  gradTo?: string;
+  angle?: number;
+  label: string;
+}
+
+const realImages: GalleryItem[] = (work.data.images ?? []).map((src, i) => ({
+  type: "image",
+  src,
+  alt: `${work.data.title} — screenshot ${i + 1}`,
+  label: `Screenshot ${i + 1}`,
+}));
+
+const placeholders: GalleryItem[] = [
+  { type: "gradient", gradFrom, gradTo, angle: 145, label: "Overview" },
+  { type: "gradient", gradFrom: gradTo, gradTo: gradFrom, angle: 200, label: "Detail view" },
+  { type: "gradient", gradFrom: gradFrom + "cc", gradTo: gradTo + "aa", angle: 90, label: "Interface" },
+];
+
+const galleryItems: GalleryItem[] =
+  realImages.length >= 3
+    ? realImages
+    : [...realImages, ...placeholders.slice(0, 3 - realImages.length)];
 ---
 
 <BaseLayout
@@ -19,111 +71,441 @@ const { Content } = await work.render();
   description={work.data.description}
   ogImage={work.data.thumbnail}
 >
-  <article class="pt-32 section-padding">
-    <div class="container-content max-w-4xl">
-      <!-- Back link -->
+  <article>
+
+    <!-- ── Back navigation ───────────────────────────────────────────── -->
+    <div class="pt-28 pb-10 container-content" id="detail-backnav">
       <a
         href="/works"
-        class="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors duration-200 mb-12 group"
+        class="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors duration-200 group"
+        aria-label="Back to Works"
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <svg
+          class="-translate-x-0.5 group-hover:-translate-x-1.5 transition-transform duration-200 ease-out-expo"
+          width="16" height="16" viewBox="0 0 16 16" fill="none"
+          aria-hidden="true"
+        >
           <path d="M13 8H3M7 12L3 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         Back to Works
       </a>
+    </div>
 
-      <!-- Header -->
-      <header class="mb-12">
-        <div class="flex items-center gap-3 mb-4">
-          <span class="accent-line" aria-hidden="true" />
-          <span class="text-sm font-medium tracking-widest text-accent uppercase">
-            {work.data.role} · {work.data.year}
-          </span>
-        </div>
-        <h1 class="font-display text-display-lg font-bold text-text-primary mb-4">
-          {work.data.title}
-        </h1>
-        <p class="text-xl text-text-secondary max-w-2xl leading-relaxed">
-          {work.data.description}
-        </p>
-
-        <!-- Stack tags -->
-        <ul class="flex flex-wrap gap-2 mt-6" role="list" aria-label="Tech stack">
-          {work.data.stack.map((tech) => (
-            <li>
-              <span class="text-xs px-3 py-1.5 rounded-full bg-bg-elevated text-text-secondary border border-border-subtle">
-                {tech}
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        <!-- Links -->
-        <div class="flex flex-wrap gap-4 mt-6">
-          {work.data.liveUrl && (
-            <a
-              href={work.data.liveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white font-semibold text-sm hover:bg-accent-hover transition-colors duration-200"
-            >
-              View Live
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </a>
-          )}
-          {work.data.sourceUrl && (
-            <a
-              href={work.data.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border text-text-secondary hover:text-text-primary hover:border-border-subtle transition-colors duration-200 text-sm font-medium"
-            >
-              Source Code
-            </a>
-          )}
-        </div>
-      </header>
-
-      <!-- Thumbnail -->
-      <div class="rounded-2xl overflow-hidden border border-border-subtle mb-12 aspect-video bg-bg-elevated">
-        <img
-          src={work.data.thumbnail}
-          alt={`${work.data.title} screenshot`}
-          class="w-full h-full object-cover"
-          width="1280"
-          height="720"
+    <!-- ── Hero visual — shared-element transition from carousel card ── -->
+    <div
+      class="relative w-full overflow-hidden"
+      style="height: clamp(220px, 42vw, 540px);"
+      transition:name={`project-visual-${currentSlug}`}
+      aria-hidden="true"
+    >
+      <!-- Gradient fill -->
+      <div
+        class="absolute inset-0"
+        style={`background: linear-gradient(145deg, ${gradFrom}3d 0%, ${gradFrom}1a 40%, ${gradTo}2d 100%);`}
+      />
+      <!-- Grid texture -->
+      <div
+        class="absolute inset-0"
+        style="background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size: 40px 40px;"
+      />
+      <!-- Central glow orb -->
+      <div class="absolute inset-0 flex items-center justify-center">
+        <div
+          class="rounded-full blur-3xl"
+          style={`width: clamp(180px, 28vw, 380px); height: clamp(180px, 28vw, 380px); background: ${gradFrom}; opacity: 0.38;`}
         />
       </div>
+      <!-- Secondary glow (right-shifted) -->
+      <div
+        class="absolute rounded-full blur-3xl"
+        style={`width: clamp(100px, 16vw, 220px); height: clamp(100px, 16vw, 220px); right: 20%; top: 50%; transform: translateY(-50%); background: ${gradTo}; opacity: 0.22;`}
+      />
+      <!-- Top shine line -->
+      <div
+        class="absolute top-0 left-0 right-0 h-px"
+        style="background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 50%, transparent 100%);"
+      />
+      <!-- Bottom fade-to-background -->
+      <div
+        class="absolute bottom-0 left-0 right-0"
+        style="height: 40%; background: linear-gradient(to bottom, transparent, var(--color-bg-base));"
+      />
+    </div>
 
-      <!-- Content -->
-      <div class="prose prose-project">
-        <Content />
+    <!-- ── Project header ────────────────────────────────────────────── -->
+    <header class="container-content -mt-6 relative z-10 mb-16" id="detail-header">
+      <!-- Eyebrow -->
+      <div class="flex items-center gap-3 mb-5 detail-fade-up" style="--delay: 0ms">
+        <span class="accent-line" aria-hidden="true" />
+        <span class="text-sm font-medium tracking-widest text-accent uppercase">
+          {work.data.role} · {work.data.year}
+        </span>
+      </div>
+
+      <!-- Title -->
+      <h1
+        class="font-display text-4xl sm:text-5xl lg:text-[3.5rem] font-bold text-text-primary mb-4 leading-[1.05] detail-fade-up"
+        style="--delay: 60ms"
+      >
+        {work.data.title}
+      </h1>
+
+      <!-- Description -->
+      <p
+        class="text-lg text-text-secondary max-w-2xl leading-relaxed mb-7 detail-fade-up"
+        style="--delay: 110ms"
+      >
+        {work.data.description}
+      </p>
+
+      <!-- Stack chips -->
+      <ul
+        class="flex flex-wrap gap-2 mb-6 detail-fade-up"
+        role="list"
+        aria-label="Tech stack"
+        style="--delay: 160ms"
+      >
+        {work.data.stack.map((tech) => (
+          <li>
+            <span class="text-xs px-3 py-1.5 rounded-full bg-bg-elevated text-text-secondary border border-border-subtle">
+              {tech}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <!-- Action links -->
+      <div class="flex flex-wrap gap-3 detail-fade-up" style="--delay: 200ms">
+        {work.data.liveUrl && (
+          <a
+            href={work.data.liveUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white font-semibold text-sm hover:bg-accent-hover transition-colors duration-200"
+          >
+            View Live
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
+        )}
+        {work.data.sourceUrl && (
+          <a
+            href={work.data.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border text-text-secondary hover:text-text-primary hover:border-border-subtle transition-colors duration-200 text-sm font-medium"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Source Code
+          </a>
+        )}
+      </div>
+    </header>
+
+    <!-- ── Content + Sticky sidebar ──────────────────────────────────── -->
+    <div class="container-content mb-20">
+      <div class="grid lg:grid-cols-[1fr_256px] gap-12 xl:gap-20 items-start">
+
+        <!-- Prose content -->
+        <div class="prose-project min-w-0" id="detail-content">
+          <Content />
+        </div>
+
+        <!-- Sticky metadata sidebar -->
+        <aside
+          id="detail-sidebar"
+          class="lg:sticky lg:top-28 space-y-4"
+          aria-label="Project details"
+        >
+          <!-- Quick facts -->
+          <div class="rounded-2xl border border-border-subtle bg-bg-surface p-5">
+            <p class="text-[10px] font-semibold tracking-[0.12em] uppercase text-text-muted mb-4">Quick Facts</p>
+            <dl class="space-y-0 divide-y divide-border-subtle">
+              <div class="py-3 first:pt-0">
+                <dt class="text-[10px] font-medium tracking-widest uppercase text-text-muted mb-1">Role</dt>
+                <dd class="text-sm text-text-secondary">{work.data.role}</dd>
+              </div>
+              <div class="py-3">
+                <dt class="text-[10px] font-medium tracking-widest uppercase text-text-muted mb-1">Year</dt>
+                <dd class="text-sm text-text-secondary">{work.data.year}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- Tech stack -->
+          <div class="rounded-2xl border border-border-subtle bg-bg-surface p-5">
+            <p class="text-[10px] font-semibold tracking-[0.12em] uppercase text-text-muted mb-4">Stack</p>
+            <ul class="flex flex-wrap gap-1.5" role="list">
+              {work.data.stack.map((tech) => (
+                <li>
+                  <span class="text-[11px] px-2.5 py-1 rounded-full bg-bg-elevated text-text-secondary border border-border-subtle">
+                    {tech}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <!-- Links (only rendered if at least one URL exists) -->
+          {(work.data.liveUrl || work.data.sourceUrl) && (
+            <div class="rounded-2xl border border-border-subtle bg-bg-surface p-5">
+              <p class="text-[10px] font-semibold tracking-[0.12em] uppercase text-text-muted mb-4">Links</p>
+              <ul class="space-y-2.5" role="list">
+                {work.data.liveUrl && (
+                  <li>
+                    <a
+                      href={work.data.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors duration-200"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" class="shrink-0 text-accent" aria-hidden="true">
+                        <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      Live Project
+                    </a>
+                  </li>
+                )}
+                {work.data.sourceUrl && (
+                  <li>
+                    <a
+                      href={work.data.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors duration-200"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" class="shrink-0 text-accent" aria-hidden="true">
+                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                      Source Code
+                    </a>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+        </aside>
+
       </div>
     </div>
+
+    <!-- ── Media gallery ─────────────────────────────────────────────── -->
+    <section
+      id="detail-gallery"
+      class="container-content mb-20 border-t border-border-subtle pt-16"
+      aria-label="Project gallery"
+    >
+      <div class="flex items-center gap-3 mb-8">
+        <span class="accent-line" aria-hidden="true" />
+        <span class="text-sm font-medium tracking-widest text-accent uppercase">Gallery</span>
+      </div>
+
+      <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
+        {galleryItems.map((item, i) => (
+          <li class="gallery-card" style={`--gallery-delay: ${i * 80}ms`}>
+            <button
+              class="gallery-item group relative w-full overflow-hidden rounded-xl border border-border-subtle cursor-zoom-in focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              style="aspect-ratio: 16/10;"
+              data-gallery-idx={i}
+              data-type={item.type}
+              data-src={item.type === "image" ? item.src : ""}
+              data-alt={item.type === "image" ? item.alt : item.label}
+              data-grad-from={item.type === "gradient" ? item.gradFrom : ""}
+              data-grad-to={item.type === "gradient" ? item.gradTo : ""}
+              data-angle={item.type === "gradient" ? String(item.angle ?? 145) : ""}
+              aria-label={`Open ${item.label} full screen`}
+            >
+              {item.type === "image" ? (
+                <img
+                  src={item.src}
+                  alt={item.alt ?? ""}
+                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+              ) : (
+                <>
+                  <div
+                    class="absolute inset-0"
+                    style={`background: linear-gradient(${item.angle ?? 145}deg, ${item.gradFrom}40 0%, ${item.gradFrom}1c 40%, ${item.gradTo}30 100%);`}
+                    aria-hidden="true"
+                  />
+                  <div
+                    class="absolute inset-0"
+                    style="background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size: 40px 40px;"
+                    aria-hidden="true"
+                  />
+                  <div class="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+                    <div
+                      class="rounded-full blur-3xl"
+                      style={`width: 45%; height: 60%; background: ${item.gradFrom}; opacity: 0.55;`}
+                    />
+                  </div>
+                  <div
+                    class="absolute top-0 left-0 right-0 h-px"
+                    style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);"
+                    aria-hidden="true"
+                  />
+                </>
+              )}
+              <!-- Hover overlay with label -->
+              <div
+                class="absolute inset-0 flex items-end justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style="background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%);"
+                aria-hidden="true"
+              >
+                <span class="text-xs font-medium text-white/80 tracking-wide">{item.label}</span>
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" class="text-white/70">
+                  <path d="M4.5 11.5L11.5 4.5M11.5 4.5H6.5M11.5 4.5V9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- ── Prev / Next project navigation ────────────────────────────── -->
+    <nav
+      id="detail-nav"
+      class="border-t border-border-subtle"
+      aria-label="Project navigation"
+    >
+      <div class="container-content py-10">
+        <div class="grid grid-cols-2 gap-6">
+
+          <!-- Previous -->
+          <div>
+            {prevWork ? (
+              <a
+                href={`/works/${slugify(prevWork.id)}`}
+                class="group flex flex-col gap-1.5"
+              >
+                <span class="flex items-center gap-1.5 text-[11px] font-medium tracking-widest uppercase text-text-muted">
+                  <svg
+                    class="shrink-0 group-hover:-translate-x-0.5 transition-transform duration-200"
+                    width="12" height="12" viewBox="0 0 16 16" fill="none"
+                    aria-hidden="true"
+                  >
+                    <path d="M13 8H3M7 12L3 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Previous
+                </span>
+                <span class="font-display font-semibold text-text-secondary group-hover:text-text-primary transition-colors duration-200 text-sm sm:text-base line-clamp-1">
+                  {prevWork.data.title}
+                </span>
+              </a>
+            ) : <span />}
+          </div>
+
+          <!-- Next -->
+          <div class="text-right">
+            {nextWork ? (
+              <a
+                href={`/works/${slugify(nextWork.id)}`}
+                class="group flex flex-col gap-1.5 items-end"
+              >
+                <span class="flex items-center gap-1.5 text-[11px] font-medium tracking-widest uppercase text-text-muted">
+                  Next
+                  <svg
+                    class="shrink-0 group-hover:translate-x-0.5 transition-transform duration-200"
+                    width="12" height="12" viewBox="0 0 16 16" fill="none"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="font-display font-semibold text-text-secondary group-hover:text-text-primary transition-colors duration-200 text-sm sm:text-base line-clamp-1">
+                  {nextWork.data.title}
+                </span>
+              </a>
+            ) : <span />}
+          </div>
+
+        </div>
+      </div>
+    </nav>
+
   </article>
+
+  <!-- ── Lightbox modal ────────────────────────────────────────────────── -->
+  <div
+    id="lightbox"
+    class="fixed inset-0 z-[100] flex items-center justify-center"
+    style="background: rgba(5,5,5,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Image viewer"
+    hidden
+  >
+    <!-- Close -->
+    <button
+      id="lb-close"
+      class="absolute top-4 right-4 sm:top-6 sm:right-6 z-10 w-10 h-10 flex items-center justify-center rounded-full border border-border bg-bg-surface text-text-secondary hover:text-text-primary hover:border-border-subtle transition-colors duration-200"
+      aria-label="Close viewer"
+    >
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M13 3L3 13M3 3l10 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <!-- Prev -->
+    <button
+      id="lb-prev"
+      class="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full border border-border bg-bg-surface text-text-secondary hover:text-text-primary hover:border-border-subtle transition-colors duration-200 disabled:opacity-30 disabled:pointer-events-none"
+      aria-label="Previous"
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M10.5 3L5.5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- Visual content area -->
+    <div id="lb-content" class="relative w-full mx-16 sm:mx-24 max-w-4xl rounded-2xl overflow-hidden" style="max-height: 76vh; aspect-ratio: 16/10;">
+      <!-- Filled dynamically by JS -->
+    </div>
+
+    <!-- Next -->
+    <button
+      id="lb-next"
+      class="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full border border-border bg-bg-surface text-text-secondary hover:text-text-primary hover:border-border-subtle transition-colors duration-200 disabled:opacity-30 disabled:pointer-events-none"
+      aria-label="Next"
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M5.5 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- Counter -->
+    <p id="lb-counter" class="absolute bottom-5 left-1/2 -translate-x-1/2 text-xs text-text-muted tabular-nums" aria-live="polite" />
+  </div>
+
 </BaseLayout>
 
+<!-- ── Page styles ────────────────────────────────────────────────────────── -->
 <style is:global>
+  /* Prose typography for project content */
   .prose-project {
     color: var(--color-text-secondary);
-    max-width: 70ch;
-    line-height: 1.75;
+    max-width: 68ch;
+    line-height: 1.78;
   }
 
   .prose-project h2 {
     font-family: var(--font-display);
-    font-size: 1.5rem;
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
     font-weight: 700;
     color: var(--color-text-primary);
-    margin-top: 2.5rem;
+    margin-top: 2.75rem;
     margin-bottom: 0.75rem;
+    letter-spacing: -0.015em;
   }
 
   .prose-project h3 {
     font-family: var(--font-display);
-    font-size: 1.125rem;
+    font-size: 1.0625rem;
     font-weight: 600;
     color: var(--color-text-primary);
     margin-top: 2rem;
@@ -131,7 +513,18 @@ const { Content } = await work.render();
   }
 
   .prose-project p {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.3rem;
+  }
+
+  .prose-project ul,
+  .prose-project ol {
+    padding-left: 1.4rem;
+    margin-bottom: 1.3rem;
+    color: var(--color-text-secondary);
+  }
+
+  .prose-project li {
+    margin-bottom: 0.4rem;
   }
 
   .prose-project a {
@@ -140,13 +533,27 @@ const { Content } = await work.render();
     text-underline-offset: 3px;
   }
 
+  .prose-project strong {
+    color: var(--color-text-primary);
+    font-weight: 600;
+  }
+
+  .prose-project blockquote {
+    border-left: 2px solid var(--color-accent);
+    padding-left: 1.25rem;
+    margin-left: 0;
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+
   .prose-project code {
     font-family: var(--font-mono);
     font-size: 0.875em;
     background: var(--color-bg-elevated);
-    padding: 0.15em 0.4em;
+    padding: 0.15em 0.45em;
     border-radius: 4px;
     border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-primary);
   }
 
   .prose-project pre {
@@ -163,4 +570,226 @@ const { Content } = await work.render();
     border: none;
     padding: 0;
   }
+
+  /* Initial states set programmatically by GSAP in init() — no CSS hiding
+     so content is always visible if JS doesn't run or fires late. */
 </style>
+
+<!-- ── Scripts ────────────────────────────────────────────────────────────── -->
+<script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+
+  // AbortController lets us cleanly remove document-level listeners on re-navigation
+  let abort: AbortController | null = null;
+
+  function init() {
+    // ── Cleanup previous navigation's artifacts ──────────────────────────
+    if (abort) abort.abort();
+    abort = new AbortController();
+    // Kill ScrollTrigger instances from a prior visit to any detail page
+    ScrollTrigger.getAll().forEach((st) => st.kill());
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // ── Entrance animations ──────────────────────────────────────────────
+    if (!prefersReduced) {
+      // Set initial hidden states programmatically (not via CSS) so content
+      // is always visible if this script is slow or doesn't run.
+      gsap.set(".detail-fade-up", { opacity: 0, y: 20 });
+      gsap.set(".gallery-card",   { opacity: 0, y: 16 });
+
+      // Header elements: staggered fade-up
+      gsap.utils.toArray<HTMLElement>(".detail-fade-up").forEach((el) => {
+        const delay = parseFloat(el.style.getPropertyValue("--delay") || "0") / 1000;
+        gsap.to(el, {
+          opacity: 1,
+          y: 0,
+          duration: 0.65,
+          delay: 0.1 + delay,
+          ease: "power3.out",
+          clearProps: "opacity,transform",
+        });
+      });
+
+      // Sidebar: fade in
+      const sidebar = document.getElementById("detail-sidebar");
+      if (sidebar) {
+        gsap.fromTo(
+          sidebar,
+          { opacity: 0, y: 18 },
+          { opacity: 1, y: 0, duration: 0.7, delay: 0.35, ease: "power3.out", clearProps: "all" }
+        );
+      }
+
+      // Content: fade in
+      const content = document.getElementById("detail-content");
+      if (content) {
+        gsap.fromTo(
+          content,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.7, delay: 0.28, ease: "power3.out", clearProps: "all" }
+        );
+      }
+
+      // Gallery cards: scroll-triggered stagger
+      gsap.utils.toArray<HTMLElement>(".gallery-card").forEach((card) => {
+        const delay = parseFloat(card.style.getPropertyValue("--gallery-delay") || "0") / 1000;
+        gsap.to(card, {
+          opacity: 1,
+          y: 0,
+          duration: 0.55,
+          ease: "power3.out",
+          delay,
+          scrollTrigger: {
+            trigger: card,
+            start: "top 88%",
+            toggleActions: "play none none none",
+          },
+        });
+      });
+
+      // Nav fade in
+      const nav = document.getElementById("detail-nav");
+      if (nav) {
+        gsap.fromTo(
+          nav,
+          { opacity: 0 },
+          {
+            opacity: 1,
+            duration: 0.6,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: nav,
+              start: "top 92%",
+              toggleActions: "play none none none",
+            },
+          }
+        );
+      }
+    } else {
+      // Reduced motion: show everything immediately
+      document.querySelectorAll<HTMLElement>(".detail-fade-up, .gallery-card").forEach((el) => {
+        el.style.opacity = "1";
+        el.style.transform = "none";
+      });
+    }
+
+    // ── Lightbox ─────────────────────────────────────────────────────────
+    const lightbox   = document.getElementById("lightbox") as HTMLDivElement | null;
+    const lbContent  = document.getElementById("lb-content") as HTMLDivElement | null;
+    const lbCounter  = document.getElementById("lb-counter") as HTMLParagraphElement | null;
+    const lbClose    = document.getElementById("lb-close") as HTMLButtonElement | null;
+    const lbPrev     = document.getElementById("lb-prev") as HTMLButtonElement | null;
+    const lbNext     = document.getElementById("lb-next") as HTMLButtonElement | null;
+    const galleryBtns = Array.from(document.querySelectorAll<HTMLButtonElement>(".gallery-item"));
+
+    if (!lightbox || !lbContent || galleryBtns.length === 0) return;
+
+    let currentIdx = 0;
+
+    interface ItemData {
+      type: string;
+      src: string;
+      alt: string;
+      gradFrom: string;
+      gradTo: string;
+      angle: string;
+    }
+
+    function getItemData(btn: HTMLButtonElement): ItemData {
+      return {
+        type:     btn.dataset.type     ?? "gradient",
+        src:      btn.dataset.src      ?? "",
+        alt:      btn.dataset.alt      ?? "",
+        gradFrom: btn.dataset.gradFrom ?? "#6c63ff",
+        gradTo:   btn.dataset.gradTo   ?? "#a78bfa",
+        angle:    btn.dataset.angle    ?? "145",
+      };
+    }
+
+    function renderContent(item: ItemData) {
+      if (!lbContent) return;
+      if (item.type === "image" && item.src) {
+        lbContent.innerHTML = `<img src="${item.src}" alt="${item.alt}" class="w-full h-full object-cover" style="max-height:76vh;" />`;
+      } else {
+        const f = item.gradFrom, t = item.gradTo, a = item.angle;
+        lbContent.innerHTML = `
+          <div class="absolute inset-0" style="background: linear-gradient(${a}deg, ${f}40 0%, ${f}1c 40%, ${t}30 100%);"></div>
+          <div class="absolute inset-0" style="background-image: linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px), linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px); background-size:40px 40px;"></div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="rounded-full blur-3xl" style="width:45%;height:65%;background:${f};opacity:0.5;"></div>
+          </div>
+          <div class="absolute top-0 left-0 right-0 h-px" style="background:linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent);"></div>
+        `;
+      }
+    }
+
+    function updateCounter() {
+      if (lbCounter) {
+        lbCounter.textContent = `${currentIdx + 1} / ${galleryBtns.length}`;
+      }
+    }
+
+    function updateNavButtons() {
+      if (lbPrev) lbPrev.disabled = currentIdx === 0;
+      if (lbNext) lbNext.disabled = currentIdx === galleryBtns.length - 1;
+    }
+
+    function openLightbox(idx: number) {
+      currentIdx = idx;
+      renderContent(getItemData(galleryBtns[currentIdx]));
+      updateCounter();
+      updateNavButtons();
+      lightbox!.hidden = false;
+      document.body.style.overflow = "hidden";
+      lbClose?.focus();
+    }
+
+    function closeLightbox() {
+      lightbox!.hidden = true;
+      document.body.style.overflow = "";
+      galleryBtns[currentIdx]?.focus();
+    }
+
+    function showPrev() {
+      if (currentIdx > 0) { currentIdx--; renderContent(getItemData(galleryBtns[currentIdx])); updateCounter(); updateNavButtons(); }
+    }
+
+    function showNext() {
+      if (currentIdx < galleryBtns.length - 1) { currentIdx++; renderContent(getItemData(galleryBtns[currentIdx])); updateCounter(); updateNavButtons(); }
+    }
+
+    // Attach event listeners (remove old ones first by cloning)
+    galleryBtns.forEach((btn, i) => btn.addEventListener("click", () => openLightbox(i)));
+    lbClose?.addEventListener("click", closeLightbox);
+    lbPrev?.addEventListener("click", showPrev);
+    lbNext?.addEventListener("click", showNext);
+
+    // Click backdrop to close
+    lightbox.addEventListener("click", (e) => { if (e.target === lightbox) closeLightbox(); });
+
+    // Keyboard navigation — use abort signal so listeners don't stack on re-navigation
+    document.addEventListener("keydown", (e) => {
+      if (lightbox!.hidden) return;
+      if (e.key === "Escape")        closeLightbox();
+      else if (e.key === "ArrowLeft")  showPrev();
+      else if (e.key === "ArrowRight") showNext();
+    }, { signal: abort!.signal });
+  }
+
+  // ── Reliable dual-init pattern ─────────────────────────────────────────────
+  // astro:page-load handles soft-nav re-entry (View Transitions).
+  // The rAF fallback covers the case where astro:page-load fires before this
+  // module script has a chance to register its listener (initial load race).
+  let _pageLoadFired = false;
+
+  document.addEventListener("astro:page-load", () => {
+    _pageLoadFired = true;
+    init();
+  });
+
+  requestAnimationFrame(() => {
+    if (!_pageLoadFired) init();
+  });
+</script>
