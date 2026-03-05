@@ -64,6 +64,23 @@ const galleryItems: GalleryItem[] =
   realImages.length >= 3
     ? realImages
     : [...realImages, ...placeholders.slice(0, 3 - realImages.length)];
+
+const workCanonicalUrl = `https://danielfang.me/works/${currentSlug}`;
+const creativeWorkJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CreativeWork",
+  name: work.data.title,
+  description: work.data.description,
+  url: workCanonicalUrl,
+  author: {
+    "@type": "Person",
+    name: "Daniel Fang",
+    url: "https://danielfang.me",
+  },
+  dateCreated: work.data.year,
+  keywords: work.data.stack.join(", "),
+  ...(work.data.liveUrl ? { sameAs: work.data.liveUrl } : {}),
+};
 ---
 
 <BaseLayout
@@ -71,6 +88,8 @@ const galleryItems: GalleryItem[] =
   description={work.data.description}
   ogImage={work.data.thumbnail}
 >
+  <script type="application/ld+json" set:html={JSON.stringify(creativeWorkJsonLd)} />
+
   <article>
 
     <!-- ── Back navigation ───────────────────────────────────────────── -->
