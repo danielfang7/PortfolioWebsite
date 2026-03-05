@@ -108,6 +108,7 @@ const BOTTOM_RESERVED = META_HEIGHT + 16 + DOTS_BAND + DOTS_BOTTOM;
                   <div
                     class="relative overflow-hidden rounded-xl"
                     style="aspect-ratio: 16/10; box-shadow: 0 50px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06);"
+                    transition:name={`project-visual-${slug(work.id)}`}
                   >
                     <!-- Gradient fill -->
                     <div
@@ -268,21 +269,36 @@ const BOTTOM_RESERVED = META_HEIGHT + 16 + DOTS_BAND + DOTS_BOTTOM;
 
   gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
+  // AbortController cleans up event listeners each time the carousel re-inits
+  let carouselAbort: AbortController | null = null;
+
+  function initCarousel() {
+    // ── Cleanup previous carousel instance only (not other page scripts) ──
+    if (carouselAbort) carouselAbort.abort();
+    carouselAbort = new AbortController();
+    // Kill by ID so we never accidentally destroy scroll triggers from
+    // other scripts on the same page (e.g. the works-grid-card triggers).
+    ScrollTrigger.getById("carousel-main")?.kill();
+    ScrollTrigger.getById("carousel-kb")?.kill();
+
+    // Guard: only run on pages that contain the carousel
+    const pin = document.getElementById("carousel-pin");
+    if (!pin) return;
+
+    const stage     = document.getElementById("carousel-stage")!;
+    const track     = document.getElementById("carousel-track")!;
+    const hint      = document.getElementById("carousel-hint")!;
+    const metaInner = document.getElementById("carousel-meta-inner")!;
+    const cards     = gsap.utils.toArray<HTMLElement>(".carousel-card");
+    const dots      = gsap.utils.toArray<HTMLButtonElement>(".carousel-dot");
+    const panels    = gsap.utils.toArray<HTMLElement>(".card-meta-panel");
+    const numCards  = cards.length;
+
+    if (numCards === 0) return;
+
   const prefersReducedMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
   ).matches;
-
-  const pin       = document.getElementById("carousel-pin")!;
-  const stage     = document.getElementById("carousel-stage")!;
-  const track     = document.getElementById("carousel-track")!;
-  const hint      = document.getElementById("carousel-hint")!;
-  const metaInner = document.getElementById("carousel-meta-inner")!;
-  const cards     = gsap.utils.toArray<HTMLElement>(".carousel-card");
-  const dots      = gsap.utils.toArray<HTMLButtonElement>(".carousel-dot");
-  const panels    = gsap.utils.toArray<HTMLElement>(".card-meta-panel");
-  const numCards  = cards.length;
-
-  if (numCards === 0) throw new Error("No carousel cards found");
 
   // ── 3D constants — tuned for the dramatic reference look ─────────────────
   const ROT_MAX     = 42;   // Y-axis degrees at full distance
@@ -428,6 +444,7 @@ const BOTTOM_RESERVED = META_HEIGHT + 16 + DOTS_BAND + DOTS_BOTTOM;
     const section = document.getElementById("works-section")!;
 
     const st = ScrollTrigger.create({
+      id:         "carousel-main",
       trigger:    section,
       pin:        pin,
       pinSpacing: true,
@@ -476,18 +493,19 @@ const BOTTOM_RESERVED = META_HEIGHT + 16 + DOTS_BAND + DOTS_BOTTOM;
       } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
         e.preventDefault(); scrollToCard(kbIndex - 1);
       }
-    });
+    }, { signal: carouselAbort!.signal });
 
     ScrollTrigger.create({
+      id:      "carousel-kb",
       trigger: section,
       start:   "top top",
       end:     () => `+=${(numCards - 1) * window.innerHeight * 0.85}`,
       onUpdate(self) { kbIndex = Math.round(self.progress * (numCards - 1)); },
     });
 
-    dots.forEach((dot, i) => dot.addEventListener("click", () => scrollToCard(i)));
+    dots.forEach((dot, i) => dot.addEventListener("click", () => scrollToCard(i), { signal: carouselAbort!.signal }));
     cards.forEach((card, i) =>
-      card.addEventListener("focus", () => scrollToCard(i), { capture: true })
+      card.addEventListener("focus", () => scrollToCard(i), { capture: true, signal: carouselAbort!.signal })
     );
 
     // ── Resize handler ────────────────────────────────────────────────────
@@ -500,6 +518,23 @@ const BOTTOM_RESERVED = META_HEIGHT + 16 + DOTS_BAND + DOTS_BOTTOM;
         gsap.set(track, { x: gsap.utils.interpolate(sx, ex, currentProgress) });
         ScrollTrigger.refresh();
       }, 150);
-    });
-  }
+    }, { signal: carouselAbort!.signal });
+  } // end else (full carousel)
+  } // end initCarousel()
+
+  // ── Wire up to Astro View Transitions lifecycle ─────────────────────────────
+  // astro:page-load fires on every navigation AND on initial page load,
+  // so this single listener handles both the first render and soft-nav re-entry.
+  let _carouselFired = false;
+
+  document.addEventListener("astro:page-load", () => {
+    _carouselFired = true;
+    initCarousel();
+  });
+
+  // rAF fallback for the initial-load race where astro:page-load fires
+  // before this module script has a chance to register its listener.
+  requestAnimationFrame(() => {
+    if (!_carouselFired) initCarousel();
+  });
 </script>
