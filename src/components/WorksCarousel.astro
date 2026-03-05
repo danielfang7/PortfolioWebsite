@@ -1,0 +1,505 @@
+---
+import { getCollection } from "astro:content";
+
+const works = (await getCollection("works")).sort(
+  (a, b) => a.data.order - b.data.order
+);
+
+const gradients = [
+  ["#6C63FF", "#A78BFA"],
+  ["#06B6D4", "#3B82F6"],
+  ["#10B981", "#06B6D4"],
+  ["#F59E0B", "#EF4444"],
+  ["#EC4899", "#8B5CF6"],
+];
+
+function slug(id: string) {
+  return id.replace(/\.(md|mdx)$/, "");
+}
+
+// Nav height in px — kept in sync with Nav.astro (h-20 = 80px desktop)
+const NAV_H = 80;
+// Dots row: distance from bottom, then height of the band we reserve
+const DOTS_BOTTOM = 14;
+const DOTS_BAND = 32;
+// Metadata strip sits directly above the dots
+const META_HEIGHT = 88;
+// Total space under the cards = metadata + gap + dots
+const BOTTOM_RESERVED = META_HEIGHT + 16 + DOTS_BAND + DOTS_BOTTOM;
+---
+
+<section id="works-section" aria-label="Selected works">
+  <!--
+    carousel-pin is the element GSAP will pin.
+    h-screen so the pinned frame is always a full viewport height.
+    Cards are centered in the space between the nav and the metadata panel.
+  -->
+  <div
+    id="carousel-pin"
+    class="h-screen relative overflow-hidden"
+    role="region"
+    aria-roledescription="carousel"
+    aria-label="Project carousel"
+  >
+    <!-- ── Section eyebrow (top-left, inside pinned frame) ──────────────── -->
+    <div
+      class="absolute left-0 right-0 z-30 pointer-events-none"
+      style={`top: ${NAV_H + 20}px`}
+      aria-hidden="true"
+    >
+      <div class="container-content flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="accent-line" />
+          <span class="text-sm font-medium tracking-widest text-accent uppercase">
+            Selected Works
+          </span>
+        </div>
+        <a
+          href="/works"
+          class="pointer-events-auto text-sm text-text-secondary hover:text-text-primary transition-colors duration-200 flex items-center gap-2 group"
+        >
+          View all
+          <svg
+            class="-translate-x-1 group-hover:translate-x-0 transition-transform duration-200 ease-out-expo"
+            width="15" height="15" viewBox="0 0 16 16" fill="none"
+          >
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── 3D stage — fills space between nav and metadata ──────────────── -->
+    <!--
+      padding-top = NAV_H offsets nav.
+      padding-bottom reserves space for metadata + dots.
+      flex items-center then centers the track in the remaining space,
+      which equals the visible area between nav and metadata.
+    -->
+    <div
+      id="carousel-stage"
+      class="absolute inset-0 flex items-center overflow-visible"
+      style={`padding-top: ${NAV_H}px; padding-bottom: ${BOTTOM_RESERVED}px; perspective: 680px; perspective-origin: 50% 50%;`}
+    >
+      <div
+        id="carousel-track"
+        class="flex items-center will-change-transform"
+        style="gap: 2.5rem;"
+      >
+        {
+          works.map((work, i) => {
+            const [from, to] = gradients[i % gradients.length];
+            return (
+              <article
+                class="carousel-card flex-shrink-0 will-change-transform"
+                data-index={i}
+                aria-label={work.data.title}
+                aria-roledescription="slide"
+                aria-setsize={works.length}
+                aria-posinset={i + 1}
+                tabindex="0"
+              >
+                <a
+                  href={`/works/${slug(work.id)}`}
+                  class="block focus-visible:outline-none group"
+                  tabindex="-1"
+                >
+                  <!-- Pure visual card — no text body, all metadata is at bottom -->
+                  <div
+                    class="relative overflow-hidden rounded-xl"
+                    style="aspect-ratio: 16/10; box-shadow: 0 50px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06);"
+                  >
+                    <!-- Gradient fill -->
+                    <div
+                      class="absolute inset-0"
+                      style={`background: linear-gradient(145deg, ${from}2a 0%, ${from}14 40%, ${to}1e 100%);`}
+                      aria-hidden="true"
+                    />
+                    <!-- Subtle grid -->
+                    <div
+                      class="absolute inset-0"
+                      style="background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size: 40px 40px;"
+                      aria-hidden="true"
+                    />
+                    <!-- Glow orb -->
+                    <div
+                      class="absolute inset-0 flex items-center justify-center"
+                      aria-hidden="true"
+                    >
+                      <div
+                        class="w-40 h-40 rounded-full blur-3xl opacity-50 transition-opacity duration-700 group-hover:opacity-80"
+                        style={`background: ${from};`}
+                      />
+                    </div>
+                    <!-- Inner shine line at top -->
+                    <div
+                      class="absolute top-0 left-0 right-0 h-px"
+                      style="background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);"
+                      aria-hidden="true"
+                    />
+                    <!-- "View Project" hover pill -->
+                    <div
+                      class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300"
+                      style="background: rgba(10,10,10,0.5); backdrop-filter: blur(4px);"
+                      aria-hidden="true"
+                    >
+                      <span class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent text-white text-sm font-semibold tracking-wide">
+                        View Project
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                          <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              </article>
+            );
+          })
+        }
+      </div>
+    </div>
+
+    <!-- ── Side gradient masks (fade cards into the dark bg) ─────────────── -->
+    <div
+      class="pointer-events-none absolute inset-y-0 left-0 w-56 z-20"
+      style="background: linear-gradient(to right, #0A0A0A 0%, transparent 100%);"
+      aria-hidden="true"
+    />
+    <div
+      class="pointer-events-none absolute inset-y-0 right-0 w-56 z-20"
+      style="background: linear-gradient(to left, #0A0A0A 0%, transparent 100%);"
+      aria-hidden="true"
+    />
+
+    <!-- ── Card metadata (centered, card-width, directly under active card) ── -->
+    <div
+      id="carousel-meta"
+      class="absolute left-0 right-0 z-30 flex justify-center"
+      style={`bottom: ${DOTS_BOTTOM + DOTS_BAND}px; height: ${META_HEIGHT}px;`}
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <!-- Width is set by JS to match card width -->
+      <div id="carousel-meta-inner" class="relative h-full flex flex-col justify-center">
+        {
+          works.map((work, i) => (
+            <div
+              class="card-meta-panel absolute inset-x-0"
+              data-index={i}
+              aria-hidden={i !== 0 ? "true" : "false"}
+              style={`opacity: ${i === 0 ? 1 : 0}; transform: translateY(${i === 0 ? 0 : 10}px);`}
+            >
+              <!-- Title + counter -->
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <a
+                  href={`/works/${slug(work.id)}`}
+                  class="font-display font-bold text-base md:text-lg text-text-primary hover:text-accent transition-colors duration-200 flex items-center gap-2 group"
+                  tabindex="-1"
+                >
+                  {work.data.title}
+                  <svg
+                    class="text-text-muted group-hover:text-accent transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    width="13" height="13" viewBox="0 0 16 16" fill="none"
+                  >
+                    <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+                <span class="text-xs text-text-muted tabular-nums shrink-0">
+                  {String(i + 1).padStart(2, "0")} / {String(works.length).padStart(2, "0")}
+                </span>
+              </div>
+              <!-- Role + Year only -->
+              <div class="flex items-center gap-5 pt-2 border-t border-border-subtle">
+                <div>
+                  <span class="text-[10px] tracking-widest text-text-muted uppercase block">Role</span>
+                  <span class="text-sm text-text-secondary">{work.data.role}</span>
+                </div>
+                <div class="w-px h-6 bg-border-subtle" aria-hidden="true" />
+                <div>
+                  <span class="text-[10px] tracking-widest text-text-muted uppercase block">Year</span>
+                  <span class="text-sm text-text-secondary">{work.data.year}</span>
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <!-- ── Progress dots (horizontal scroll indicator at bottom) ───────────── -->
+    <div
+      id="carousel-dots"
+      class="absolute left-0 right-0 z-30 flex items-center justify-center gap-2"
+      style={`bottom: ${DOTS_BOTTOM}px`}
+      role="tablist"
+      aria-label="Carousel progress"
+    >
+      {
+        works.map((work, i) => (
+          <button
+            class="carousel-dot h-1.5 rounded-full transition-colors"
+            style="width: 6px; background: var(--color-border);"
+            data-index={i}
+            role="tab"
+            aria-selected={i === 0 ? "true" : "false"}
+            aria-label={`Go to ${work.data.title}`}
+            aria-controls="carousel-track"
+          />
+        ))
+      }
+    </div>
+
+    <!-- ── Scroll hint (fades out after first interaction) ───────────────── -->
+    <p
+      id="carousel-hint"
+      class="absolute left-1/2 -translate-x-1/2 text-[11px] tracking-widest text-text-muted uppercase z-30"
+      style={`bottom: ${DOTS_BOTTOM + DOTS_BAND + META_HEIGHT + 12}px`}
+      aria-hidden="true"
+    >
+      scroll
+    </p>
+  </div>
+</section>
+
+<script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+
+  gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  const pin       = document.getElementById("carousel-pin")!;
+  const stage     = document.getElementById("carousel-stage")!;
+  const track     = document.getElementById("carousel-track")!;
+  const hint      = document.getElementById("carousel-hint")!;
+  const metaInner = document.getElementById("carousel-meta-inner")!;
+  const cards     = gsap.utils.toArray<HTMLElement>(".carousel-card");
+  const dots      = gsap.utils.toArray<HTMLButtonElement>(".carousel-dot");
+  const panels    = gsap.utils.toArray<HTMLElement>(".card-meta-panel");
+  const numCards  = cards.length;
+
+  if (numCards === 0) throw new Error("No carousel cards found");
+
+  // ── 3D constants — tuned for the dramatic reference look ─────────────────
+  const ROT_MAX     = 42;   // Y-axis degrees at full distance
+  const SCALE_MIN   = 0.72; // scale of fully-offset adjacent card
+  const Z_MIN       = -130; // translateZ (px) at full distance
+  const OPACITY_MIN = 0.28; // opacity of fully-offset card
+  const BLUR_MAX    = 3.5;  // blur (px) at full distance
+
+  // ── Responsive card width ─────────────────────────────────────────────────
+  function getCardWidth(): number {
+    const vw = window.innerWidth;
+    if (vw < 640)  return vw * 0.9;
+    if (vw < 1024) return Math.min(vw * 0.62, 580);
+    return Math.min(vw * 0.50, 700);
+  }
+
+  function getGap(): number {
+    return window.innerWidth < 768 ? 20 : 40;
+  }
+
+  function applyCardWidth() {
+    const w = getCardWidth();
+    cards.forEach((c) => gsap.set(c, { width: w }));
+    metaInner.style.width = `${w}px`;
+  }
+
+  function getTrackBounds() {
+    const w   = getCardWidth();
+    const gap = getGap();
+    const vw  = window.innerWidth;
+    const startX = (vw - w) / 2;
+    const endX   = startX - (numCards - 1) * (w + gap);
+    return { startX, endX };
+  }
+
+  // ── Per-card 3D transforms ────────────────────────────────────────────────
+  function updateCards(progress: number) {
+    const active = progress * (numCards - 1); // fractional active index
+
+    cards.forEach((card, i) => {
+      const dist    = i - active;
+      const absD    = Math.abs(dist);
+      // Use a slightly nonlinear curve so the center pops more
+      const t       = Math.min(Math.pow(absD, 0.85), 1);
+
+      gsap.set(card, {
+        rotationY:      dist * ROT_MAX,
+        scale:          1 - t * (1 - SCALE_MIN),
+        z:              t * Z_MIN,
+        opacity:        1 - t * (1 - OPACITY_MIN),
+        filter:         `blur(${(t * BLUR_MAX).toFixed(1)}px)`,
+        transformStyle: "preserve-3d",
+        zIndex:         Math.round(20 - absD * 8),
+      });
+    });
+  }
+
+  // ── Metadata crossfade ────────────────────────────────────────────────────
+  let lastActivePanel = 0;
+
+  function updateMeta(progress: number) {
+    const next = Math.round(progress * (numCards - 1));
+    if (next === lastActivePanel) return;
+
+    // Fade out current
+    gsap.to(panels[lastActivePanel], {
+      opacity: 0,
+      y: -8,
+      duration: 0.3,
+      ease: "power2.in",
+      onComplete() {
+        panels[lastActivePanel].setAttribute("aria-hidden", "true");
+      },
+    });
+
+    // Fade in next
+    gsap.fromTo(
+      panels[next],
+      { opacity: 0, y: 10 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.4,
+        ease: "power2.out",
+        onStart() {
+          panels[next].setAttribute("aria-hidden", "false");
+        },
+      }
+    );
+
+    lastActivePanel = next;
+  }
+
+  // ── Dot indicators ────────────────────────────────────────────────────────
+  function updateDots(active: number) {
+    const idx = Math.round(active);
+    dots.forEach((dot, i) => {
+      dot.setAttribute("aria-selected", String(i === idx));
+      gsap.to(dot, {
+        width:      i === idx ? 22 : 6,
+        background: i === idx ? "var(--color-accent)" : "var(--color-border)",
+        duration:   0.35,
+        ease:       "power2.out",
+      });
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // REDUCED MOTION: static grid, no 3D, no pinning
+  // ─────────────────────────────────────────────────────────────────────────
+  if (prefersReducedMotion) {
+    gsap.set(pin, { height: "auto", overflow: "visible" });
+    gsap.set(stage, {
+      position: "relative",
+      display: "block",
+      padding: "clamp(1.25rem, 5vw, 3rem)",
+      paddingTop: "6rem",
+      paddingBottom: "3rem",
+    });
+    gsap.set(track, {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))",
+      gap: "1.5rem",
+    });
+    cards.forEach((c) => gsap.set(c, { width: "100%", opacity: 1 }));
+    // Show only the static metadata grid (hide pinned meta panel)
+    document.getElementById("carousel-meta")!.style.display = "none";
+    updateDots(0);
+  } else {
+    // ─────────────────────────────────────────────────────────────────────
+    // FULL CAROUSEL
+    // ─────────────────────────────────────────────────────────────────────
+
+    applyCardWidth();
+    const { startX } = getTrackBounds();
+    gsap.set(track, { x: startX });
+    updateCards(0);
+    updateDots(0);
+
+    let currentProgress = 0;
+    let hintFaded = false;
+
+    const section = document.getElementById("works-section")!;
+
+    const st = ScrollTrigger.create({
+      trigger:    section,
+      pin:        pin,
+      pinSpacing: true,
+      start:      "top top",
+      end:        () => `+=${(numCards - 1) * window.innerHeight * 0.85}`,
+      scrub:      1.0,
+      snap: {
+        snapTo:   1 / (numCards - 1),
+        duration: { min: 0.3, max: 0.65 },
+        delay:    0.06,
+        ease:     "power2.inOut",
+      },
+      onUpdate(self) {
+        const p = self.progress;
+        currentProgress = p;
+
+        const { startX: sx, endX: ex } = getTrackBounds();
+        gsap.set(track, { x: gsap.utils.interpolate(sx, ex, p) });
+        updateCards(p);
+        updateDots(p * (numCards - 1));
+        updateMeta(p);
+
+        if (!hintFaded && p > 0.03) {
+          hintFaded = true;
+          gsap.to(hint, { opacity: 0, duration: 0.4 });
+        }
+      },
+    });
+
+    // ── Keyboard navigation ───────────────────────────────────────────────
+    let kbIndex = 0;
+
+    function scrollToCard(idx: number) {
+      kbIndex = gsap.utils.clamp(0, numCards - 1, idx);
+      const p = numCards > 1 ? kbIndex / (numCards - 1) : 0;
+      gsap.to(window, {
+        scrollTo: st.start + p * (st.end - st.start),
+        duration: 0.65,
+        ease: "power2.inOut",
+      });
+    }
+
+    pin.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault(); scrollToCard(kbIndex + 1);
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault(); scrollToCard(kbIndex - 1);
+      }
+    });
+
+    ScrollTrigger.create({
+      trigger: section,
+      start:   "top top",
+      end:     () => `+=${(numCards - 1) * window.innerHeight * 0.85}`,
+      onUpdate(self) { kbIndex = Math.round(self.progress * (numCards - 1)); },
+    });
+
+    dots.forEach((dot, i) => dot.addEventListener("click", () => scrollToCard(i)));
+    cards.forEach((card, i) =>
+      card.addEventListener("focus", () => scrollToCard(i), { capture: true })
+    );
+
+    // ── Resize handler ────────────────────────────────────────────────────
+    let resizeTm: ReturnType<typeof setTimeout>;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTm);
+      resizeTm = setTimeout(() => {
+        applyCardWidth();
+        const { startX: sx, endX: ex } = getTrackBounds();
+        gsap.set(track, { x: gsap.utils.interpolate(sx, ex, currentProgress) });
+        ScrollTrigger.refresh();
+      }, 150);
+    });
+  }
+</script>
