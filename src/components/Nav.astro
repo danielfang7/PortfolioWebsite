@@ -38,7 +38,7 @@ const { pathname } = Astro.url;
                 <a
                   href={href}
                   class:list={[
-                    "text-sm font-medium tracking-wide transition-colors duration-200 relative group",
+                    "text-sm font-medium tracking-wide transition-colors duration-200",
                     isActive
                       ? "text-text-primary"
                       : "text-text-secondary hover:text-text-primary",
@@ -46,12 +46,6 @@ const { pathname } = Astro.url;
                   aria-current={isActive ? "page" : undefined}
                 >
                   {label}
-                  <span
-                    class:list={[
-                      "absolute -bottom-0.5 left-0 h-px bg-accent transition-all duration-300 ease-out-expo",
-                      isActive ? "w-full" : "w-0 group-hover:w-full",
-                    ]}
-                  />
                 </a>
               </li>
             );
@@ -121,11 +115,9 @@ const { pathname } = Astro.url;
     if (scrollY > 60) {
       nav.style.backdropFilter = "blur(16px)";
       nav.style.background = "rgba(10,10,10,0.85)";
-      nav.style.borderBottom = "1px solid #222222";
     } else {
       nav.style.backdropFilter = "";
       nav.style.background = "";
-      nav.style.borderBottom = "";
     }
     lastScroll = scrollY;
   };
