@@ -139,52 +139,31 @@ const socialLinks = [
 <script>
   import { gsap } from "gsap";
 
-  const prefersReducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  ).matches;
+  function initHero() {
+    const hero = document.getElementById("hero");
+    if (!hero) return;
 
-  if (!prefersReducedMotion) {
-    // Staggered entrance animation on load
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    tl.fromTo(
-      "#hero-eyebrow",
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.7 }
-    )
-      .fromTo(
-        "#hero-headline",
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.8 },
-        "-=0.4"
-      )
-      .fromTo(
-        "#hero-subtext",
-        { opacity: 0, y: 24 },
-        { opacity: 1, y: 0, duration: 0.7 },
-        "-=0.5"
-      )
-      .fromTo(
-        "#hero-actions",
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.6 },
-        "-=0.4"
-      )
-      .fromTo(
-        "#hero-scroll-cue",
-        { opacity: 0 },
-        { opacity: 1, duration: 0.8 },
-        "-=0.1"
-      );
-  } else {
-    // Show all elements immediately for reduced-motion users
-    document
-      .querySelectorAll<HTMLElement>(
-        "#hero-eyebrow, #hero-headline, #hero-subtext, #hero-actions, #hero-scroll-cue"
-      )
-      .forEach((el) => {
-        el.style.opacity = "1";
-        el.style.transform = "none";
-      });
+    if (!prefersReducedMotion) {
+      // Staggered entrance — fromTo sets initial state programmatically so
+      // elements are always visible if this function doesn't run (no CSS hiding).
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      tl.fromTo("#hero-eyebrow",    { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7 })
+        .fromTo("#hero-headline",   { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 }, "-=0.4")
+        .fromTo("#hero-subtext",    { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7 }, "-=0.5")
+        .fromTo("#hero-actions",    { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.4")
+        .fromTo("#hero-scroll-cue", { opacity: 0 },        { opacity: 1, duration: 0.8 },       "-=0.1");
+    }
+    // Reduced-motion: elements are visible by default (no CSS opacity:0)
   }
+
+  let _heroFired = false;
+  document.addEventListener("astro:page-load", () => {
+    _heroFired = true;
+    initHero();
+  });
+  requestAnimationFrame(() => {
+    if (!_heroFired) initHero();
+  });
 </script>
