@@ -84,28 +84,41 @@ function slug(id: string) {
   import { ScrollTrigger } from "gsap/ScrollTrigger";
   gsap.registerPlugin(ScrollTrigger);
 
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function initGrid() {
+    const cards = gsap.utils.toArray<HTMLElement>(".works-grid-card");
+    if (cards.length === 0) return;
 
-  if (!prefersReducedMotion) {
-    gsap.utils.toArray<HTMLElement>(".works-grid-card").forEach((card, i) => {
-      gsap.fromTo(card,
-        { opacity: 0, y: 28 },
-        {
-          opacity: 1, y: 0,
-          duration: 0.55,
-          delay: (i % 3) * 0.07,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: card,
-            start: "top 88%",
-            toggleActions: "play none none none",
-          },
-        }
-      );
-    });
-  } else {
-    document.querySelectorAll<HTMLElement>(".works-grid-card").forEach((el) => {
-      el.style.opacity = "1";
-    });
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!prefersReducedMotion) {
+      cards.forEach((card, i) => {
+        gsap.fromTo(
+          card,
+          { opacity: 0, y: 28 },
+          {
+            opacity: 1, y: 0,
+            duration: 0.55,
+            delay: (i % 3) * 0.07,
+            ease: "power3.out",
+            scrollTrigger: {
+              id: `works-grid-${i}`,
+              trigger: card,
+              start: "top 88%",
+              toggleActions: "play none none none",
+            },
+          }
+        );
+      });
+    }
+    // Reduced-motion: cards are already visible (no CSS opacity:0 on them)
   }
+
+  let _gridFired = false;
+  document.addEventListener("astro:page-load", () => {
+    _gridFired = true;
+    initGrid();
+  });
+  requestAnimationFrame(() => {
+    if (!_gridFired) initGrid();
+  });
 </script>
