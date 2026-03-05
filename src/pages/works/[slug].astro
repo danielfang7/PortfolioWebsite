@@ -433,12 +433,11 @@ const galleryItems: GalleryItem[] =
   <!-- ── Lightbox modal ────────────────────────────────────────────────── -->
   <div
     id="lightbox"
-    class="fixed inset-0 z-[100] flex items-center justify-center"
-    style="background: rgba(5,5,5,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);"
+    class="fixed inset-0 z-[100] items-center justify-center"
+    style="display: none; background: rgba(5,5,5,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);"
     role="dialog"
     aria-modal="true"
     aria-label="Image viewer"
-    hidden
   >
     <!-- Close -->
     <button
@@ -741,13 +740,13 @@ const galleryItems: GalleryItem[] =
       renderContent(getItemData(galleryBtns[currentIdx]));
       updateCounter();
       updateNavButtons();
-      lightbox!.hidden = false;
+      lightbox!.style.display = "flex";
       document.body.style.overflow = "hidden";
       lbClose?.focus();
     }
 
     function closeLightbox() {
-      lightbox!.hidden = true;
+      lightbox!.style.display = "none";
       document.body.style.overflow = "";
       galleryBtns[currentIdx]?.focus();
     }
@@ -771,7 +770,7 @@ const galleryItems: GalleryItem[] =
 
     // Keyboard navigation — use abort signal so listeners don't stack on re-navigation
     document.addEventListener("keydown", (e) => {
-      if (lightbox!.hidden) return;
+      if (lightbox!.style.display === "none") return;
       if (e.key === "Escape")        closeLightbox();
       else if (e.key === "ArrowLeft")  showPrev();
       else if (e.key === "ArrowRight") showNext();
