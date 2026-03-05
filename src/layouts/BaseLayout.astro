@@ -14,7 +14,7 @@ interface Props {
 const {
   title = "Daniel Fang — Frontend Engineer",
   description = "Frontend engineer building thoughtful digital experiences. Showcasing creative projects, investment activity, and written content.",
-  ogImage = "/og-default.png",
+  ogImage = "/og-default.svg",
   noindex = false,
 } = Astro.props;
 
@@ -39,7 +39,7 @@ const fullTitle = title.includes("Daniel Fang")
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -71,9 +71,13 @@ const fullTitle = title.includes("Daniel Fang")
       }
     </script>
 
-    <!-- Font preload hints -->
+    <!-- Font connections — preconnect speeds up Google Fonts DNS + TLS -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Web manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#0a0a0a" />
 
     <!-- View Transitions (soft navigation + shared-element morphing) -->
     <ClientRouter />

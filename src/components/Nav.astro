@@ -103,57 +103,65 @@ const { pathname } = Astro.url;
 </header>
 
 <script>
-  const nav = document.getElementById("site-nav")!;
-  const menuBtn = document.getElementById("mobile-menu-btn")!;
-  const mobileMenu = document.getElementById("mobile-menu")!;
-  const bars = menuBtn.querySelectorAll(".mobile-bar");
+  function initNav() {
+    const nav = document.getElementById("site-nav");
+    const menuBtn = document.getElementById("mobile-menu-btn");
+    const mobileMenu = document.getElementById("mobile-menu");
+    if (!nav || !menuBtn || !mobileMenu) return;
 
-  // Scroll-based nav background
-  let lastScroll = 0;
-  const onScroll = () => {
-    const scrollY = window.scrollY;
-    if (scrollY > 60) {
-      nav.style.backdropFilter = "blur(16px)";
-      nav.style.background = "rgba(10,10,10,0.85)";
-    } else {
-      nav.style.backdropFilter = "";
-      nav.style.background = "";
-    }
-    lastScroll = scrollY;
-  };
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
+    const bars = menuBtn.querySelectorAll<HTMLElement>(".mobile-bar");
 
-  // Mobile menu toggle
-  let isOpen = false;
-  menuBtn.addEventListener("click", () => {
-    isOpen = !isOpen;
-    menuBtn.setAttribute("aria-expanded", String(isOpen));
-    mobileMenu.classList.toggle("hidden", !isOpen);
+    // Scroll-based nav background
+    const onScroll = () => {
+      const scrollY = window.scrollY;
+      if (scrollY > 60) {
+        nav.style.backdropFilter = "blur(16px)";
+        nav.style.background = "rgba(10,10,10,0.85)";
+      } else {
+        nav.style.backdropFilter = "";
+        nav.style.background = "";
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
 
-    if (isOpen) {
-      (bars[0] as HTMLElement).style.transform = "translateY(7px) rotate(45deg)";
-      (bars[1] as HTMLElement).style.transform = "translateY(-7px) rotate(-45deg)";
-      (bars[2] as HTMLElement).style.opacity = "0";
-      (bars[2] as HTMLElement).style.transform = "scaleX(0)";
-    } else {
-      (bars[0] as HTMLElement).style.transform = "";
-      (bars[1] as HTMLElement).style.transform = "";
-      (bars[2] as HTMLElement).style.opacity = "";
-      (bars[2] as HTMLElement).style.transform = "";
-    }
-  });
-
-  // Close menu on link click
-  mobileMenu.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", () => {
+    function closeMobileMenu() {
       isOpen = false;
       menuBtn.setAttribute("aria-expanded", "false");
       mobileMenu.classList.add("hidden");
-      (bars[0] as HTMLElement).style.transform = "";
-      (bars[1] as HTMLElement).style.transform = "";
-      (bars[2] as HTMLElement).style.opacity = "";
-      (bars[2] as HTMLElement).style.transform = "";
+      bars[0].style.transform = "";
+      bars[1].style.transform = "";
+      bars[2].style.opacity = "";
+      bars[2].style.transform = "";
+    }
+
+    // Reset mobile menu on every navigation (handles Astro View Transitions)
+    closeMobileMenu();
+
+    // Mobile menu toggle
+    let isOpen = false;
+    menuBtn.addEventListener("click", () => {
+      isOpen = !isOpen;
+      menuBtn.setAttribute("aria-expanded", String(isOpen));
+      mobileMenu.classList.toggle("hidden", !isOpen);
+
+      if (isOpen) {
+        bars[0].style.transform = "translateY(7px) rotate(45deg)";
+        bars[1].style.transform = "translateY(-7px) rotate(-45deg)";
+        bars[2].style.opacity = "0";
+        bars[2].style.transform = "scaleX(0)";
+      } else {
+        closeMobileMenu();
+      }
     });
-  });
+
+    // Close menu on link click
+    mobileMenu.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => closeMobileMenu());
+    });
+  }
+
+  // Run on initial load and after every Astro view transition
+  initNav();
+  document.addEventListener("astro:after-swap", initNav);
 </script>

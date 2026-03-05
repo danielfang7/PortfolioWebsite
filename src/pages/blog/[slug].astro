@@ -28,12 +28,37 @@ function formatDate(date: Date) {
     day: "numeric",
   });
 }
+
+const postSlug = slug(post.id);
+const canonicalUrl = `https://danielfang.me/blog/${postSlug}`;
+const blogPostingJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: post.data.title,
+  description: post.data.excerpt,
+  datePublished: post.data.date.toISOString(),
+  author: {
+    "@type": "Person",
+    name: "Daniel Fang",
+    url: "https://danielfang.me",
+  },
+  publisher: {
+    "@type": "Person",
+    name: "Daniel Fang",
+    url: "https://danielfang.me",
+  },
+  url: canonicalUrl,
+  mainEntityOfPage: canonicalUrl,
+  keywords: post.data.tags.join(", "),
+};
 ---
 
 <BaseLayout
   title={post.data.title}
   description={post.data.excerpt}
 >
+  <script type="application/ld+json" set:html={JSON.stringify(blogPostingJsonLd)} />
+
   <article class="pt-32 section-padding">
     <div class="container-content max-w-3xl">
       <!-- Back -->
