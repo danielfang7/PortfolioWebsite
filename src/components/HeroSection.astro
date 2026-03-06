@@ -34,42 +34,43 @@ const socialLinks = [
   />
 
   <div class="container-content relative z-10 pt-28 pb-20 md:pt-36 md:pb-28">
-    <div class="max-w-4xl">
-      <!-- Eyebrow -->
-      <div id="hero-eyebrow" class="anim-fade-up mb-6 flex items-center gap-3">
-        <span class="accent-line" aria-hidden="true" />
-        <span class="text-sm font-medium tracking-widest text-accent uppercase">
-          Frontend Engineer
-        </span>
-      </div>
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12 lg:gap-16">
+      <div class="max-w-2xl flex-shrink-0">
+        <!-- Eyebrow -->
+        <div id="hero-eyebrow" class="anim-fade-up mb-6 flex items-center gap-3">
+          <span class="accent-line" aria-hidden="true" />
+          <span class="text-sm font-medium tracking-widest text-accent uppercase">
+            Founder, Engineer, Investor
+          </span>
+        </div>
 
-      <!-- Headline -->
-      <h1
-        id="hero-headline"
-        class="anim-fade-up font-display text-display-xl font-bold text-text-primary text-balance mb-6"
-        style="animation-delay: 100ms;"
-      >
-        Building things
-        <br />
-        <em class="not-italic gradient-text">worth experiencing.</em>
-      </h1>
+        <!-- Headline -->
+        <h1
+          id="hero-headline"
+          class="anim-fade-up font-display text-display-md font-bold text-text-primary text-balance mb-6"
+          style="animation-delay: 100ms;"
+        >
+          Building is my passion.
+          <br />
+          <em class="not-italic gradient-text">Inspiration keeps me building.</em>
+        </h1>
 
-      <!-- Subtext -->
-      <p
-        id="hero-subtext"
-        class="anim-fade-up text-lg md:text-xl text-text-secondary max-w-lg leading-relaxed mb-10"
-        style="animation-delay: 200ms;"
-      >
-        I design and engineer high-quality web experiences — from expressive
-        interfaces to the systems that power them.
-      </p>
+        <!-- Subtext -->
+        <p
+          id="hero-subtext"
+          class="anim-fade-up text-base md:text-lg text-text-secondary max-w-lg leading-relaxed mb-10"
+          style="animation-delay: 200ms;"
+        >
+          YC founder. I design and engineer products and systems, angel
+          invest in early-stage founders, and invest in equities. 
+        </p>
 
-      <!-- CTAs + Social links -->
-      <div
-        id="hero-actions"
-        class="anim-fade-up flex flex-wrap items-center gap-6"
-        style="animation-delay: 300ms;"
-      >
+        <!-- CTAs + Social links -->
+        <div
+          id="hero-actions"
+          class="anim-fade-up flex flex-wrap items-center gap-6"
+          style="animation-delay: 300ms;"
+        >
         <a
           href="/works"
           class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-accent text-white font-semibold text-sm tracking-wide hover:bg-accent-hover transition-all duration-200 ease-out-expo hover:-translate-y-px hover:shadow-lg hover:shadow-accent/20"
@@ -100,6 +101,24 @@ const socialLinks = [
             }
           </ul>
         </nav>
+      </div>
+      </div>
+
+      <!-- Hero image -->
+      <div
+        id="hero-image"
+        class="anim-fade-up flex-shrink-0 lg:w-[380px] xl:w-[420px] order-first lg:order-last"
+        style="animation-delay: 150ms;"
+      >
+        <img
+          src="/Fang_Daniel_114-PilotSF-1471%20-%20use.jpg"
+          alt="Daniel Fang"
+          class="rounded-2xl w-full aspect-[3/4] object-cover shadow-2xl shadow-black/40"
+          width="420"
+          height="560"
+          loading="eager"
+          fetchpriority="high"
+        />
       </div>
     </div>
   </div>
@@ -153,6 +172,7 @@ const socialLinks = [
         .fromTo("#hero-headline",   { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 }, "-=0.4")
         .fromTo("#hero-subtext",    { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7 }, "-=0.5")
         .fromTo("#hero-actions",    { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.4")
+        .fromTo("#hero-image",      { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.8 }, "-=1.2")
         .fromTo("#hero-scroll-cue", { opacity: 0 },        { opacity: 1, duration: 0.8 },       "-=0.1");
     }
     // Reduced-motion: elements are visible by default (no CSS opacity:0)
