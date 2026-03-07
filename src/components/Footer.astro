@@ -2,16 +2,19 @@
 const year = new Date().getFullYear();
 
 const socialLinks = [
-  { label: "GitHub", href: "https://github.com/danielfang", icon: "github" },
-  { label: "LinkedIn", href: "https://linkedin.com/in/danielfang", icon: "linkedin" },
-  { label: "X / Twitter", href: "https://twitter.com/danielfang", icon: "x" },
+  { label: "GitHub", href: "https://github.com/danielfang7", icon: "github" },
+  { label: "LinkedIn", href: "https://linkedin.com/in/danielfang7", icon: "linkedin" },
+  { label: "X / Twitter", href: "https://twitter.com/danielfang7", icon: "x" },
 ];
 ---
 
-<footer class="border-t border-border-subtle section-padding" aria-label="Site footer">
+<footer
+  class="mt-10 md:mt-14 border-t border-border-subtle py-5 md:py-6"
+  aria-label="Site footer"
+>
   <div class="container-content">
-    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-      <div class="flex flex-col items-center md:items-start gap-1">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4 min-h-16 md:min-h-20">
+      <div class="flex flex-col items-center md:items-start gap-0.5">
         <span class="font-display font-bold text-text-primary">Daniel Fang</span>
         <span class="text-sm text-text-muted">
           &copy; {year} — Built with Astro &amp; GSAP
@@ -19,7 +22,7 @@ const socialLinks = [
       </div>
 
       <nav aria-label="Social links">
-        <ul class="flex items-center gap-5" role="list">
+        <ul class="flex items-center gap-4 md:gap-5" role="list">
           {
             socialLinks.map(({ label, href }) => (
               <li>
