@@ -139,6 +139,14 @@ const creativeWorkJsonLd = {
         class="absolute rounded-full blur-3xl"
         style={`width: clamp(100px, 16vw, 220px); height: clamp(100px, 16vw, 220px); right: 20%; top: 50%; transform: translateY(-50%); background: ${gradTo}; opacity: 0.22;`}
       />
+      <!-- Thumbnail image -->
+      {work.data.thumbnail && (
+        <img
+          src={work.data.thumbnail}
+          alt={work.data.title}
+          class="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
       <!-- Top shine line -->
       <div
         class="absolute top-0 left-0 right-0 h-px"

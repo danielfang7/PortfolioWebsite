@@ -134,6 +134,13 @@ const META_HEIGHT = 88;
                       style="background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);"
                       aria-hidden="true"
                     />
+                    {work.data.thumbnail && (
+                      <img
+                        src={work.data.thumbnail}
+                        alt={work.data.title}
+                        class="absolute inset-0 w-full h-full object-cover"
+                      />
+                    )}
                     <div
                       class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300"
                       style="background: rgba(10,10,10,0.5); backdrop-filter: blur(4px);"

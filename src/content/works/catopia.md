@@ -1,5 +1,5 @@
 ---
-title: "AI Writing Tool"
+title: "Catopia"
 description: "Browser-based writing assistant with context-aware suggestions, tone adjustment, and export to Notion."
 role: "Sole Developer"
 year: "2024"

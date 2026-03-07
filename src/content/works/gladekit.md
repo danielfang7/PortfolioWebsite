@@ -4,9 +4,9 @@ description: "AI agent for game development"
 role: "Founder"
 year: "2026"
 stack: ["Electron", "React", "Typescript", "FastAPI", "AWS ECS/Fargate", "Unity 6"]
-thumbnail: "/images/works/placeholder.png"
+thumbnail: "/images/works/gladekit.png"
 images: []
-liveUrl: "https://gladetki.com"
+liveUrl: "https://gladekit.com"
 sourceUrl: "https://github.com/Glade-tool/GladeKitUnityPlugin"
 featured: true
 order: 1

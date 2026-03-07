@@ -1,10 +1,10 @@
 ---
-title: "Component Library"
+title: "GladeCore"
 description: "A production design system with 60+ components, theming, and full Storybook documentation."
-role: "Lead Engineer"
-year: "2023"
-stack: ["React", "TypeScript", "Storybook", "CSS Modules"]
-thumbnail: "/images/works/design-system.png"
+role: "Founder"
+year: "2025"
+stack: ["C++", "Unreal Engine", "Unity", "Piper"]
+thumbnail: "/images/works/GladeCore_ProjectImage.png"
 images: []
 featured: true
 order: 2

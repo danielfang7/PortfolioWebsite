@@ -1,9 +1,9 @@
 ---
-title: "Analytics Dashboard"
-description: "Real-time data visualization platform with interactive charts and customizable widgets."
-role: "Frontend Lead"
+title: "Cursed Crown"
+description: "Co-Op Multiplayer, 3D action RPG built in Unreal Engine"
+role: "Founder"
 year: "2023"
-stack: ["Next.js", "D3.js", "Zustand", "Tailwind CSS"]
+stack: ["C++", "Unreal Engine 5", "GameplayAbilitySystem"]
 thumbnail: "/images/works/dashboard.png"
 images: []
 featured: false
