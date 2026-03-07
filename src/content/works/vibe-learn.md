@@ -1,5 +1,5 @@
 ---
-title: "Mobile Finance App"
+title: "Vibe Learn"
 description: "Cross-platform personal finance app with AI-powered spending insights and budget tracking."
 role: "Full-Stack Engineer"
 year: "2024"
