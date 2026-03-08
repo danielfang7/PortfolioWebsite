@@ -18,7 +18,7 @@ function slug(id: string) {
 }
 
 const NAV_H = 80;
-const META_HEIGHT = 88;
+const META_HEIGHT = 108;
 ---
 
 <section
@@ -197,9 +197,9 @@ const META_HEIGHT = 88;
               class="card-meta-panel absolute inset-x-0"
               data-index={i}
               aria-hidden={i !== 0 ? "true" : "false"}
-              style={`opacity: ${i === 0 ? 1 : 0}; transform: translateY(${i === 0 ? 0 : 10}px);`}
+              style={`opacity: ${i === 0 ? 1 : 0}; transform: translateY(${i === 0 ? 0 : 10}px); pointer-events: ${i === 0 ? "auto" : "none"};`}
             >
-              <div class="flex items-baseline justify-between gap-4 mb-2">
+              <div class="flex items-baseline justify-between gap-4 mb-1.5">
                 <a
                   href={`/works/${slug(work.id)}`}
                   class="font-display font-bold text-base md:text-lg text-text-primary hover:text-accent transition-colors duration-200 flex items-center gap-2 group"
@@ -217,6 +217,7 @@ const META_HEIGHT = 88;
                   {String(i + 1).padStart(2, "0")} / {String(works.length).padStart(2, "0")}
                 </span>
               </div>
+              <p class="text-xs text-text-muted mb-2 leading-snug">{work.data.description}</p>
               <div class="flex items-center gap-5 pt-2 border-t border-border-subtle">
                 <div>
                   <span class="text-[10px] tracking-widest text-text-muted uppercase block">Role</span>
@@ -330,7 +331,7 @@ const META_HEIGHT = 88;
 
     if (numCards === 0) return;
 
-    const META_HEIGHT = 88;
+    const META_HEIGHT = 108;
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -373,11 +374,13 @@ const META_HEIGHT = 88;
       metaInner.style.width  = `${w}px`;
       metaInner.style.height = `${META_HEIGHT}px`;
 
-      // Position arrows just outside the active card
+      // Position arrows symmetrically outside the active card
       const arrowGap  = 16;
       const arrowSize = 44;
-      prevBtn.style.left = `calc(50% - ${w / 2 + arrowGap + arrowSize}px)`;
-      nextBtn.style.left = `calc(50% + ${w / 2 + arrowGap}px)`;
+      prevBtn.style.left  = `calc(50% - ${w / 2 + arrowGap + arrowSize}px)`;
+      prevBtn.style.right = "";
+      nextBtn.style.right = `calc(50% - ${w / 2 + arrowGap + arrowSize}px)`;
+      nextBtn.style.left  = "";
     }
 
     // ── Per-card 3D transforms ────────────────────────────────────────────
@@ -411,14 +414,20 @@ const META_HEIGHT = 88;
 
       gsap.to(panels[prev], {
         opacity: 0, y: -8, duration: 0.3, ease: "power2.in",
-        onComplete() { panels[prev].setAttribute("aria-hidden", "true"); },
+        onComplete() {
+          panels[prev].setAttribute("aria-hidden", "true");
+          (panels[prev] as HTMLElement).style.pointerEvents = "none";
+        },
       });
       gsap.fromTo(
         panels[newIdx],
         { opacity: 0, y: 10 },
         {
           opacity: 1, y: 0, duration: 0.4, ease: "power2.out",
-          onStart() { panels[newIdx].setAttribute("aria-hidden", "false"); },
+          onStart() {
+            panels[newIdx].setAttribute("aria-hidden", "false");
+            (panels[newIdx] as HTMLElement).style.pointerEvents = "auto";
+          },
         }
       );
     }
@@ -446,6 +455,15 @@ const META_HEIGHT = 88;
     let currentIndex = 0;
     let isAnimating  = false;
 
+    // Only the active card's <a> tag receives pointer events so that
+    // clicking a non-active card never triggers link navigation.
+    function updateCardLinks(activeIdx: number) {
+      cards.forEach((card, i) => {
+        const link = card.querySelector<HTMLElement>("a");
+        if (link) link.style.pointerEvents = i === activeIdx ? "auto" : "none";
+      });
+    }
+
     function goToCard(idx: number) {
       const newIdx = gsap.utils.clamp(0, numCards - 1, idx);
       if (newIdx === currentIndex || isAnimating) return;
@@ -456,6 +474,7 @@ const META_HEIGHT = 88;
       updateMeta(newIdx);
       updateDots(newIdx);
       updateArrows(newIdx);
+      updateCardLinks(newIdx);
 
       const p = numCards > 1 ? newIdx / (numCards - 1) : 0;
       const { startX, endX } = getTrackBounds();
@@ -505,6 +524,7 @@ const META_HEIGHT = 88;
       updateCards(0);
       updateDots(0);
       updateArrows(0);
+      updateCardLinks(0);
 
       // Button clicks
       prevBtn.addEventListener("click", () => goToCard(currentIndex - 1), { signal: carouselAbort!.signal });
@@ -519,6 +539,15 @@ const META_HEIGHT = 88;
       cards.forEach((card, i) =>
         card.addEventListener("focus", () => goToCard(i), { capture: true, signal: carouselAbort!.signal })
       );
+
+      // Card clicks — non-active cards have pointer-events:none on their <a>,
+      // so clicks land on the article and we just navigate to that card.
+      // Active card's <a> has pointer-events:auto so the link works normally.
+      cards.forEach((card, i) => {
+        card.addEventListener("click", () => {
+          if (i !== currentIndex) goToCard(i);
+        }, { signal: carouselAbort!.signal });
+      });
 
       // Keyboard navigation
       pin.addEventListener("keydown", (e: KeyboardEvent) => {
