@@ -1,8 +1,6 @@
 # danielfang.me
 
-Personal portfolio and showcase site for **Daniel Fang** — engineering, projects, investments, and writing. Built to demonstrate craft through the site itself: clean layout, modern animations, and a 3D scroll-linked works carousel.
-
-**Domain:** [danielfang.me](https://danielfang.me) · **Hosting:** Netlify · **Status:** In development
+Personal portfolio and showcase site for **Daniel Fang** - engineering, projects, investments, and writing. 
 
 ---
 
@@ -12,9 +10,9 @@ Personal portfolio and showcase site for **Daniel Fang** — engineering, projec
 |-------|------------|
 | **Framework** | [Astro](https://astro.build) 5 (static by default, React islands where needed) |
 | **Styling** | [Tailwind CSS](https://tailwindcss.com) + CSS custom properties (design tokens) |
-| **Animation** | [GSAP](https://gsap.com) (ScrollTrigger, ScrollToPlugin) + optional [Lenis](https://lenis.studio) (smooth scroll) |
-| **Content** | Astro Content Collections — Markdown for works, MDX for blog |
-| **Deployment** | [Netlify](https://netlify.com) (continuous deploy from Git) |
+| **Animation** | [GSAP](https://gsap.com) (ScrollTrigger, ScrollToPlugin)
+| **Content** | Astro Content Collections - Markdown for works, MDX for blog |
+| **Deployment** | [Netlify](https://netlify.com) 
 
 ---
 
@@ -58,7 +56,7 @@ The site follows a single-page–style flow with scroll sections and deep-linkab
 - **Keep it simple** — Clean, readable layout; animations that enhance, not distract.
 - **Drive engagement** — Clear paths to works, blog, investments, and contact.
 
-### Non-goals (v1)
+### Non-goals
 
 - No CMS or admin panel (content via code/markdown).
 - No e-commerce or payments.
@@ -93,12 +91,3 @@ The site follows a single-page–style flow with scroll sections and deep-linkab
 - **Palette:** Dark base (`#0A0A0A`), surface shades, off-white text, single accent (e.g. `#6C63FF`).
 - **Typography:** Display (Syne), body (Plus Jakarta Sans), mono (JetBrains Mono).
 - **Motion:** Consistent easing (`cubic-bezier(0.16, 1, 0.3, 1)`), durations 150–600ms; all animations respect `prefers-reduced-motion`.
-
----
-
-## Deployment (Netlify)
-
-- **Build command:** `npm run build`
-- **Publish directory:** `dist`
-- **Node:** 20 (set in `netlify.toml`)
-- Custom domain `danielfang.me` configured via Netlify DNS.
