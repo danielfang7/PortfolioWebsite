@@ -9,5 +9,21 @@ import WorksCarousel from "@/components/WorksCarousel.astro";
   description="Founder and engineer building thoughtful digital experiences. Showcasing creative projects, investment activity, and written content."
 >
   <HeroSection />
+  <!-- Scroll cue: sits in the gap between hero and works on all viewports -->
+  <section
+    id="hero-scroll-cue-wrapper"
+    class="flex justify-center items-center py-8 md:py-10 lg:py-12"
+    aria-hidden="true"
+  >
+    <div
+      id="hero-scroll-cue"
+      class="hero-scroll-cue flex flex-col items-center gap-2"
+    >
+      <span class="text-xs tracking-widest text-text-muted uppercase">Scroll</span>
+      <div class="w-px h-10 scroll-line bg-border relative overflow-hidden">
+        <span class="scroll-shimmer absolute inset-0 bg-gradient-to-b from-transparent via-accent to-transparent" />
+      </div>
+    </div>
+  </section>
   <WorksCarousel />
 </BaseLayout>

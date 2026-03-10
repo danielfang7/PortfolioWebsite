@@ -128,6 +128,11 @@
     opacity: 1 !important;
     transform: none !important;
   }
+
+  .hero-scroll-cue {
+    opacity: 1 !important;
+    animation-delay: 0s !important;
+  }
 }
 
 /* ─── Utility Classes ───────────────────────────────────────────────────────── */
@@ -166,6 +171,27 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Scroll cue (between hero and next section) */
+  .hero-scroll-cue {
+    animation: heroScrollCueFadeIn 0.8s var(--ease-out-expo) 1.2s forwards;
+    opacity: 0;
+  }
+
+  @keyframes heroScrollCueFadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  .scroll-shimmer {
+    animation: shimmerDown 2s ease-in-out infinite;
+  }
+
+  @keyframes shimmerDown {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(200%); }
   }
 
   /* Accent line decorations */

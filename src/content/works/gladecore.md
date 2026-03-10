@@ -1,6 +1,6 @@
 ---
 title: "GladeCore"
-description: "A production design system with 60+ components, theming, and full Storybook documentation."
+description: "LLM powered plugin with built in text-to-speech, speech-to-text, emotional tuning, and RAG"
 role: "Founder"
 year: "2025"
 stack: ["C++", "Unreal Engine", "Unity", "Piper"]
@@ -12,28 +12,40 @@ order: 2
 
 ## Overview
 
-A design system built for a 40-person engineering team that had grown beyond what ad-hoc component sharing could sustain. The codebase had accumulated five different button variants, three modal patterns, and no shared color system. This project replaced all of that with a single, well-documented library.
-
-Over eight months it became the foundation for four separate product surfaces, saving an estimated 2–3 engineering weeks per new feature that required UI work.
+GladeCore is a comprehensive system for integrating advanced, AI-driven NPC interactions into your game engine project. It allows players to engage in dynamic, unscripted conversations with non-player characters or companions using either text or voice. NPCs use local inference to respond in real-time, with their personalities, knowledge, and even their voices defined by easy-to-use data assets that are set up to be designed and configured in the engine.
 
 ## The Problem
 
-When teams scale past a certain size, visual consistency breaks down — not because engineers don't care, but because there's no friction-free way to share and discover shared components. Copy-paste proliferates. Design reviews catch regressions late. New team members reinvent existing patterns.
+1. The Cost Model
+Most commercial tools charge per token or per query. The more engaging the conversations are, the steeper the costs. While manageable at first, ultimately, this pricing model punishes success.
 
-The company had hit this inflection point. The design and engineering teams had diverged: Figma components didn't map 1:1 to code, which meant every handoff required manual translation work. We needed a system that both sides could trust as the source of truth.
+2. Latency
+Even under good conditions, cloud-based models introduce a 1-3 second delay. In gameplay, that lag feels disruptive. It turns fluid conversation into awkward waiting, undermining any sense of presence, responsiveness, and immersion. The magic of real-time interaction disappears.
+
+3. Customization
+The key to successful AI asset generation is writing clear, descriptive prompts. Here are some tips:
+
+We wanted our characters to feel like they belonged in our world, with specific voices, memories, and emotional arcs. But most tools offered limited control over how the model behaved. Prompt engineering could only go so far, and vendor-controlled fine-tuning was often inaccessible or prohibitively complex.
+
+4. Integration Friction
+Many AI solutions came with bulky SDKs that caused build issues, plugin conflicts, or version mismatches across all game engines. What should have been plug-and-play often became weeks of debugging.
+
+5. Connectivity and Privacy
+Without an internet connection, the AI didn’t function at all. All interactions are routed through third-party servers, which also raises red flags for accessibility, privacy, and global compliance. For games launched in Europe or any GDPR-enforced region, transmitting player voice or text data to cloud services can trigger strict rules around consent, data storage, and cross-border transfers. With little transparency in data retention and processing, these systems made global compliance difficult and risky.
 
 ## What I Built
 
-- **60+ production components** — everything from typography primitives to complex data table, date picker, and combobox patterns
-- **Multi-theme support** using CSS custom properties with a light/dark/high-contrast mode, switchable at runtime without a page reload
-- **Storybook documentation** with live prop controls, accessibility annotations, and usage guidelines for every component
-- **Design token pipeline** that syncs Figma variables to CSS and TypeScript constants via a CI step, keeping design and code in sync automatically
-- **Testing suite** using React Testing Library with 94% statement coverage and snapshot tests for visual regression detection
+The plugin’s core features include:
+
+LLM-Powered Dialogue: Utilizes local LLM inference to generate dynamic NPC responses.
+Speech-to-Text (STT): Allows the player to use their microphone to speak to NPCs.
+Text-to-Speech (TTS): Enables NPCs to audibly speak their generated responses using either ElevenLabs’ cloud API or a local Piper TTS model
+Data-Driven Personalities: NPC personas, backstories, and voice settings are configured through Data Assets, allowing for easy customization without changing code.
+Retrieval Augmented Generation (Pro Subscribers Only): Store and retrieve knowledge to keep responses accurate, consistent, and grounded.
+Custom Model Fine-Tuning (Pro Subscribers Only): Finetune and integrate your own custom models of different sizes, emotions, and training data for even more personalization.
+Multiplayer Support (Enterprise Only): The architecture is built with networking in mind, using client-server RPCs to handle communication but is not implemented out of the box. 
+
+Our base plugin supports Meta’s Llama 3.2 (1B or 3B) and ships with a default fine-tune targeting that model. You can swap in other models easily within our framework.
 
 ## Technical Details
 
-The hardest part was not building the components — it was defining the **token taxonomy**. We went through three iterations before landing on a semantic naming system (`color.surface.default`, `color.text.secondary`) rather than raw values. This makes it possible to change the entire color palette by editing 12 token definitions rather than hunting through component files.
-
-For the component API design, I followed a principle of **composition over configuration**: instead of a `<Button variant="primary" size="lg" iconLeft={...} isLoading />` monolith, we have a `<Button>` with a small surface area that composes with `<Icon>` and `<Spinner>`. This keeps the prop surface small and prevents the "options explosion" that plagues most design systems.
-
-The Storybook setup includes a custom theme, an accessibility panel backed by `axe-core`, and an auto-generated changelog that shows which component changed in each release.
