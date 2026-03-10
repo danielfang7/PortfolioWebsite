@@ -153,10 +153,37 @@ const socialLinks = [
     0% { transform: translateY(-100%); }
     100% { transform: translateY(200%); }
   }
+
+  /* Hidden by CSS before JS runs — prevents the paint→hide flash.
+     GSAP animates these to opacity:1. The noscript block below
+     overrides this for users with JS disabled. */
+  #hero-eyebrow,
+  #hero-headline,
+  #hero-subtext,
+  #hero-actions,
+  #hero-image,
+  #hero-scroll-cue {
+    opacity: 0;
+  }
 </style>
+
+<noscript>
+  <style>
+    #hero-eyebrow,
+    #hero-headline,
+    #hero-subtext,
+    #hero-actions,
+    #hero-image,
+    #hero-scroll-cue {
+      opacity: 1 !important;
+    }
+  </style>
+</noscript>
 
 <script>
   import { gsap } from "gsap";
+
+  const HERO_IDS = "#hero-eyebrow, #hero-headline, #hero-subtext, #hero-actions, #hero-image, #hero-scroll-cue";
 
   function initHero() {
     const hero = document.getElementById("hero");
@@ -164,18 +191,28 @@ const socialLinks = [
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (!prefersReducedMotion) {
-      // Staggered entrance — fromTo sets initial state programmatically so
-      // elements are always visible if this function doesn't run (no CSS hiding).
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-      tl.fromTo("#hero-eyebrow",    { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7 })
-        .fromTo("#hero-headline",   { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 }, "-=0.4")
-        .fromTo("#hero-subtext",    { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7 }, "-=0.5")
-        .fromTo("#hero-actions",    { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6 }, "-=0.4")
-        .fromTo("#hero-image",      { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.8 }, "-=1.2")
-        .fromTo("#hero-scroll-cue", { opacity: 0 },        { opacity: 1, duration: 0.8 },       "-=0.1");
+    if (prefersReducedMotion) {
+      // Skip animation but ensure elements are visible (CSS hides them by default)
+      gsap.set(HERO_IDS, { opacity: 1, y: 0 });
+      return;
     }
-    // Reduced-motion: elements are visible by default (no CSS opacity:0)
+
+    // CSS already sets opacity:0 on these elements before first paint so there
+    // is no flash. gsap.set() locks in the starting y offsets synchronously,
+    // then the timeline animates everything into place.
+    gsap.set("#hero-eyebrow",    { y: 20 });
+    gsap.set("#hero-headline",   { y: 30 });
+    gsap.set("#hero-subtext",    { y: 24 });
+    gsap.set("#hero-actions",    { y: 20 });
+    gsap.set("#hero-image",      { y: 24 });
+
+    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    tl.to("#hero-eyebrow",    { opacity: 1, y: 0, duration: 0.7 })
+      .to("#hero-headline",   { opacity: 1, y: 0, duration: 0.8 }, "-=0.4")
+      .to("#hero-subtext",    { opacity: 1, y: 0, duration: 0.7 }, "-=0.5")
+      .to("#hero-actions",    { opacity: 1, y: 0, duration: 0.6 }, "-=0.4")
+      .to("#hero-image",      { opacity: 1, y: 0, duration: 0.8 }, "-=1.2")
+      .to("#hero-scroll-cue", { opacity: 1,        duration: 0.8 },  "-=0.1");
   }
 
   let _heroFired = false;
