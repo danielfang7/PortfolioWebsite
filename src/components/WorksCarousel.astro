@@ -40,7 +40,7 @@ const META_HEIGHT = 108;
         </span>
       </div>
       <a
-        href="/works"
+        href="/works#full-archive"
         class="pointer-events-auto text-sm text-text-secondary hover:text-text-primary transition-colors duration-200 flex items-center gap-2 group"
       >
         View all
@@ -58,7 +58,7 @@ const META_HEIGHT = 108;
   <div
     id="carousel-pin"
     class="flex-1 flex flex-col items-center justify-center relative"
-    style={`padding-top: ${NAV_H + 64}px; padding-bottom: 5rem;`}
+    style={`padding-top: ${NAV_H + 64}px; padding-bottom: 2rem;`}
     role="region"
     aria-roledescription="carousel"
     aria-label="Project carousel"
@@ -186,7 +186,7 @@ const META_HEIGHT = 108;
     <!-- ── Metadata — flows directly below the stage ─────────────────────── -->
     <div
       id="carousel-meta"
-      class="relative z-30 mt-4 flex justify-center w-full"
+      class="relative z-30 mt-2 flex justify-center w-full"
       aria-live="polite"
       aria-atomic="true"
     >
@@ -239,7 +239,7 @@ const META_HEIGHT = 108;
   <!-- ── Progress dots ────────────────────────────────────────────────────── -->
   <div
     id="carousel-dots"
-    class="absolute bottom-8 left-0 right-0 flex items-center justify-center gap-2 z-30"
+    class="absolute bottom-16 left-0 right-0 flex items-center justify-center gap-2 z-15"
     role="tablist"
     aria-label="Carousel progress"
   >
@@ -374,13 +374,21 @@ const META_HEIGHT = 108;
       metaInner.style.width  = `${w}px`;
       metaInner.style.height = `${META_HEIGHT}px`;
 
-      // Position arrows symmetrically outside the active card
+      // Position arrows: on mobile keep inside viewport; on desktop outside the active card
       const arrowGap  = 16;
       const arrowSize = 44;
-      prevBtn.style.left  = `calc(50% - ${w / 2 + arrowGap + arrowSize}px)`;
-      prevBtn.style.right = "";
-      nextBtn.style.right = `calc(50% - ${w / 2 + arrowGap + arrowSize}px)`;
-      nextBtn.style.left  = "";
+      const vw = window.innerWidth;
+      if (vw < 640) {
+        prevBtn.style.left  = "8px";
+        prevBtn.style.right = "";
+        nextBtn.style.right = "8px";
+        nextBtn.style.left  = "";
+      } else {
+        prevBtn.style.left  = `calc(50% - ${w / 2 + arrowGap + arrowSize}px)`;
+        prevBtn.style.right = "";
+        nextBtn.style.right = `calc(50% - ${w / 2 + arrowGap + arrowSize}px)`;
+        nextBtn.style.left  = "";
+      }
     }
 
     // ── Per-card 3D transforms ────────────────────────────────────────────

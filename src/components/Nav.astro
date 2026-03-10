@@ -11,10 +11,10 @@ const { pathname } = Astro.url;
 
 <header
   id="site-nav"
-  class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-border-subtle"
+  class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-border-subtle bg-bg-base"
   aria-label="Site navigation"
 >
-  <div class="container-content">
+  <div class="container-content relative">
     <nav class="flex items-center justify-between h-16 md:h-20">
       <!-- Logo / Wordmark -->
       <a
@@ -55,8 +55,9 @@ const { pathname } = Astro.url;
 
       <!-- Mobile menu button -->
       <button
+        type="button"
         id="mobile-menu-btn"
-        class="md:hidden flex flex-col justify-center items-center w-10 h-10 gap-1.5 text-text-secondary hover:text-text-primary transition-colors"
+        class="md:hidden flex flex-col justify-center items-center min-w-[44px] min-h-[44px] w-10 h-10 gap-1.5 text-text-secondary hover:text-text-primary transition-colors cursor-pointer touch-manipulation"
         aria-label="Toggle mobile menu"
         aria-expanded="false"
         aria-controls="mobile-menu"
@@ -71,7 +72,7 @@ const { pathname } = Astro.url;
   <!-- Mobile menu -->
   <div
     id="mobile-menu"
-    class="md:hidden hidden border-t border-border-subtle"
+    class="md:hidden hidden border-t border-border-subtle bg-bg-base relative z-50"
     role="dialog"
     aria-label="Mobile navigation"
   >
