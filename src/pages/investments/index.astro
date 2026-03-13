@@ -94,12 +94,33 @@ const investments = (await getCollection("investments")).sort(
 
   gsap.registerPlugin(ScrollTrigger);
 
-  const prefersReducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  ).matches;
+  function initInvestmentAnimations() {
+    const cards = gsap.utils.toArray<HTMLElement>(".investment-card");
+    if (!cards.length) return;
 
-  if (!prefersReducedMotion) {
-    gsap.utils.toArray<HTMLElement>(".investment-card").forEach((card, i) => {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    // Always ensure cards are visible as a fallback
+    cards.forEach((el) => {
+      el.style.opacity = "1";
+      el.style.transform = "none";
+    });
+
+    if (prefersReducedMotion) {
+      return;
+    }
+
+    // Kill any existing ScrollTriggers bound to investment cards (handles soft nav)
+    ScrollTrigger.getAll().forEach((t) => {
+      const trigger = t.trigger as HTMLElement | null;
+      if (trigger && trigger.classList.contains("investment-card")) {
+        t.kill();
+      }
+    });
+
+    cards.forEach((card, i) => {
       gsap.fromTo(
         card,
         { opacity: 0, y: 30 },
@@ -117,10 +138,22 @@ const investments = (await getCollection("investments")).sort(
         }
       );
     });
-  } else {
-    document.querySelectorAll<HTMLElement>(".investment-card").forEach((el) => {
-      el.style.opacity = "1";
-      el.style.transform = "none";
-    });
+
+    ScrollTrigger.refresh();
   }
+
+  let _investmentsInitFired = false;
+
+  document.addEventListener("astro:page-load", () => {
+    _investmentsInitFired = true;
+    initInvestmentAnimations();
+  });
+
+  requestAnimationFrame(() => {
+    if (!_investmentsInitFired) initInvestmentAnimations();
+  });
+
+  document.addEventListener("astro:after-swap", () => {
+    initInvestmentAnimations();
+  });
 </script>
