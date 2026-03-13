@@ -36,14 +36,11 @@ const gradients: [string, string][] = [
 const gi = Math.max(0, work.data.order - 1) % gradients.length;
 const [gradFrom, gradTo] = gradients[gi];
 
-// Build gallery items: real media (images/videos) padded with gradient placeholders
+// Build gallery items from real media only (no placeholder cards)
 interface GalleryItem {
-  type: "image" | "video" | "gradient";
+  type: "image" | "video";
   src?: string;
   alt?: string;
-  gradFrom?: string;
-  gradTo?: string;
-  angle?: number;
   label: string;
 }
 
@@ -66,23 +63,12 @@ const rawMedia = work.data.media?.length
       })),
     ];
 
-const realMedia: GalleryItem[] = rawMedia.map((m) => ({
+const galleryItems: GalleryItem[] = rawMedia.map((m) => ({
   type: m.type,
   src: m.src,
   alt: `${work.data.title} — ${m.label}`,
   label: m.label,
 }));
-
-const placeholders: GalleryItem[] = [
-  { type: "gradient", gradFrom, gradTo, angle: 145, label: "Overview" },
-  { type: "gradient", gradFrom: gradTo, gradTo: gradFrom, angle: 200, label: "Detail view" },
-  { type: "gradient", gradFrom: gradFrom + "cc", gradTo: gradTo + "aa", angle: 90, label: "Interface" },
-];
-
-const galleryItems: GalleryItem[] =
-  realMedia.length >= 3
-    ? realMedia
-    : [...realMedia, ...placeholders.slice(0, 3 - realMedia.length)];
 
 const workCanonicalUrl = `https://danielfang.me/works/${currentSlug}`;
 const creativeWorkJsonLd = {
@@ -357,11 +343,8 @@ const creativeWorkJsonLd = {
               style="aspect-ratio: 16/10;"
               data-gallery-idx={i}
               data-type={item.type}
-              data-src={item.type === "image" || item.type === "video" ? item.src : ""}
+              data-src={item.src ?? ""}
               data-alt={item.type === "image" ? item.alt : item.label}
-              data-grad-from={item.type === "gradient" ? item.gradFrom : ""}
-              data-grad-to={item.type === "gradient" ? item.gradTo : ""}
-              data-angle={item.type === "gradient" ? String(item.angle ?? 145) : ""}
               aria-label={`Open ${item.label} full screen`}
             >
               {item.type === "image" ? (
@@ -371,7 +354,7 @@ const creativeWorkJsonLd = {
                   class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
-              ) : item.type === "video" ? (
+              ) : (
                 <>
                   <video
                     src={item.src}
@@ -391,30 +374,6 @@ const creativeWorkJsonLd = {
                       </svg>
                     </span>
                   </div>
-                </>
-              ) : (
-                <>
-                  <div
-                    class="absolute inset-0"
-                    style={`background: linear-gradient(${item.angle ?? 145}deg, ${item.gradFrom}40 0%, ${item.gradFrom}1c 40%, ${item.gradTo}30 100%);`}
-                    aria-hidden="true"
-                  />
-                  <div
-                    class="absolute inset-0"
-                    style="background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size: 40px 40px;"
-                    aria-hidden="true"
-                  />
-                  <div class="absolute inset-0 flex items-center justify-center" aria-hidden="true">
-                    <div
-                      class="rounded-full blur-3xl"
-                      style={`width: 45%; height: 60%; background: ${item.gradFrom}; opacity: 0.55;`}
-                    />
-                  </div>
-                  <div
-                    class="absolute top-0 left-0 right-0 h-px"
-                    style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);"
-                    aria-hidden="true"
-                  />
                 </>
               )}
               <!-- Hover overlay with label -->
