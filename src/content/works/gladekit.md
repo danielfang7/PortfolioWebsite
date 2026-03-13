@@ -9,7 +9,7 @@ images:
   - "/images/works/GladeKit_ProjectImage.png"
   - "/images/works/GladeCore_ProjectImage_Detailed.png"
 videos:
-  - "/videos/works/GladeKit Demo Video V5 (2K).mp4"
+  - "/videos/works/GladeKit_Demo_Video.mp4"
 liveUrl: "https://gladekit.com"
 sourceUrl: "https://github.com/Glade-tool/GladeKitUnityPlugin"
 featured: true
