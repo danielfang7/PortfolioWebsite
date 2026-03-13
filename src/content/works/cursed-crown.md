@@ -6,6 +6,9 @@ year: "2023"
 stack: ["C++", "Unreal Engine 5", "GameplayAbilitySystem"]
 thumbnail: "/images/works/CursedCrown_ProjectImage.png"
 images: []
+videos:
+  - "/videos/works/CursedCrown_CinematicTrailer.mp4"
+  - "/videos/works/CursedCrown_GDCGameplayVideo.mp4"
 featured: false
 order: 3
 ---

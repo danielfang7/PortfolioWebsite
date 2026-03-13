@@ -3,8 +3,8 @@ title: "Vibe Learning"
 description: "Passive learning layer for AI-assisted development"
 role: "Solo Developer"
 year: "2026"
-stack: ["React Native", "Expo", "Supabase", "OpenAI"]
-thumbnail: "/images/works/mobile.png"
+stack: ["VS Code / Cursor Extension", "TypeScript", "Node.js", "Claude Code", "SQLite"]
+thumbnail: "/images/works/VibeLearning_ProjectImage.png"
 images: []
 featured: true
 order: 4
