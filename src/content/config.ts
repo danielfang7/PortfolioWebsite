@@ -11,6 +11,18 @@ const works = defineCollection({
     stack: z.array(z.string()),
     thumbnail: z.string(),
     images: z.array(z.string()).optional().default([]),
+    /** Ordered gallery items (images and/or videos). If set, overrides `images`/`videos`. */
+    media: z
+      .array(
+        z.object({
+          type: z.enum(["image", "video"]),
+          src: z.string(),
+          label: z.string().optional(),
+        })
+      )
+      .optional(),
+    /** Video URLs for gallery (used when `media` is not set). Shown after `images`. */
+    videos: z.array(z.string()).optional().default([]),
     liveUrl: z.string().url().optional(),
     sourceUrl: z.string().url().optional(),
     featured: z.boolean().default(false),

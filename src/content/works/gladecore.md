@@ -5,7 +5,8 @@ role: "Founder"
 year: "2025"
 stack: ["C++", "Unreal Engine", "Unity", "Piper"]
 thumbnail: "/images/works/GladeCore_ProjectImage.png"
-images: []
+images:
+  - "/images/works/GladeCore_ProjectImage_Detailed.png"
 featured: true
 order: 2
 ---

@@ -36,9 +36,9 @@ const gradients: [string, string][] = [
 const gi = Math.max(0, work.data.order - 1) % gradients.length;
 const [gradFrom, gradTo] = gradients[gi];
 
-// Build gallery items: real images padded with gradient placeholders
+// Build gallery items: real media (images/videos) padded with gradient placeholders
 interface GalleryItem {
-  type: "image" | "gradient";
+  type: "image" | "video" | "gradient";
   src?: string;
   alt?: string;
   gradFrom?: string;
@@ -47,11 +47,30 @@ interface GalleryItem {
   label: string;
 }
 
-const realImages: GalleryItem[] = (work.data.images ?? []).map((src, i) => ({
-  type: "image",
-  src,
-  alt: `${work.data.title} — screenshot ${i + 1}`,
-  label: `Screenshot ${i + 1}`,
+const rawMedia = work.data.media?.length
+  ? work.data.media.map((m) => ({
+      type: m.type as "image" | "video",
+      src: m.src,
+      label: m.label ?? (m.type === "image" ? "Screenshot" : "Video"),
+    }))
+  : [
+      ...(work.data.images ?? []).map((src, i) => ({
+        type: "image" as const,
+        src,
+        label: `Screenshot ${i + 1}`,
+      })),
+      ...(work.data.videos ?? []).map((src, i) => ({
+        type: "video" as const,
+        src,
+        label: `Video ${i + 1}`,
+      })),
+    ];
+
+const realMedia: GalleryItem[] = rawMedia.map((m) => ({
+  type: m.type,
+  src: m.src,
+  alt: `${work.data.title} — ${m.label}`,
+  label: m.label,
 }));
 
 const placeholders: GalleryItem[] = [
@@ -61,9 +80,9 @@ const placeholders: GalleryItem[] = [
 ];
 
 const galleryItems: GalleryItem[] =
-  realImages.length >= 3
-    ? realImages
-    : [...realImages, ...placeholders.slice(0, 3 - realImages.length)];
+  realMedia.length >= 3
+    ? realMedia
+    : [...realMedia, ...placeholders.slice(0, 3 - realMedia.length)];
 
 const workCanonicalUrl = `https://danielfang.me/works/${currentSlug}`;
 const creativeWorkJsonLd = {
@@ -338,7 +357,7 @@ const creativeWorkJsonLd = {
               style="aspect-ratio: 16/10;"
               data-gallery-idx={i}
               data-type={item.type}
-              data-src={item.type === "image" ? item.src : ""}
+              data-src={item.type === "image" || item.type === "video" ? item.src : ""}
               data-alt={item.type === "image" ? item.alt : item.label}
               data-grad-from={item.type === "gradient" ? item.gradFrom : ""}
               data-grad-to={item.type === "gradient" ? item.gradTo : ""}
@@ -352,6 +371,27 @@ const creativeWorkJsonLd = {
                   class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
+              ) : item.type === "video" ? (
+                <>
+                  <video
+                    src={item.src}
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    muted
+                    preload="metadata"
+                    playsinline
+                    aria-hidden="true"
+                  />
+                  <div
+                    class="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/20 transition-colors"
+                    aria-hidden="true"
+                  >
+                    <span class="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <svg class="w-6 h-6 text-gray-900 ml-1" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </span>
+                  </div>
+                </>
               ) : (
                 <>
                   <div
@@ -746,7 +786,9 @@ const creativeWorkJsonLd = {
 
     function renderContent(item: ItemData) {
       if (!lbContent) return;
-      if (item.type === "image" && item.src) {
+      if (item.type === "video" && item.src) {
+        lbContent.innerHTML = `<video src="${item.src}" class="w-full h-full object-contain bg-black" style="max-height:76vh;" controls playsinline></video>`;
+      } else if (item.type === "image" && item.src) {
         lbContent.innerHTML = `<img src="${item.src}" alt="${item.alt}" class="w-full h-full object-cover" style="max-height:76vh;" />`;
       } else {
         const f = item.gradFrom, t = item.gradTo, a = item.angle;
@@ -783,6 +825,8 @@ const creativeWorkJsonLd = {
     }
 
     function closeLightbox() {
+      const video = lbContent?.querySelector("video");
+      if (video) video.pause();
       lightbox!.style.display = "none";
       document.body.style.overflow = "";
       galleryBtns[currentIdx]?.focus();
