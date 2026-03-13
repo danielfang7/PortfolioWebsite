@@ -7,6 +7,8 @@ stack: ["C++", "Unreal Engine", "Unity", "Piper"]
 thumbnail: "/images/works/GladeCore_ProjectImage.png"
 images:
   - "/images/works/GladeCore_ProjectImage_Detailed.png"
+videos:
+  - "/videos/works/GladeCore_Demo_Video.mp4"
 featured: true
 order: 2
 ---

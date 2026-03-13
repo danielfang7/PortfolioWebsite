@@ -7,7 +7,6 @@ stack: ["Electron", "React", "Typescript", "FastAPI", "AWS ECS/Fargate", "Unity 
 thumbnail: "/images/works/GladeKit_ProjectImage.png"
 images:
   - "/images/works/GladeKit_ProjectImage.png"
-  - "/images/works/GladeCore_ProjectImage_Detailed.png"
 videos:
   - "/videos/works/GladeKit_Demo_Video.mp4"
 liveUrl: "https://gladekit.com"
