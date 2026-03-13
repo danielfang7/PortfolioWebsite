@@ -1,11 +1,11 @@
 ---
-title: "Catopia"
-description: "Browser-based writing assistant with context-aware suggestions, tone adjustment, and export to Notion."
+title: "Everglade"
+description: "Semi-idle AI companion mobile game built in Unity 2D"
 role: "Sole Developer"
-year: "2024"
-stack: ["SvelteKit", "OpenAI API", "ProseMirror", "Cloudflare Workers"]
-thumbnail: "/images/works/ai-writing.png"
-images: []
+year: "2026"
+stack: ["Unity", "C#", "Local LLM inference"]
+thumbnail: "/images/works/Everglade_ProjectImage.png"
+images: ["/images/works/Everglade_ExampleImage.png"]
 featured: false
 order: 5
 ---

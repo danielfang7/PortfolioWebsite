@@ -5,7 +5,11 @@ role: "Founder"
 year: "2026"
 stack: ["Electron", "React", "Typescript", "FastAPI", "AWS ECS/Fargate", "Unity 6"]
 thumbnail: "/images/works/GladeKit_ProjectImage.png"
-images: []
+images:
+  - "/images/works/GladeKit_ProjectImage.png"
+  - "/images/works/GladeCore_ProjectImage_Detailed.png"
+videos:
+  - "/videos/works/GladeKit Demo Video V5 (2K).mp4"
 liveUrl: "https://gladekit.com"
 sourceUrl: "https://github.com/Glade-tool/GladeKitUnityPlugin"
 featured: true
