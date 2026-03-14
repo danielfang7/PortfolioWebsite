@@ -75,6 +75,7 @@ const { pathname } = Astro.url;
     class="md:hidden hidden border-t border-border-subtle bg-bg-base relative z-50"
     role="dialog"
     aria-label="Mobile navigation"
+    aria-hidden="true"
   >
     <ul class="container-content py-6 flex flex-col gap-5" role="list">
       {
@@ -126,43 +127,59 @@ const { pathname } = Astro.url;
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
 
+    let isOpen = false;
+
     function closeMobileMenu() {
       isOpen = false;
       menuBtn.setAttribute("aria-expanded", "false");
       mobileMenu.classList.add("hidden");
+      mobileMenu.setAttribute("aria-hidden", "true");
       bars[0].style.transform = "";
       bars[1].style.transform = "";
       bars[2].style.opacity = "";
       bars[2].style.transform = "";
     }
 
+    function openMobileMenu() {
+      isOpen = true;
+      menuBtn.setAttribute("aria-expanded", "true");
+      mobileMenu.classList.remove("hidden");
+      mobileMenu.setAttribute("aria-hidden", "false");
+      bars[0].style.transform = "translateY(7px) rotate(45deg)";
+      bars[1].style.transform = "translateY(-7px) rotate(-45deg)";
+      bars[2].style.opacity = "0";
+      bars[2].style.transform = "scaleX(0)";
+    }
+
     // Reset mobile menu on every navigation (handles Astro View Transitions)
     closeMobileMenu();
 
     // Mobile menu toggle
-    let isOpen = false;
     menuBtn.addEventListener("click", () => {
-      isOpen = !isOpen;
-      menuBtn.setAttribute("aria-expanded", String(isOpen));
-      mobileMenu.classList.toggle("hidden", !isOpen);
-
-      if (isOpen) {
-        bars[0].style.transform = "translateY(7px) rotate(45deg)";
-        bars[1].style.transform = "translateY(-7px) rotate(-45deg)";
-        bars[2].style.opacity = "0";
-        bars[2].style.transform = "scaleX(0)";
-      } else {
-        closeMobileMenu();
-      }
+      if (isOpen) closeMobileMenu();
+      else openMobileMenu();
     });
 
-    // Close menu on link click
+    // Close menu on link click (navigation)
     mobileMenu.querySelectorAll("a").forEach((link) => {
       link.addEventListener("click", () => closeMobileMenu());
     });
+
+    // Close menu on Escape key
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) closeMobileMenu();
+    };
+    document.addEventListener("keydown", onKeyDown);
   }
 
-  // Run on initial load and after every Astro view transition
-  initNav();
+  function runNav() {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initNav);
+    } else {
+      initNav();
+    }
+  }
+
+  runNav();
   document.addEventListener("astro:after-swap", initNav);
 </script>
