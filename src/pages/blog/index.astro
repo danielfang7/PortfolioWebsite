@@ -95,12 +95,29 @@ function formatDate(date: Date) {
 
   gsap.registerPlugin(ScrollTrigger);
 
-  const prefersReducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  ).matches;
+  function initBlogAnimations() {
+    const items = gsap.utils.toArray<HTMLElement>(".blog-post-item");
+    if (!items.length) return;
 
-  if (!prefersReducedMotion) {
-    gsap.utils.toArray<HTMLElement>(".blog-post-item").forEach((item, i) => {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    // Always ensure items are visible as fallback (e.g. after soft nav before animation runs)
+    items.forEach((el) => {
+      el.style.opacity = "1";
+      el.style.transform = "none";
+    });
+
+    if (prefersReducedMotion) return;
+
+    // Kill any existing ScrollTriggers for blog items (handles soft nav re-entry)
+    ScrollTrigger.getAll().forEach((t) => {
+      const trigger = t.trigger as HTMLElement | null;
+      if (trigger?.classList.contains("blog-post-item")) t.kill();
+    });
+
+    items.forEach((item, i) => {
       gsap.fromTo(
         item,
         { opacity: 0, x: -12 },
@@ -118,9 +135,22 @@ function formatDate(date: Date) {
         }
       );
     });
-  } else {
-    document.querySelectorAll<HTMLElement>(".blog-post-item").forEach((el) => {
-      el.style.opacity = "1";
-    });
+
+    ScrollTrigger.refresh();
   }
+
+  let _blogInitFired = false;
+
+  document.addEventListener("astro:page-load", () => {
+    _blogInitFired = true;
+    initBlogAnimations();
+  });
+
+  requestAnimationFrame(() => {
+    if (!_blogInitFired) initBlogAnimations();
+  });
+
+  document.addEventListener("astro:after-swap", () => {
+    initBlogAnimations();
+  });
 </script>
