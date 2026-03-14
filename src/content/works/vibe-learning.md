@@ -5,14 +5,15 @@ role: "Solo Developer"
 year: "2026"
 stack: ["VS Code / Cursor Extension", "TypeScript", "Node.js", "Claude Code", "SQLite"]
 thumbnail: "/images/works/VibeLearning_ProjectImage.png"
-images: []
+images: 
+  - "/images/works/VibeLearning_ProjectImage.png"
 featured: true
 order: 4
 ---
 
 ## Overview
 
-This project is an AI-powered “passive learning layer” for AI-assisted development that sits alongside tools like Cursor and Claude Code and turns everyday coding sessions into tailored micro-learning experiences. It monitors what a developer is building (prompts, diffs, languages, concepts) and periodically surfaces targeted interventions—like quick concept checks or micro-explanations—without breaking flow, all packaged as a VS Code / Cursor extension with a local knowledge state and no required backend.
+This project is an AI-powered “passive learning layer” for AI-assisted development that sits alongside tools like Cursor and Claude Code and turns everyday coding sessions into tailored micro-learning experiences. It monitors what a developer is building (prompts, diffs, languages, concepts) and periodically surfaces targeted interventions - like quick concept checks or micro-explanations without breaking flow, all packaged as a VS Code / Cursor extension with a local knowledge state and no required backend.
 
 Long-term, the goal is a full learning companion for developers: a concept-aware system that tracks what you’ve seen and how well you understand it, schedules spaced repetition across topics, supports multiple AI coding tools via adapters, and eventually powers team-level insights and dashboards. Right now, the focus is on the Phase 1 MVP: core extension scaffolding, a Claude Code adapter, a simple intervention engine, SQLite-backed knowledge tracking, and a basic sidebar UI.
 
