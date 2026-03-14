@@ -1,7 +1,7 @@
 ---
 title: "Everglade"
 description: "Semi-idle AI companion mobile game built in Unity 2D"
-role: "Sole Developer"
+role: "Founder"
 year: "2026"
 stack: ["Unity", "C#", "Local LLM inference"]
 thumbnail: "/images/works/Everglade_ProjectImage.png"

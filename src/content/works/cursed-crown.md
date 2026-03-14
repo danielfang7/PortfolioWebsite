@@ -3,7 +3,7 @@ title: "Cursed Crown"
 description: "Co-Op Multiplayer, 3D action RPG built in Unreal Engine"
 role: "Founder"
 year: "2023"
-stack: ["C++", "Unreal Engine 5", "GameplayAbilitySystem"]
+stack: ["C++", "Unreal Engine 5", "GAS"]
 thumbnail: "/images/works/CursedCrown_ProjectImage.png"
 images: []
 videos:
