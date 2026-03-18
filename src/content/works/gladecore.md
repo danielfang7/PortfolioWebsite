@@ -39,7 +39,7 @@ GladeCore is a comprehensive system for integrating advanced, AI-driven NPC inte
 
    Without an internet connection, the AI didn’t function at all. All interactions are routed through third-party servers, which also raises red flags for accessibility, privacy, and global compliance. For games launched in Europe or any GDPR-enforced region, transmitting player voice or text data to cloud services can trigger strict rules around consent, data storage, and cross-border transfers. With little transparency in data retention and processing, these systems made global compliance difficult and risky.
 
-## What I Built
+## What We Built
 
 The plugin’s core features include:
 

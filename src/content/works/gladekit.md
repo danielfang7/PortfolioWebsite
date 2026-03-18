@@ -27,7 +27,7 @@ Building inside Unity often requires constant context switching between editor p
 
 The specific challenge here was: can we make AI genuinely useful inside Unity by giving it real project context, real-time feedback, and safe direct control over editor actions instead of limiting it to a basic chat box?
 
-## What I Built
+## What We Built
 
 A production-ready AI system for Unity with:
 

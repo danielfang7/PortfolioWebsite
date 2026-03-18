@@ -17,7 +17,7 @@ order: 3
 
 Cursed Crown is an anime-style action RPG featuring dynamic combat, deep exploration, and relationship-driven gameplay. Discover ancient ruins, wield weapons with customizable elemental skills, and forge bonds with lifelike AI characters to restore peace to the fantasy world of Alder.
 
-## What I Built
+## What We Built
 
 - Dynamic Weapon and Skill Tree System: Each weapon you discover comes with a randomly generated set of elemental ability trees, offering endless possibilities and customization. Acquire powerful weapons by completing quests, exploring re-playable maps, and building deep connections with NPCs.
 
