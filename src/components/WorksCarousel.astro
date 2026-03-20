@@ -347,7 +347,7 @@ const META_HEIGHT = 108;
     // ── Responsive card width ─────────────────────────────────────────────
     function getCardWidth(): number {
       const vw = window.innerWidth;
-      if (vw < 640)  return vw * 0.9;
+      if (vw < 640)  return Math.max(vw - 120, 200);
       if (vw < 1024) return Math.min(vw * 0.62, 580);
       return Math.min(vw * 0.50, 700);
     }
