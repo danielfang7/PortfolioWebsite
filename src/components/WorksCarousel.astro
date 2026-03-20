@@ -199,15 +199,15 @@ const META_HEIGHT = 108;
               aria-hidden={i !== 0 ? "true" : "false"}
               style={`opacity: ${i === 0 ? 1 : 0}; transform: translateY(${i === 0 ? 0 : 10}px); pointer-events: ${i === 0 ? "auto" : "none"};`}
             >
-              <div class="flex items-baseline justify-between gap-4 mb-1.5">
+              <div class="flex items-center gap-3 mb-1.5">
                 <a
                   href={`/works/${slug(work.id)}`}
-                  class="font-display font-bold text-base md:text-lg text-text-primary hover:text-accent transition-colors duration-200 flex items-center gap-2 group"
+                  class="font-display font-bold text-base md:text-lg text-text-primary hover:text-accent transition-colors duration-200 flex items-center gap-2 group min-w-0 flex-1"
                   tabindex="-1"
                 >
-                  {work.data.title}
+                  <span class="truncate">{work.data.title}</span>
                   <svg
-                    class="text-text-muted group-hover:text-accent transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    class="flex-shrink-0 text-text-muted group-hover:text-accent transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                     width="13" height="13" viewBox="0 0 16 16" fill="none"
                   >
                     <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
