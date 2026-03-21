@@ -32,7 +32,7 @@ const META_HEIGHT = 108;
     style={`top: ${NAV_H + 20}px`}
     aria-hidden="true"
   >
-    <div class="container-content flex items-center justify-between">
+    <div class="container-content flex items-center gap-6 sm:justify-between">
       <div class="flex items-center gap-3">
         <span class="accent-line" />
         <span class="text-sm font-medium tracking-widest text-accent uppercase">
@@ -57,8 +57,7 @@ const META_HEIGHT = 108;
   <!-- ── Carousel region ──────────────────────────────────────────────────── -->
   <div
     id="carousel-pin"
-    class="flex-1 flex flex-col items-center justify-center relative"
-    style={`padding-top: ${NAV_H + 64}px; padding-bottom: 2rem;`}
+    class="flex-1 flex flex-col items-center justify-center relative pt-[130px] sm:pt-[144px] pb-8"
     role="region"
     aria-roledescription="carousel"
     aria-label="Project carousel"
@@ -85,7 +84,6 @@ const META_HEIGHT = 108;
       <div
         id="carousel-track"
         class="flex items-center will-change-transform"
-        style="gap: 2.5rem;"
       >
         {
           works.map((work, i) => {
@@ -368,9 +366,11 @@ const META_HEIGHT = 108;
     function updateLayout() {
       const w = getCardWidth();
       const h = w * (10 / 16); // 16:10 aspect ratio
+      const gap = getGap();
 
       cards.forEach((c) => gsap.set(c, { width: w }));
       stage.style.height = `${h}px`;
+      track.style.gap = `${gap}px`;
       metaInner.style.width  = `${w}px`;
       metaInner.style.height = `${META_HEIGHT}px`;
 
