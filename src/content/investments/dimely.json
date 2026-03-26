@@ -1,9 +1,10 @@
 {
   "company": "Dimely",
-  "description": "AI-Powered Spreadsheet for Billing Automation",
+  "description": "Dimely helps accounting teams scale their order management & contract review workflows.",
   "sector": "B2B",
   "stage": "Seed",
-  "year": 2026,
+  "year": 2024,
+  "logo": "/images/investments/dimely-logo.png",
   "url": "https://dimely.com",
   "featured": true
 }
