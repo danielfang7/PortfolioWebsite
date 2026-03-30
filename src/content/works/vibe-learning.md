@@ -5,8 +5,9 @@ role: "Solo Developer"
 year: "2026"
 stack: ["VS Code / Cursor Extension", "TypeScript", "Node.js", "Claude Code", "SQLite"]
 thumbnail: "/images/works/VibeLearning_ProjectImage.png"
-images: 
+images:
   - "/images/works/VibeLearning_ProjectImage.png"
+  - "/images/works/VibeLearning_ExampleImage.png"
 featured: true
 order: 4
 ---
