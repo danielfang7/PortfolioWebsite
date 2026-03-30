@@ -36,12 +36,12 @@ const investments = (await getCollection("investments")).sort(
       ) : (
         <ul class="grid gap-5 md:grid-cols-2 lg:grid-cols-3" role="list">
           {investments.map((inv) => (
-            <li class="investment-card anim-fade-up">
+            <li class="investment-card anim-fade-up h-full">
               <a
                 href={inv.data.url ?? "#"}
                 target={inv.data.url ? "_blank" : undefined}
                 rel={inv.data.url ? "noopener noreferrer" : undefined}
-                class="group flex flex-col gap-4 p-6 rounded-2xl border border-border-subtle bg-bg-surface hover:border-border hover:-translate-y-1 transition-all duration-300 ease-out-expo"
+                class="group flex flex-col gap-4 p-6 rounded-2xl border border-border-subtle bg-bg-surface hover:border-border hover:-translate-y-1 transition-all duration-300 ease-out-expo h-full"
               >
                 <div class="flex items-start justify-between gap-4">
                   <div class="w-10 h-10 rounded-xl bg-bg-elevated border border-border-subtle flex items-center justify-center overflow-hidden shrink-0">
@@ -66,7 +66,7 @@ const investments = (await getCollection("investments")).sort(
                   <h2 class="font-display font-semibold text-text-primary mb-1.5 group-hover:text-accent transition-colors duration-200">
                     {inv.data.company}
                   </h2>
-                  <p class="text-sm text-text-secondary line-clamp-2">
+                  <p class="text-sm text-text-secondary">
                     {inv.data.description}
                   </p>
                 </div>
