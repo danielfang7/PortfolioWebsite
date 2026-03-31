@@ -1,0 +1,52 @@
+---
+title: "LLMs in Games: 5 Studio-Killing Problems Nobody Talks About"
+date: 2025-06-18T09:00:00.000Z
+excerpt: "Learn from our lessons on integrating LLMs into AI-driven games."
+tags: ["Gaming", "AI"]
+readingTime: "3 min read"
+authors: ["Daniel Fang", "Lukas Licon"]
+---
+
+Imagine building an AI-powered game where players can form real bonds with characters through conversation, shared experiences, and mutual growth. Now imagine discovering that the more players engage with your characters, the more money your studio loses.
+
+That's exactly what happened to us.
+
+We integrated a cloud-based large language model (LLM) into our game to bring our NPCs to life, giving them memory, emotional nuance, and real-time conversational abilities. Our characters had depth, and players loved it. But halfway through our initial testing, the system stopped responding. We had unknowingly hit our usage limit.
+
+It was a moment of clarity. The more engaging our AI became, the more fragile and expensive it was to maintain.
+
+So we started digging into alternatives. This led us to well-known cloud APIs with AI characters that felt natural and responsive, such as InWorld and Convai. Quickly, we began noticing five recurring roadblocks that made current solutions a poor fit for real games:
+
+## 1. The Cost Model
+
+Most commercial tools charge per token or per query. The more engaging the conversations are, the steeper the costs. While manageable at first, ultimately, this pricing model punishes success.
+
+## 2. Latency
+
+Even under good conditions, cloud-based models introduce a 1–3 second delay. In gameplay, that lag feels disruptive. It turns fluid conversation into awkward waiting, undermining any sense of presence, responsiveness, and immersion. The magic of real-time interaction disappears.
+
+## 3. Customization
+
+We wanted our characters to feel like they belonged in our world, with specific voices, memories, and emotional arcs. But most tools offered limited control over how the model behaved. Prompt engineering could only go so far, and vendor-controlled fine-tuning was often inaccessible or prohibitively complex.
+
+## 4. Integration Friction
+
+Many AI solutions came with bulky SDKs that caused build issues, plugin conflicts, or version mismatches across all game engines. What should have been plug-and-play often became weeks of debugging.
+
+## 5. Connectivity and Privacy
+
+Without an internet connection, the AI didn't function at all. All interactions are routed through third-party servers, which also raises red flags for accessibility, privacy, and global compliance. For games launched in Europe or any GDPR-enforced region, transmitting player voice or text data to cloud services can trigger strict rules around consent, data storage, and cross-border transfers. With little transparency in data retention and processing, these systems made global compliance difficult and risky.
+
+---
+
+None of the existing tools offered the combination of control, speed, cost-efficiency, and offline access we needed. So we built our own.
+
+## GladeCore
+
+It runs entirely on-device with no servers, no per-use fees, and no cloud latency. It delivers sub-200ms response times without needing internet connection, ensuring full local privacy by design. Players can talk to NPCs as much as they like with no additional operating expenses. Developers can fine-tune personality and behavior directly, injecting story context or world data without external tools.
+
+Our model solves the issue of large plugin footprints by offering lightweight versions at 400–600 MB that don't compromise in-game performance. This means responsive, private, and production-ready AI characters across platforms on PC, console, and mobile.
+
+If you're building an AI-driven game and running into the same limitations as we did, let's talk. We've learned the hard way what doesn't work and built something that finally does.
+
+[Contact us to learn more.](/contact)
