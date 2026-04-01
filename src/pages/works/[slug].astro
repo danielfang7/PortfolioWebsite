@@ -213,12 +213,15 @@ const creativeWorkJsonLd = {
             href={work.data.liveUrl}
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white font-semibold text-sm hover:bg-accent-hover transition-colors duration-200"
+            data-magnetic
+            class="magnetic-cta inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-accent text-white font-semibold text-sm hover:bg-accent-hover transition-colors duration-200"
           >
-            View Live
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <span class="magnetic-cta__inner inline-flex items-center gap-2">
+              View Live
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
           </a>
         )}
         {work.data.sourceUrl && (
