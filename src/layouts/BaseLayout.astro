@@ -94,5 +94,18 @@ const fullTitle = title.includes("Daniel Fang")
     </main>
 
     <Footer />
+
+    <script>
+      import { initMagneticCTAs } from "@/scripts/magnetic-cta";
+
+      let _magneticPageLoad = false;
+      document.addEventListener("astro:page-load", () => {
+        _magneticPageLoad = true;
+        initMagneticCTAs();
+      });
+      requestAnimationFrame(() => {
+        if (!_magneticPageLoad) initMagneticCTAs();
+      });
+    </script>
   </body>
 </html>
