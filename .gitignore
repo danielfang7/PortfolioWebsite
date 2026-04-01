@@ -15,3 +15,5 @@ dist/
 *.log
 .netlify/
 .gstack/
+TODO.md
+.claude/
