@@ -202,4 +202,30 @@
     background: var(--color-accent);
     border-radius: 1px;
   }
+
+  /* Magnetic CTA inner layer — GSAP sets transform */
+  .magnetic-cta__inner {
+    will-change: transform;
+  }
+}
+
+/* ─── Astro View Transitions — page + shared-element morph timing ─────────── */
+@supports (view-transition-name: none) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: var(--duration-page);
+    animation-timing-function: var(--ease-out-expo);
+  }
+
+  /* Named shared elements (e.g. project carousel → detail hero) */
+  ::view-transition-group(*) {
+    animation-duration: 0.55s;
+    animation-timing-function: var(--ease-out-expo);
+  }
+
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.5s;
+    animation-timing-function: var(--ease-out-expo);
+  }
 }
