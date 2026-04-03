@@ -9,22 +9,37 @@ const investments = (await getCollection("investments")).sort(
 
 <BaseLayout
   title="Investments"
-  description="A curated portfolio of companies and projects I've invested in across early-stage startups and technology ventures."
+  description="Early-stage angel investor backing exceptional founders in AI infrastructure, developer tools, and B2B software. My investment framework and portfolio."
 >
-  <div class="pt-32 section-padding">
+  <div class="pt-32 pb-24 section-padding">
     <div class="container-content">
-      <!-- Section header -->
-      <div class="mb-16 max-w-2xl">
+
+      <!-- Page header -->
+      <div class="mb-20 max-w-2xl anim-fade-up">
         <div class="flex items-center gap-3 mb-4">
           <span class="accent-line" aria-hidden="true" />
-          <span class="text-sm font-medium tracking-widest text-accent uppercase">Portfolio</span>
+          <span class="text-sm font-medium tracking-widest text-accent uppercase">Investing</span>
         </div>
         <h1 class="font-display text-display-lg font-bold text-text-primary mb-4">
           Investments
         </h1>
         <p class="text-lg text-text-secondary leading-relaxed">
-          I back exceptional founders building the next generation of software,
-          AI infrastructure, and consumer products. Here's where I've put conviction to work.
+          I back exceptional founders at the pre-seed and seed stage - primarily in AI infrastructure,
+          developer tools, and B2B software. <a href="#thesis-heading" class="thesis-link text-text-primary underline underline-offset-4 decoration-border hover:decoration-accent transition-colors duration-200">Read more about my investment thesis.</a>
+        </p>
+      </div>
+
+      <!-- Portfolio section header -->
+      <div class="mb-12 anim-fade-up">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="accent-line" aria-hidden="true" />
+          <span class="text-sm font-medium tracking-widest text-accent uppercase">Portfolio</span>
+        </div>
+        <h2 class="font-display text-display-md font-bold text-text-primary mb-3">
+          Companies
+        </h2>
+        <p class="text-base text-text-secondary leading-relaxed">
+          Where I've put conviction to work.
         </p>
       </div>
 
@@ -41,49 +56,258 @@ const investments = (await getCollection("investments")).sort(
                 href={inv.data.url ?? "#"}
                 target={inv.data.url ? "_blank" : undefined}
                 rel={inv.data.url ? "noopener noreferrer" : undefined}
-                class="group flex flex-col gap-4 p-6 rounded-2xl border border-border-subtle bg-bg-surface hover:border-border hover:-translate-y-1 transition-all duration-300 ease-out-expo h-full"
+                class="group flex flex-col gap-5 p-6 rounded-2xl border border-border-subtle bg-bg-surface hover:border-border hover:-translate-y-1 transition-all duration-300 ease-out-expo h-full relative overflow-hidden"
               >
-                <div class="flex items-start justify-between gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-bg-elevated border border-border-subtle flex items-center justify-center overflow-hidden shrink-0">
+                <div
+                  class="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style="background: radial-gradient(ellipse at 50% 0%, rgba(108,99,255,0.06) 0%, transparent 70%);"
+                  aria-hidden="true"
+                ></div>
+
+                <div class="relative flex items-start justify-between gap-4">
+                  <div class="w-12 h-12 rounded-xl bg-bg-elevated border border-border-subtle flex items-center justify-center overflow-hidden shrink-0">
                     {inv.data.logo ? (
                       <img
                         src={inv.data.logo}
                         alt={`${inv.data.company} logo`}
                         class="w-full h-full object-cover"
-                        width="40"
-                        height="40"
+                        width="48"
+                        height="48"
                       />
                     ) : (
-                      <span class="font-display font-bold text-sm text-accent">
+                      <span class="font-display font-bold text-base text-accent">
                         {inv.data.company.charAt(0)}
                       </span>
                     )}
                   </div>
-                  <span class="text-xs text-text-muted mt-1">{inv.data.year}</span>
+                  <span class="text-xs font-mono text-text-muted mt-1">{inv.data.year}</span>
                 </div>
 
-                <div>
-                  <h2 class="font-display font-semibold text-text-primary mb-1.5 group-hover:text-accent transition-colors duration-200">
+                <div class="relative flex flex-col gap-2">
+                  <h3 class="font-display font-semibold text-text-primary group-hover:text-accent transition-colors duration-200">
                     {inv.data.company}
-                  </h2>
-                  <p class="text-sm text-text-secondary">
+                  </h3>
+                  <p class="text-sm text-text-secondary leading-relaxed">
                     {inv.data.description}
                   </p>
                 </div>
 
-                <div class="flex items-center gap-2 mt-auto">
+                <div class="relative flex items-center gap-2 mt-auto flex-wrap">
                   <span class="text-xs px-2.5 py-1 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
                     {inv.data.sector}
                   </span>
                   <span class="text-xs px-2.5 py-1 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
                     {inv.data.stage}
                   </span>
+                  {inv.data.url && (
+                    <span class="ml-auto text-text-muted group-hover:text-accent transition-colors duration-200">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M7 17L17 7M17 7H7M17 7V17" />
+                      </svg>
+                    </span>
+                  )}
                 </div>
               </a>
             </li>
           ))}
         </ul>
       )}
+
+      <!-- Divider -->
+      <div class="h-px bg-border-subtle mt-24 mb-24" aria-hidden="true"></div>
+
+      <!-- ── Investment Thesis ───────────────────────────────────────────────── -->
+      <section aria-labelledby="thesis-heading">
+
+        <div class="mb-12 anim-fade-up">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="accent-line" aria-hidden="true" />
+            <span class="text-sm font-medium tracking-widest text-accent uppercase">Framework</span>
+          </div>
+          <h2 id="thesis-heading" class="font-display text-display-md font-bold text-text-primary mb-4">
+            Investment Thesis
+          </h2>
+          <p class="text-base text-text-secondary leading-relaxed max-w-2xl">
+            I evaluate deals through four lenses. The first two are largely objective and carry the
+            most weight - they're the clearest signal in a noisy market. The last two require
+            judgment and taste; I have views on them, but I hold them with appropriate humility.
+          </p>
+        </div>
+
+        <!-- Tier 1: Objective Signals -->
+        <div class="mb-6">
+          <div class="flex items-center gap-4 mb-5 anim-fade-up">
+            <span class="font-mono text-xs font-semibold text-accent tracking-widest uppercase whitespace-nowrap">Weighted Most Heavily · Objective</span>
+            <div class="flex-1 h-px bg-border-subtle" aria-hidden="true"></div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- 01 Founder Quality -->
+            <div class="pillar-card anim-fade-up group relative overflow-hidden rounded-2xl border border-border bg-bg-surface p-7 hover:-translate-y-1 transition-all duration-300 ease-out-expo">
+              <div
+                class="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style="background: radial-gradient(ellipse at 20% 20%, rgba(108,99,255,0.09) 0%, transparent 65%);"
+                aria-hidden="true"
+              ></div>
+              <div class="relative">
+                <div class="flex items-start justify-between mb-5">
+                  <span class="font-mono text-5xl font-bold leading-none select-none" style="color: rgba(108,99,255,0.22)">01</span>
+                  <span class="text-xs px-2.5 py-1 rounded-full bg-accent/10 text-accent border border-accent/20 font-mono tracking-wide">Objective</span>
+                </div>
+                <h3 class="font-display text-xl font-bold text-text-primary mb-1">Founder Quality</h3>
+                <p class="text-xs text-text-muted font-mono tracking-widest uppercase mb-4">Prior Experience · Domain Fit</p>
+                <p class="text-sm text-text-secondary leading-relaxed mb-6">
+                  Two questions I'm always asking: have they built a startup before, and does their background give them an unfair edge in this specific problem? The best founders have lived the pain they're solving - they don't need to discover the problem, they need to solve it.
+                </p>
+                <div class="space-y-3 border-t border-border-subtle pt-5">
+                  <p class="text-xs font-mono text-text-muted tracking-widest uppercase mb-3">Founder-Market Fit Examples</p>
+                  <div class="flex gap-3 items-start">
+                    <span class="mt-1 w-4 h-4 shrink-0 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    </span>
+                    <p class="text-xs text-text-secondary leading-relaxed">AWS ML engineers who spent years hand-optimizing GPU training jobs, now building an AI infrastructure platform to automate exactly that - the problem is their lived experience.</p>
+                  </div>
+                  <div class="flex gap-3 items-start">
+                    <span class="mt-1 w-4 h-4 shrink-0 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    </span>
+                    <p class="text-xs text-text-secondary leading-relaxed">A former ER physician co-founding a clinical workflow automation tool with a strong full stack engineer - they've felt the friction daily, know the stakeholders, and can open doors through their network immediately.</p>
+                  </div>
+                  <div class="flex gap-3 items-start">
+                    <span class="mt-1 w-4 h-4 shrink-0 rounded-full bg-red-500/15 border border-red-500/30 flex items-center justify-center">
+                      <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                    </span>
+                    <p class="text-xs text-text-secondary leading-relaxed">A generalist founder opportunistically entering a regulated industry (healthcare, finance, legal) with no prior exposure to the customer - solving a problem they read about, not one they lived.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 02 Traction -->
+            <div class="pillar-card anim-fade-up group relative overflow-hidden rounded-2xl border border-border bg-bg-surface p-7 hover:-translate-y-1 transition-all duration-300 ease-out-expo">
+              <div
+                class="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style="background: radial-gradient(ellipse at 80% 20%, rgba(108,99,255,0.09) 0%, transparent 65%);"
+                aria-hidden="true"
+              ></div>
+              <div class="relative">
+                <div class="flex items-start justify-between mb-5">
+                  <span class="font-mono text-5xl font-bold leading-none select-none" style="color: rgba(108,99,255,0.22)">02</span>
+                  <span class="text-xs px-2.5 py-1 rounded-full bg-accent/10 text-accent border border-accent/20 font-mono tracking-wide">Objective</span>
+                </div>
+                <h3 class="font-display text-xl font-bold text-text-primary mb-1">Traction</h3>
+                <p class="text-xs text-text-muted font-mono tracking-widest uppercase mb-4">Revenue · Pilots · DAU · Velocity</p>
+                <p class="text-sm text-text-secondary leading-relaxed mb-6">
+                  Cold numbers - revenue, DAU, pilots signed. But equally important: <span class="text-text-primary">how quickly did they get there?</span> A team at $10K MRR in month two tells a completely different story than one at $10K MRR after 18 months. Speed signals real conviction in the market.
+                </p>
+                <div class="space-y-3 border-t border-border-subtle pt-5">
+                  <p class="text-xs font-mono text-text-muted tracking-widest uppercase mb-3">What I'm Looking For</p>
+                  <div class="flex gap-3 items-start">
+                    <span class="mt-1 w-4 h-4 shrink-0 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    </span>
+                    <p class="text-xs text-text-secondary leading-relaxed">Revenue is king: for example, revenue in the first 90 days of company formation. Even $500/month can be meaningful signal.</p>
+                  </div>
+                  <div class="flex gap-3 items-start">
+                    <span class="mt-1 w-4 h-4 shrink-0 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    </span>
+                    <p class="text-xs text-text-secondary leading-relaxed">Enterprise pilots where the customer is actually paying or committing real resources - not just a soft LOI or email commitment.</p>
+                  </div>
+                  <div class="flex gap-3 items-start">
+                    <span class="mt-1 w-4 h-4 shrink-0 rounded-full bg-red-500/15 border border-red-500/30 flex items-center justify-center">
+                      <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                    </span>
+                    <p class="text-xs text-text-secondary leading-relaxed">12 months post-launch with "lots of warm conversations" and no signed contracts. Activity is not traction.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tier 2: Judgment Signals -->
+        <div>
+          <div class="flex items-center gap-4 mb-5 anim-fade-up">
+            <span class="font-mono text-xs font-semibold text-text-muted tracking-widest uppercase whitespace-nowrap">Supporting Signal · Judgment Call</span>
+            <div class="flex-1 h-px bg-border-subtle" aria-hidden="true"></div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- 03 Product -->
+            <div class="pillar-card anim-fade-up group relative overflow-hidden rounded-2xl border border-border-subtle bg-bg-surface p-7 hover:-translate-y-1 transition-all duration-300 ease-out-expo">
+              <div
+                class="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style="background: radial-gradient(ellipse at 20% 20%, rgba(108,99,255,0.05) 0%, transparent 65%);"
+                aria-hidden="true"
+              ></div>
+              <div class="relative">
+                <div class="flex items-start justify-between mb-5">
+                  <span class="font-mono text-5xl font-bold leading-none select-none" style="color: rgba(255,255,255,0.07)">03</span>
+                  <span class="text-xs px-2.5 py-1 rounded-full bg-bg-elevated text-text-muted border border-border-subtle font-mono tracking-wide">Judgment</span>
+                </div>
+                <h3 class="font-display text-xl font-bold text-text-primary mb-1">Product</h3>
+                <p class="text-xs text-text-muted font-mono tracking-widest uppercase mb-4">Pain Point · Scalability · PMF Signals</p>
+                <p class="text-sm text-text-secondary leading-relaxed mb-6">
+                  Is this solving a serious and urgent pain, or just a nice-to-have? And can it evolve to address bigger problems as the company scales? I'm listening for customer quotes that sound like <span class="text-text-primary">"we can't imagine going back"</span> rather than <span class="text-text-muted">"this is useful sometimes."</span>
+                </p>
+                <div class="space-y-2.5 border-t border-border-subtle pt-5">
+                  <p class="text-xs font-mono text-text-muted tracking-widest uppercase mb-3">What Matters to Me</p>
+                  <div class="flex gap-2.5 items-start">
+                    <span class="mt-1.5 w-1 h-1 rounded-full bg-text-muted shrink-0"></span>
+                    <p class="text-xs text-text-secondary leading-relaxed">Organic referrals - proof of existing customers recommending to others unprompted is the earliest PMF signal I know of.</p>
+                  </div>
+                  <div class="flex gap-2.5 items-start">
+                    <span class="mt-1.5 w-1 h-1 rounded-full bg-text-muted shrink-0"></span>
+                    <p class="text-xs text-text-secondary leading-relaxed">Natural upsell paths - a product that can grow with the customer and tackle bigger adjacent problems over time is far more interesting than a static tool.</p>
+                  </div>
+                  <div class="flex gap-2.5 items-start">
+                    <span class="mt-1.5 w-1 h-1 rounded-full bg-text-muted shrink-0"></span>
+                    <p class="text-xs text-text-secondary leading-relaxed">I don't obsess over moats at pre-seed/seed unless it's a deep tech or scientific breakthrough. Investors claiming to find moats in all early stage startups are full of ****.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 04 Market -->
+            <div class="pillar-card anim-fade-up group relative overflow-hidden rounded-2xl border border-border-subtle bg-bg-surface p-7 hover:-translate-y-1 transition-all duration-300 ease-out-expo">
+              <div
+                class="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style="background: radial-gradient(ellipse at 80% 20%, rgba(108,99,255,0.05) 0%, transparent 65%);"
+                aria-hidden="true"
+              ></div>
+              <div class="relative">
+                <div class="flex items-start justify-between mb-5">
+                  <span class="font-mono text-5xl font-bold leading-none select-none" style="color: rgba(255,255,255,0.07)">04</span>
+                  <span class="text-xs px-2.5 py-1 rounded-full bg-bg-elevated text-text-muted border border-border-subtle font-mono tracking-wide">Judgment</span>
+                </div>
+                <h3 class="font-display text-xl font-bold text-text-primary mb-1">Market</h3>
+                <p class="text-xs text-text-muted font-mono tracking-widest uppercase mb-4">Bottoms-Up TAM · Competitive Landscape</p>
+                <p class="text-sm text-text-secondary leading-relaxed mb-6">
+                  I'm skeptical of top-down market sizing. Saying "we're targeting the $200B logistics market" tells me nothing useful. I want bottoms-up: <span class="text-text-primary">how many customers can realistically buy this, at what price, and why now?</span>
+                </p>
+                <div class="space-y-2.5 border-t border-border-subtle pt-5">
+                  <p class="text-xs font-mono text-text-muted tracking-widest uppercase mb-3">What I Want to See</p>
+                  <div class="flex gap-2.5 items-start">
+                    <span class="mt-1.5 w-1 h-1 rounded-full bg-text-muted shrink-0"></span>
+                    <p class="text-xs text-text-secondary leading-relaxed">Bottoms-up: (# of realistic target customers) × (realistic ARPU) = a number you can actually defend. E.g., 50K US accounting firms × $2,400/yr = $120M TAM.</p>
+                  </div>
+                  <div class="flex gap-2.5 items-start">
+                    <span class="mt-1.5 w-1 h-1 rounded-full bg-text-muted shrink-0"></span>
+                    <p class="text-xs text-text-secondary leading-relaxed">Honest competitor analysis - who actually competes for this customer's attention and budget, and what's the realistic displacement story?</p>
+                  </div>
+                  <div class="flex gap-2.5 items-start">
+                    <span class="mt-1.5 w-1 h-1 rounded-full bg-text-muted shrink-0"></span>
+                    <p class="text-xs text-text-secondary leading-relaxed">A small but captive niche often beats a vague massive market at early stage - depth before breadth.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
     </div>
   </div>
 </BaseLayout>
@@ -91,35 +315,80 @@ const investments = (await getCollection("investments")).sort(
 <script>
   import { gsap } from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
+  import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 
-  gsap.registerPlugin(ScrollTrigger);
+  gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
   function initInvestmentAnimations() {
     const cards = gsap.utils.toArray<HTMLElement>(".investment-card");
-    if (!cards.length) return;
+    const pillars = gsap.utils.toArray<HTMLElement>(".pillar-card");
+    const fadeUps = gsap.utils.toArray<HTMLElement>(".anim-fade-up:not(.investment-card):not(.pillar-card)");
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
-    // Always ensure cards are visible as a fallback
-    cards.forEach((el) => {
+    // Always ensure everything is visible as a fallback
+    [...cards, ...pillars, ...fadeUps].forEach((el) => {
       el.style.opacity = "1";
       el.style.transform = "none";
     });
 
-    if (prefersReducedMotion) {
-      return;
-    }
+    if (prefersReducedMotion) return;
 
-    // Kill any existing ScrollTriggers bound to investment cards (handles soft nav)
+    // Kill any existing ScrollTriggers for these elements (handles soft nav)
     ScrollTrigger.getAll().forEach((t) => {
       const trigger = t.trigger as HTMLElement | null;
-      if (trigger && trigger.classList.contains("investment-card")) {
+      if (
+        trigger &&
+        (trigger.classList.contains("investment-card") ||
+          trigger.classList.contains("pillar-card") ||
+          trigger.classList.contains("anim-fade-up"))
+      ) {
         t.kill();
       }
     });
 
+    // Generic fade-up elements (headers, tier labels, etc.)
+    fadeUps.forEach((el) => {
+      gsap.fromTo(
+        el,
+        { opacity: 0, y: 20 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 90%",
+            toggleActions: "play none none none",
+          },
+        }
+      );
+    });
+
+    // Pillar cards — staggered in pairs
+    pillars.forEach((card, i) => {
+      gsap.fromTo(
+        card,
+        { opacity: 0, y: 28 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.65,
+          delay: (i % 2) * 0.1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: card,
+            start: "top 88%",
+            toggleActions: "play none none none",
+          },
+        }
+      );
+    });
+
+    // Investment cards — staggered in columns
     cards.forEach((card, i) => {
       gsap.fromTo(
         card,
@@ -142,18 +411,37 @@ const investments = (await getCollection("investments")).sort(
     ScrollTrigger.refresh();
   }
 
+  // Smooth scroll for thesis link — offsets for fixed nav
+  function initThesisLink() {
+    const link = document.querySelector<HTMLAnchorElement>("a.thesis-link");
+    if (!link) return;
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const target = document.getElementById("thesis-heading");
+      if (!target) return;
+      const navHeight = 80; // approx fixed nav height
+      const top = target.getBoundingClientRect().top + window.scrollY - navHeight;
+      gsap.to(window, { scrollTo: top, duration: 1, ease: "power3.inOut" });
+    });
+  }
+
   let _investmentsInitFired = false;
 
   document.addEventListener("astro:page-load", () => {
     _investmentsInitFired = true;
     initInvestmentAnimations();
+    initThesisLink();
   });
 
   requestAnimationFrame(() => {
-    if (!_investmentsInitFired) initInvestmentAnimations();
+    if (!_investmentsInitFired) {
+      initInvestmentAnimations();
+      initThesisLink();
+    }
   });
 
   document.addEventListener("astro:after-swap", () => {
     initInvestmentAnimations();
+    initThesisLink();
   });
 </script>
