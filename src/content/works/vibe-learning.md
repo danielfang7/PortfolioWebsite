@@ -3,7 +3,7 @@ title: "Vibe Learning"
 description: "Passive learning layer for AI-assisted development"
 role: "Solo Developer"
 year: "2026"
-stack: ["VS Code / Cursor Extension", "TypeScript", "Node.js", "Claude Code", "SQLite"]
+stack: ["VS Code Extension", "TypeScript", "Node.js", "Claude Code", "SQLite"]
 thumbnail: "/images/works/VibeLearning_ProjectImage.png"
 images:
   - "/images/works/VibeLearning_ProjectImage.png"
@@ -27,6 +27,7 @@ The specific challenge here is: can we embed a learning loop directly into AI-as
 ## What I Built
 
 A VS Code / Cursor extension architecture for an AI-powered learning layer with:
+
 - Extension scaffold and adapter design for tools like Cursor, Claude Code, and Codex, based on a SessionAdapter interface that cleanly separates data collection (prompts, diffs, file changes) from learning logic.
 - Intervention Engine design that defines structured Intervention types (Concept Check, Explain It Back, Micro-Reading, etc.) and a loop that periodically calls Anthropic’s Claude API to generate targeted interventions from recent session context.
 - Local knowledge state model backed by SQLite (v1) that tracks per-concept stats such as seen count, last seen, average score, and next review timing, forming the basis for spaced repetition and difficulty adjustment.

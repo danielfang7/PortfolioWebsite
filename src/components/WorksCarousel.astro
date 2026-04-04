@@ -18,18 +18,19 @@ function slug(id: string) {
 }
 
 const NAV_H = 80;
+const EYEBROW_TOP = NAV_H + 16;
 const META_HEIGHT = 108;
 ---
 
 <section
   id="works-section"
-  class="relative min-h-screen flex flex-col overflow-hidden"
+  class="relative overflow-hidden"
   aria-label="Selected works"
 >
   <!-- ── Section eyebrow ──────────────────────────────────────────────────── -->
   <div
     class="absolute left-0 right-0 z-30 pointer-events-none"
-    style={`top: ${NAV_H + 20}px`}
+    style={`top: ${EYEBROW_TOP}px`}
     aria-hidden="true"
   >
     <div class="container-content flex items-center gap-6 sm:justify-between">
@@ -57,7 +58,7 @@ const META_HEIGHT = 108;
   <!-- ── Carousel region ──────────────────────────────────────────────────── -->
   <div
     id="carousel-pin"
-    class="flex-1 flex flex-col items-center justify-start relative pt-[130px] sm:pt-[144px] pb-8"
+    class="flex flex-col items-center justify-start relative pt-[110px] sm:pt-[120px] pb-6"
     role="region"
     aria-roledescription="carousel"
     aria-label="Project carousel"
@@ -237,7 +238,7 @@ const META_HEIGHT = 108;
   <!-- ── Progress dots ────────────────────────────────────────────────────── -->
   <div
     id="carousel-dots"
-    class="mt-4 md:mt-5 lg:mt-6 flex items-center justify-center gap-2"
+    class="mt-4 mb-8 md:mb-10 flex items-center justify-center gap-2"
     role="tablist"
     aria-label="Carousel progress"
   >
