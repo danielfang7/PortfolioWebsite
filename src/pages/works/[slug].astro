@@ -1,6 +1,8 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
+import { GladeCorePipeline } from "@/components/case-studies/GladeCorePipeline";
+import { GladeKitAgentLoop } from "@/components/case-studies/GladeKitAgentLoop";
 
 export async function getStaticPaths() {
   const works = (await getCollection("works")).sort(
@@ -239,6 +241,29 @@ const creativeWorkJsonLd = {
         )}
       </div>
     </header>
+
+    <!-- ── Interactive case study ──────────────────────────────────── -->
+    {work.data.caseStudy && (
+      <section
+        id="detail-case-study"
+        class="container-content mb-12"
+        aria-label="Interactive case study"
+      >
+        <div class="flex items-center gap-3 mb-8">
+          <span class="accent-line" aria-hidden="true" />
+          <span class="text-sm font-medium tracking-widest text-accent uppercase">
+            {work.data.caseStudy === "gladecore" ? "LLM Inference Pipeline" : "System Architecture"}
+          </span>
+        </div>
+
+        {work.data.caseStudy === "gladecore" && (
+          <GladeCorePipeline client:visible />
+        )}
+        {work.data.caseStudy === "gladekit" && (
+          <GladeKitAgentLoop client:visible />
+        )}
+      </section>
+    )}
 
     <!-- ── Content + Sticky sidebar ──────────────────────────────────── -->
     <div class="container-content mb-20">
