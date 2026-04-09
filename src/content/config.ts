@@ -27,6 +27,8 @@ const works = defineCollection({
     sourceUrl: z.string().url().optional(),
     featured: z.boolean().default(false),
     order: z.number().default(99),
+    /** Identifier for the interactive case study component to render on the detail page. */
+    caseStudy: z.string().optional(),
   }),
 });
 
