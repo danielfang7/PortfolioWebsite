@@ -13,6 +13,7 @@ liveUrl: "https://gladekit.com"
 sourceUrl: "https://github.com/Glade-tool/GladeKitUnityPlugin"
 featured: true
 order: 1
+caseStudy: "gladekit"
 ---
 
 ## Overview
