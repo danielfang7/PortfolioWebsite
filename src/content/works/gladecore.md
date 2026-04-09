@@ -11,6 +11,7 @@ videos:
   - "/videos/works/GladeCore_Demo_Video.mp4"
 featured: true
 order: 2
+caseStudy: "gladecore"
 ---
 
 ## Overview
