@@ -2,6 +2,9 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import HeroSection from "@/components/HeroSection.astro";
 import WorksCarousel from "@/components/WorksCarousel.astro";
+import { GitHubActivity, fetchGitHubEvents } from "@/components/GitHubActivity";
+
+const githubEvents = await fetchGitHubEvents();
 ---
 
 <BaseLayout
@@ -26,4 +29,29 @@ import WorksCarousel from "@/components/WorksCarousel.astro";
     </div>
   </section>
   <WorksCarousel />
+
+  <!-- ── GitHub activity ─────────────────────────────────────────────── -->
+  <section
+    id="github-activity"
+    class="container-content pb-section"
+    aria-labelledby="github-activity-heading"
+  >
+    <div class="border-t border-border-subtle pt-16">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="accent-line" aria-hidden="true" />
+        <span class="text-sm font-medium tracking-widest text-accent uppercase">Active Building</span>
+      </div>
+      <div class="flex items-end justify-between mb-8 gap-4">
+        <h2
+          id="github-activity-heading"
+          class="font-display text-2xl sm:text-3xl font-bold text-text-primary leading-tight"
+        >
+          Recent Activity
+        </h2>
+        <p class="text-sm text-text-muted hidden sm:block">Live from GitHub</p>
+      </div>
+
+      <GitHubActivity initialEvents={githubEvents} client:visible />
+    </div>
+  </section>
 </BaseLayout>
