@@ -1,0 +1,136 @@
+---
+title: "What is an AI Agent? The Loop Explained (pt. 1)"
+date: 2026-04-09T09:00:00.000Z
+excerpt: "The agentic loop is simpler than expected. But everything else is tricky..."
+tags: ["AI", "Engineering"]
+readingTime: "8 min read"
+---
+
+I find that AI agents seem more complicated and mythical to most people than they really are.
+
+Before I started on the journey to build my own AI agent for Unity game development, I assumed that an AI agent was a significant leap from a normal chatbot. In reality, an AI agent is simply an AI that can execute the following loop:
+
+1. The model calls tools
+2. The tools are executed
+3. The results are fed back into the model
+4. Repeat until the task is complete
+
+## The core idea
+
+The key difference is that a normal chatbot is one-shot. You send a message, it replies, and then that's it.
+
+But an agent comes into play when the model gains the ability to do something other than communicate. You can give models access to various tools, such as "create file", "search codebase", "query database" or "create a GameObject in Unity".
+
+At the highest level, it looks something like this:
+
+```python
+while not done:
+    response = call_model(messages, tools)
+
+    if response.tool_calls:
+        results = execute_tools(response.tool_calls)
+        messages.append(response)
+        messages.append(results)
+        continue
+
+    return response.content
+```
+
+That's essentially it. Obviously that does not cover how you actually build useful AI agents, but the underlying mechanism is that simple.
+
+And that's why much of the AI agent discussion feels exaggerated. People talk about agents like some separate form of artificial intelligence. What they really mean is "a model that can take action in a loop".
+
+## What the model is actually doing
+
+A tool is just a function you expose to the model. To create a tool you specify the name of it, what it does, and the parameters it takes. The model then decides when to use the tool based on the task.
+
+For example, a Unity game engine tool might look like this:
+
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "create_game_object",
+    "description": "Creates a new GameObject in the Unity scene.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "parent_path": { "type": "string" }
+      },
+      "required": ["name"]
+    }
+  }
+}
+```
+
+If the model decides to call the tool, it returns a tool call with the parameters filled in. Then the actual implementation is executed by your application, with the result passed back to the conversation. That's all there is to it. At its core, this "reason-act-observe" pattern discussed in approaches like ReAct is what I find to be the cleanest way to visualize this process.
+
+So the model: Gets the current state &rarr; Executes some action based on it &rarr; Evaluates the result &rarr; Makes its next decision accordingly.
+
+## The first thing that surprised me
+
+At first, I thought the difficulty would be implementing the loop. But that was the easy part, and it was just the start.
+
+Because once you have a model that calls tools, you run into more challenging questions:
+
+- Which tools should be available to the agent?
+- How are tools best described so the model uses them properly?
+- How much context should you provide the model?
+- How should you structure the tool result?
+- How do you prevent the model from getting lost or giving up too quickly?
+- How do we allow users to cancel, resume, or undo changes?
+
+These questions are ignored in most "how to create an AI agent in under twenty minutes" tutorials. Getting the loop itself working is not difficult — creating the system around the loop and making the agent reliable is the hard part.
+
+## Conversation history
+
+It is also important to note that the conversation history becomes the agent's working memory. Every tool call and tool result gets added back into the message history, so the model can see what it has already tried.
+
+That sounds great, and it initially does feel useful in a prototype. But in production, it becomes obvious that continuously appending all messages is not a practical memory strategy. Raw logs, giant tool results, noisy context, and long histories will quietly make your agent worse. By simply appending everything, the model technically has more context but functionally has less clarity. So although conversation history is the memory, memory itself is a budgeting problem. That lesson hit me much harder than the loop itself.
+
+## What makes agents useful
+
+Agents are not simply valuable because they are able to call these tools or functions, but because they are able to adapt across multiple steps.
+
+For example, someone using our AI agent for Unity (GladeKit) might ask for a third-person character controller with walk and run animations. That's not just one action — that's a whole sequence that requires you to:
+
+- Inspect the scene
+- Create or modify objects
+- Add components
+- Create or edit scripts
+- Find animation clips
+- Set up the animator
+- Compile and review for errors
+- Adjust if something failed
+
+Sure scripts can do fixed sequences, but an agent is able to adjust mid-run. If the animation clip is not found, it can try another path. If compilation fails, it can inspect the error and respond. If an object is already there, it can modify it instead of duplicating it.
+
+## An important caveat
+
+Agents do not automatically "know" when they are done with a task, in any rigorous sense at least. They are usually done when the model stops calling tools and returns the final text response. That is a much shakier termination condition than it sounds.
+
+Maybe the model actually finished the task. But sometimes it summarizes the task instead of doing it. Sometimes it tells you it lacks a tool you just provided it.
+
+A working agent is not just a model + tools. Good agents add recovery logic for when the models fail to use tools properly. This matters much more than people think — these are LLMs at the end of the day, and they can always hallucinate.
+
+## Some advice that may help
+
+Here is some advice I wish I knew earlier when building an AI agent:
+
+- **Start with fewer tools** to understand how the model actually behaves
+- **Standardize tool descriptions** and make them concise
+- **Design and shape tool outputs**, don't just focus on inputs
+- **Make sure agent iteration limits are set** from day one
+- **Treat context like a budget**, and make sure every extra token earns its place
+- **Write evals and test thoroughly**, as agents can seem reliable on initial runs even though they are not
+
+I'll provide some concrete examples of ways I learned to handle these issues in upcoming posts in this series.
+
+## AI agents are quite simple
+
+The truth is, AI agents are not some magical new intelligence. They are simply a model with tools inside a loop. The good news is that simplicity means most people can understand and build an agent easily. But the hard part is what comes after the loop — that's where the real lessons are. The real lessons start the moment you try to make the agent truly reliable, fast, and safe.
+
+And that is what I will write more about in this series.
+
+*Coming Next: How to Write Tool Schemas that AI Agents will Reliably Use*
