@@ -1,0 +1,196 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const experiments = [
+  {
+    slug: "particle-field",
+    title: "Particle Field",
+    description: "Mouse-reactive particle network with proximity connections and repulsion physics.",
+    tech: ["Canvas 2D", "requestAnimationFrame", "Spatial hashing"],
+    color: "#6C63FF",
+    year: "2026",
+  },
+  {
+    slug: "mesh-gradient",
+    title: "Mesh Gradient",
+    description: "Organic gradient blobs using additive blending with gentle mouse attraction.",
+    tech: ["Canvas 2D", "Radial gradients", "Composite ops"],
+    color: "#A78BFA",
+    year: "2026",
+  },
+  {
+    slug: "flow-field",
+    title: "Flow Field",
+    description: "Perlin noise-driven particle flow with trail persistence and cursor warping.",
+    tech: ["Canvas 2D", "Noise functions", "Trail rendering"],
+    color: "#38BDF8",
+    year: "2026",
+  },
+  {
+    slug: "chromatic-pulse",
+    title: "Chromatic Pulse",
+    description: "Animatable CSS gradients driven by mouse position using @property registered custom properties.",
+    tech: ["CSS @property", "conic-gradient", "mix-blend-mode"],
+    color: "#EC4899",
+    year: "2026",
+  },
+  {
+    slug: "vertex-terrain",
+    title: "Vertex Terrain",
+    description: "Real-time 3D terrain mesh rendered with raw WebGL2 shaders, displaced by simplex noise.",
+    tech: ["WebGL2", "GLSL shaders", "Simplex noise"],
+    color: "#10B981",
+    year: "2026",
+  },
+  {
+    slug: "frequency-rings",
+    title: "Frequency Rings",
+    description: "Concentric SVG rings pulsing from microphone frequency bands with procedural fallback.",
+    tech: ["Web Audio API", "SVG animation", "getUserMedia"],
+    color: "#F59E0B",
+    year: "2026",
+  },
+];
+---
+
+<BaseLayout
+  title="Lab"
+  description="Self-contained front-end experiments: shader effects, generative art, and novel UI patterns."
+>
+  <section class="section-padding" aria-labelledby="lab-heading">
+    <div class="container-content">
+      <!-- Header -->
+      <div class="mb-12 md:mb-16">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="accent-line" aria-hidden="true" />
+          <span class="text-sm font-medium tracking-widest text-accent uppercase">
+            Experiments
+          </span>
+        </div>
+        <h1
+          id="lab-heading"
+          class="font-display text-display-lg font-bold text-text-primary mb-4"
+        >
+          Lab
+        </h1>
+        <p class="text-text-secondary max-w-xl leading-relaxed">
+          Self-contained front-end experiments exploring generative art,
+          interactive physics, and novel visual patterns. Each piece is
+          built from scratch: Canvas 2D, WebGL2, CSS @property, Web Audio, and SVG.
+        </p>
+      </div>
+
+      <!-- Experiment grid -->
+      <ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="list">
+        {
+          experiments.map((exp, i) => (
+            <li class="lab-grid-card" style={`--delay: ${i * 60}ms`}>
+              <a
+                href={`/lab/${exp.slug}`}
+                class="group flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-bg-surface hover:border-border hover:-translate-y-1 transition-all duration-300 ease-out-expo shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30"
+              >
+                {/* Preview canvas area */}
+                <div class="relative aspect-[16/10] overflow-hidden bg-bg-base">
+                  {/* Animated gradient preview */}
+                  <div
+                    class="absolute inset-0 transition-transform duration-500 ease-out-expo group-hover:scale-[1.04]"
+                    style={`background: radial-gradient(ellipse at 30% 50%, ${exp.color}25 0%, transparent 60%), radial-gradient(ellipse at 70% 30%, ${exp.color}18 0%, transparent 50%);`}
+                    aria-hidden="true"
+                  />
+                  {/* Animated dot grid pattern */}
+                  <div
+                    class="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-500"
+                    style={`background-image: radial-gradient(${exp.color}60 1px, transparent 1px); background-size: 20px 20px;`}
+                    aria-hidden="true"
+                  />
+                  {/* Hover overlay */}
+                  <div class="absolute inset-0 bg-gradient-to-t from-bg-base/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
+                  <div class="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out-expo">
+                    <span class="inline-flex items-center gap-2 text-sm font-semibold text-white tracking-wide">
+                      Open experiment
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-3 p-5 flex-1 min-h-0">
+                  <div class="flex items-center gap-3">
+                    <span
+                      class="h-1 w-8 rounded-full transition-all duration-300 group-hover:w-10 shrink-0"
+                      style={`background: ${exp.color};`}
+                      aria-hidden="true"
+                    />
+                    <h2 class="font-display font-semibold text-text-primary group-hover:text-accent transition-colors duration-200 min-w-0">
+                      {exp.title}
+                    </h2>
+                  </div>
+
+                  <p class="text-sm text-text-secondary leading-relaxed line-clamp-2">
+                    {exp.description}
+                  </p>
+
+                  <div class="flex items-center justify-between gap-3 pt-1 mt-auto border-t border-border-subtle/80">
+                    <ul class="flex flex-wrap gap-1.5" role="list" aria-label="Technologies">
+                      {exp.tech.slice(0, 3).map((t) => (
+                        <li>
+                          <span class="text-[11px] px-2 py-0.5 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
+                            {t}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <span class="text-xs text-text-muted shrink-0">{exp.year}</span>
+                  </div>
+                </div>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+
+  function initLabGrid() {
+    const cards = gsap.utils.toArray<HTMLElement>(".lab-grid-card");
+    if (cards.length === 0) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    cards.forEach((card, i) => {
+      gsap.fromTo(
+        card,
+        { opacity: 0, y: 28 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.55,
+          delay: (i % 3) * 0.07,
+          ease: "power3.out",
+          scrollTrigger: {
+            id: `lab-grid-${i}`,
+            trigger: card,
+            start: "top 88%",
+            toggleActions: "play none none none",
+          },
+        },
+      );
+    });
+  }
+
+  let _labFired = false;
+  document.addEventListener("astro:page-load", () => {
+    _labFired = true;
+    initLabGrid();
+  });
+  requestAnimationFrame(() => {
+    if (!_labFired) initLabGrid();
+  });
+</script>

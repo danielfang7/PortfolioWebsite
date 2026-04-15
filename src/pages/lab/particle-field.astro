@@ -1,0 +1,96 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { ParticleField } from "@/components/lab/ParticleField";
+---
+
+<BaseLayout
+  title="Particle Field — Lab"
+  description="Mouse-reactive particle network with proximity connections and repulsion physics."
+>
+  <div class="lab-experiment">
+    <!-- Fullscreen canvas -->
+    <div class="lab-canvas-wrap">
+      <ParticleField client:load />
+    </div>
+
+    <!-- Info overlay -->
+    <div class="lab-info">
+      <a href="/lab" class="lab-back" aria-label="Back to Lab">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Lab
+      </a>
+      <div class="lab-info-content">
+        <h1 class="font-display text-xl font-bold text-text-primary">Particle Field</h1>
+        <p class="text-sm text-text-secondary mt-1 leading-relaxed">
+          120 particles connected by proximity lines. Move your cursor to create
+          repulsion waves — particles scatter and reform organically.
+        </p>
+        <div class="flex flex-wrap gap-1.5 mt-3">
+          <span class="lab-tag">Canvas 2D</span>
+          <span class="lab-tag">requestAnimationFrame</span>
+          <span class="lab-tag">Mouse physics</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .lab-experiment {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 5rem);
+    min-height: 400px;
+    overflow: hidden;
+  }
+
+  .lab-canvas-wrap {
+    position: absolute;
+    inset: 0;
+  }
+
+  .lab-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1.5rem clamp(1.25rem, 5vw, 3rem);
+    background: linear-gradient(to top, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.6) 60%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .lab-info > * {
+    pointer-events: auto;
+  }
+
+  .lab-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    margin-bottom: 0.75rem;
+    transition: color 0.2s;
+  }
+
+  .lab-back:hover {
+    color: var(--color-accent);
+  }
+
+  .lab-info-content {
+    max-width: 32rem;
+  }
+
+  .lab-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 9999px;
+    background: var(--color-bg-elevated);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border-subtle);
+  }
+</style>
