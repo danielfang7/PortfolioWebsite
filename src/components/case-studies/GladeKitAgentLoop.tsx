@@ -22,7 +22,7 @@ const RUNTIMES: Runtime[] = [
     id: "backend",
     label: "Cloud Backend",
     sublabel: "FastAPI / AWS ECS",
-    color: "#6C63FF",
+    color: "#00D8FF",
     desc: "The orchestration brain. Runs a streaming agentic loop: receives user prompts from Electron, filters relevant tools, augments with RAG-retrieved Unity documentation, injects conversation and project memory, streams model responses, and dispatches tool calls mid-stream to the Unity bridge. Dockerized on AWS ECS/Fargate with an ALB for routing.",
     items: ["Streaming agentic loop", "RAG documentation injection", "Multi-model support (OpenAI/Anthropic/Gemini)", "Redis-backed caching & cost tracking"],
   },
@@ -45,7 +45,7 @@ interface Flow {
 
 const FLOWS: Flow[] = [
   { from: "electron", to: "backend", label: "user prompt + project context", color: "#F59E0B" },
-  { from: "backend", to: "unity", label: "tool dispatch (HTTP POST)", color: "#6C63FF" },
+  { from: "backend", to: "unity", label: "tool dispatch (HTTP POST)", color: "#00D8FF" },
   { from: "unity", to: "backend", label: "tool results", color: "#10B981" },
   { from: "backend", to: "electron", label: "streamed response", color: "#A78BFA" },
 ];
@@ -117,7 +117,7 @@ export function GladeKitAgentLoop() {
                   <div key={`conn-${i}`} style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "0 4px" }}>
                     {/* Forward flow */}
                     <FlowConnector
-                      color={FLOWS[i * 2]?.color ?? "#6C63FF"}
+                      color={FLOWS[i * 2]?.color ?? "#00D8FF"}
                       direction="right"
                       delay={i * 0.5}
                       label={i === 0 ? "prompt" : "results"}

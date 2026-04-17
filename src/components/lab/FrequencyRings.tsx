@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 
 const RING_COUNT = 10;
 const COLORS = [
-  "#6C63FF", "#A78BFA", "#38BDF8", "#06B6D4", "#10B981",
+  "#00D8FF", "#A78BFA", "#38BDF8", "#06B6D4", "#10B981",
   "#F59E0B", "#EF4444", "#EC4899", "#C084FC", "#818CF8",
 ];
 
@@ -181,8 +181,8 @@ export function FrequencyRings() {
             transform: "translateX(-50%)",
             padding: "8px 20px",
             borderRadius: "9999px",
-            background: "rgba(108, 99, 255, 0.15)",
-            border: "1px solid rgba(108, 99, 255, 0.3)",
+            background: "rgba(0, 216, 255, 0.15)",
+            border: "1px solid rgba(0, 216, 255, 0.3)",
             color: "#A78BFA",
             fontSize: "13px",
             fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -191,12 +191,12 @@ export function FrequencyRings() {
             transition: "all 0.2s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = "rgba(108, 99, 255, 0.25)";
-            e.currentTarget.style.borderColor = "rgba(108, 99, 255, 0.5)";
+            e.currentTarget.style.background = "rgba(0, 216, 255, 0.25)";
+            e.currentTarget.style.borderColor = "rgba(0, 216, 255, 0.5)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = "rgba(108, 99, 255, 0.15)";
-            e.currentTarget.style.borderColor = "rgba(108, 99, 255, 0.3)";
+            e.currentTarget.style.background = "rgba(0, 216, 255, 0.15)";
+            e.currentTarget.style.borderColor = "rgba(0, 216, 255, 0.3)";
           }}
         >
           {fallback ? "Enable microphone for live audio" : "Connecting..."}

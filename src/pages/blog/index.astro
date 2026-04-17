@@ -45,8 +45,12 @@ function slug(id: string) {
       </div>
 
       {allPosts.length === 0 ? (
-        <div class="rounded-2xl border border-border-subtle p-16 text-center">
-          <p class="text-text-muted text-sm">Posts coming soon.</p>
+        <div class="rounded-2xl border border-border-subtle p-16 flex flex-col items-center gap-3">
+          <div class="flex items-center gap-3 mb-1">
+            <span class="accent-line" aria-hidden="true" />
+            <span class="text-sm font-medium tracking-widest text-accent uppercase">Coming soon</span>
+          </div>
+          <p class="text-text-muted text-sm text-center max-w-xs">More writing on the way. Check back soon.</p>
         </div>
       ) : (
         <>

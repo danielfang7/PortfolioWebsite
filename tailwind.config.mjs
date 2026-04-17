@@ -15,9 +15,9 @@ export default {
           muted: "#555555",
         },
         accent: {
-          DEFAULT: "#6C63FF",
-          hover: "#857DFF",
-          dim: "rgba(108, 99, 255, 0.15)",
+          DEFAULT: "#00D8FF",
+          hover: "#33E4FF",
+          dim: "rgba(0, 216, 255, 0.12)",
         },
         border: {
           subtle: "#222222",
