@@ -15,9 +15,9 @@
   --color-text-secondary: #888888;
   --color-text-muted: #555555;
 
-  --color-accent: #6c63ff;
-  --color-accent-hover: #857dff;
-  --color-accent-dim: rgba(108, 99, 255, 0.15);
+  --color-accent: #00d8ff;
+  --color-accent-hover: #33e4ff;
+  --color-accent-dim: rgba(0, 216, 255, 0.12);
 
   --color-border-subtle: #222222;
   --color-border: #2e2e2e;
