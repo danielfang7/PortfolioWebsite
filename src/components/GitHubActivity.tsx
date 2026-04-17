@@ -71,7 +71,7 @@ function parseEvent(
       return {
         id: ev.id,
         type: "push",
-        color: "#6C63FF",
+        color: "#00D8FF",
         repo,
         title: msg.length > 80 ? msg.slice(0, 80) + "\u2026" : msg,
         sha: shortSha,
@@ -410,8 +410,8 @@ export function GitHubActivity({ initialEvents }: Props) {
                       width: "9px",
                       height: "9px",
                       borderRadius: "50%",
-                      background: "#6C63FF",
-                      boxShadow: "0 0 8px rgba(108, 99, 255, 0.4)",
+                      background: "#00D8FF",
+                      boxShadow: "0 0 8px rgba(0, 216, 255, 0.4)",
                       flexShrink: 0,
                       zIndex: 1,
                     }}

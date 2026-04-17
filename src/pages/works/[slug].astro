@@ -29,7 +29,7 @@ const currentSlug = slugify(work.id);
 
 // Match the carousel gradient palette (same order as WorksCarousel)
 const gradients: [string, string][] = [
-  ["#6C63FF", "#A78BFA"],
+  ["#00D8FF", "#A78BFA"],
   ["#06B6D4", "#3B82F6"],
   ["#10B981", "#06B6D4"],
   ["#F59E0B", "#EF4444"],
@@ -216,7 +216,7 @@ const creativeWorkJsonLd = {
             target="_blank"
             rel="noopener noreferrer"
             data-magnetic
-            class="magnetic-cta inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-accent text-white font-semibold text-sm hover:bg-accent-hover transition-colors duration-200"
+            class="magnetic-cta inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-accent text-bg-base font-semibold text-sm hover:bg-accent-hover transition-colors duration-200"
           >
             <span class="magnetic-cta__inner inline-flex items-center gap-2">
               View Live
@@ -765,7 +765,7 @@ const creativeWorkJsonLd = {
         type:     btn.dataset.type     ?? "gradient",
         src:      btn.dataset.src      ?? "",
         alt:      btn.dataset.alt      ?? "",
-        gradFrom: btn.dataset.gradFrom ?? "#6c63ff",
+        gradFrom: btn.dataset.gradFrom ?? "#00d8ff",
         gradTo:   btn.dataset.gradTo   ?? "#a78bfa",
         angle:    btn.dataset.angle    ?? "145",
       };

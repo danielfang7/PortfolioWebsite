@@ -10,7 +10,7 @@ interface Blob {
 }
 
 const COLORS: [number, number, number][] = [
-  [108, 99, 255],  // accent
+  [0, 216, 255],   // accent
   [167, 139, 250], // purple
   [56, 189, 248],  // cyan
   [236, 72, 153],  // pink
