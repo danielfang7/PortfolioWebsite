@@ -11,7 +11,7 @@ interface Particle {
 const PARTICLE_COUNT = 90;
 const CONNECTION_DIST = 130;
 const MOUSE_RADIUS = 180;
-const ACCENT = [108, 99, 255];
+const ACCENT = [0, 216, 255]; // #00D8FF
 
 export function HeroParticleField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);

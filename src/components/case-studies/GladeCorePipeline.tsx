@@ -27,7 +27,7 @@ const TOP_ROW: Stage[] = [
     id: "chat-s",
     name: "Chat Server RPC",
     tech: "UChatComponent",
-    color: "#6C63FF",
+    color: "#00D8FF",
     desc: "The chat component on the client forwards transcribed text to the server via Unreal Engine's Server RPC system. Acts as the authoritative bridge between the client input layer and the server-side AI inference pipeline.",
   },
   {
@@ -58,7 +58,7 @@ const BOT_ROW: Stage[] = [
     id: "chat-c",
     name: "Chat Client RPC",
     tech: "UChatComponent",
-    color: "#6C63FF",
+    color: "#00D8FF",
     desc: "Receives audio segments from the server via Client RPC and forwards them to the local playback component. Handles sequential ordering of audio chunks to ensure gap-free sentence assembly.",
   },
   {
