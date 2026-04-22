@@ -1,0 +1,120 @@
+---
+import type { Experiment } from "@/data/experiments";
+
+interface Props {
+  experiments: Experiment[];
+}
+
+const { experiments } = Astro.props;
+---
+
+<ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="list">
+  {
+    experiments.map((exp, i) => (
+      <li class="lab-grid-card" style={`--delay: ${i * 60}ms`}>
+        <a
+          href={`/lab/${exp.slug}`}
+          class="group flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-bg-surface hover:border-border hover:-translate-y-1 transition-all duration-300 ease-out-expo shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30"
+        >
+          {/* Preview canvas area */}
+          <div class="relative aspect-[16/10] overflow-hidden bg-bg-base">
+            {/* Animated gradient preview */}
+            <div
+              class="absolute inset-0 transition-transform duration-500 ease-out-expo group-hover:scale-[1.04]"
+              style={`background: radial-gradient(ellipse at 30% 50%, ${exp.color}25 0%, transparent 60%), radial-gradient(ellipse at 70% 30%, ${exp.color}18 0%, transparent 50%);`}
+              aria-hidden="true"
+            />
+            {/* Animated dot grid pattern */}
+            <div
+              class="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-500"
+              style={`background-image: radial-gradient(${exp.color}60 1px, transparent 1px); background-size: 20px 20px;`}
+              aria-hidden="true"
+            />
+            {/* Hover overlay */}
+            <div class="absolute inset-0 bg-gradient-to-t from-bg-base/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
+            <div class="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out-expo">
+              <span class="inline-flex items-center gap-2 text-sm font-semibold text-white tracking-wide">
+                Open experiment
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 p-5 flex-1 min-h-0">
+            <div class="flex items-center gap-3">
+              <span
+                class="h-1 w-8 rounded-full transition-all duration-300 group-hover:w-10 shrink-0"
+                style={`background: ${exp.color};`}
+                aria-hidden="true"
+              />
+              <h2 class="font-display font-semibold text-text-primary group-hover:text-accent transition-colors duration-200 min-w-0">
+                {exp.title}
+              </h2>
+            </div>
+
+            <p class="text-sm text-text-secondary leading-relaxed line-clamp-2">
+              {exp.description}
+            </p>
+
+            <div class="flex items-center justify-between gap-3 pt-1 mt-auto border-t border-border-subtle/80">
+              <ul class="flex flex-wrap gap-1.5" role="list" aria-label="Technologies">
+                {exp.tech.slice(0, 3).map((t) => (
+                  <li>
+                    <span class="text-[11px] px-2 py-0.5 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
+                      {t}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <span class="text-xs text-text-muted shrink-0">{exp.year}</span>
+            </div>
+          </div>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+  gsap.registerPlugin(ScrollTrigger);
+
+  function initLabGrid() {
+    const cards = gsap.utils.toArray<HTMLElement>(".lab-grid-card");
+    if (cards.length === 0) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    cards.forEach((card, i) => {
+      gsap.fromTo(
+        card,
+        { opacity: 0, y: 28 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.55,
+          delay: (i % 3) * 0.07,
+          ease: "power3.out",
+          scrollTrigger: {
+            id: `lab-grid-${i}`,
+            trigger: card,
+            start: "top 88%",
+            toggleActions: "play none none none",
+          },
+        },
+      );
+    });
+  }
+
+  let _labFired = false;
+  document.addEventListener("astro:page-load", () => {
+    _labFired = true;
+    initLabGrid();
+  });
+  requestAnimationFrame(() => {
+    if (!_labFired) initLabGrid();
+  });
+</script>
