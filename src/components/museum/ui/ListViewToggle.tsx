@@ -12,10 +12,6 @@ export function ListViewToggle({ onSwitch }: Props) {
       type="button"
       onClick={onSwitch}
       style={{
-        position: "absolute",
-        top: "0.75rem",
-        right: "0.75rem",
-        zIndex: 10,
         display: "inline-flex",
         alignItems: "center",
         gap: "0.4rem",

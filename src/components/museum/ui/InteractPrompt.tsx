@@ -1,31 +1,37 @@
+import { useRef } from "react";
 import type { Interactable } from "../engine/interactables";
 
 type Props = {
   focused: Interactable | null;
-  /** Character position in base-canvas pixels. Ignored when `focused` is null. */
-  charX: number;
-  charY: number;
+  tileSize: number;
   canvasW: number;
   canvasH: number;
 };
 
 /**
- * Floating interact HUD anchored just above the character's head. Pokemon/
- * Stardew-style floating prompt — follows where the player is rather than
- * sitting at a fixed corner of the screen.
+ * Floating interact HUD anchored just above the focused exhibit. Anchoring to
+ * the interactable (not the player) keeps the prompt in the same spot every
+ * time the player walks up to the same exhibit, regardless of approach angle.
  */
 export function InteractPrompt({
   focused,
-  charX,
-  charY,
+  tileSize,
   canvasW,
   canvasH,
 }: Props) {
-  // Anchor point: roughly the top of the character sprite. The sprite is 24px
-  // tall drawn feet-aligned to charY+4, so sprite top ~ charY - 20. Back off a
-  // few more px so the pill doesn't overlap hair.
-  const anchorX = charX;
-  const anchorY = charY - 26;
+  // Keep the last focused target around during fade-out so position doesn't
+  // snap to (0,0) when focused goes null.
+  const lastRef = useRef<Interactable | null>(null);
+  if (focused) lastRef.current = focused;
+  const target = focused ?? lastRef.current;
+
+  // Anchor above the top-center of the interactable's footprint, with a small
+  // gap so the pill doesn't touch the sprite.
+  const GAP_PX = 6;
+  const anchorX = target
+    ? (target.tileX + target.width / 2) * tileSize
+    : 0;
+  const anchorY = target ? target.tileY * tileSize - GAP_PX : 0;
 
   return (
     <div
@@ -42,7 +48,7 @@ export function InteractPrompt({
         whiteSpace: "nowrap",
       }}
     >
-      {focused && (
+      {target && (
         <div
           style={{
             display: "inline-flex",
@@ -81,7 +87,7 @@ export function InteractPrompt({
             E
           </kbd>
           <span>
-            {focused.kind === "painting" ? "view" : "open"} {focused.title}
+            {target.kind === "painting" ? "view" : "open"} {target.title}
           </span>
         </div>
       )}

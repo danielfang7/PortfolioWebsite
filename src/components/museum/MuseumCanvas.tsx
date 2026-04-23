@@ -27,21 +27,15 @@ import type { Experiment } from "@/data/experiments";
 
 export const CANVAS_W = HALL_WIDTH * TILE_SIZE; // 14 * 32 = 448
 export const CANVAS_H = HALL_HEIGHT * TILE_SIZE; // 10 * 32 = 320
+export { TILE_SIZE };
 
 /** Activation radius for live painting mount (Manhattan tiles). */
 const LIVE_RADIUS = 3;
 
-export type FocusEvent = {
-  interactable: Interactable;
-  /** Character position in base canvas pixels at the moment focus changed. */
-  charX: number;
-  charY: number;
-};
-
 export type MuseumCanvasProps = {
   experiments: Experiment[];
   works: WorkRef[];
-  onFocusChange?: (focus: FocusEvent | null) => void;
+  onFocusChange?: (focused: Interactable | null) => void;
 };
 
 export function MuseumCanvas({
@@ -81,11 +75,7 @@ export function MuseumCanvas({
         const focusKey = focused ? `${focused.kind}:${focused.slug}` : null;
         if (focusKey !== prevFocusKey) {
           prevFocusKey = focusKey;
-          onFocusChangeRef.current?.(
-            focused
-              ? { interactable: focused, charX: character.x, charY: character.y }
-              : null,
-          );
+          onFocusChangeRef.current?.(focused);
         }
 
         // Live-painting activation: nearest painting within LIVE_RADIUS tiles.
@@ -148,9 +138,10 @@ export function MuseumCanvas({
         ref={canvasRef}
         width={CANVAS_W}
         height={CANVAS_H}
-        aria-label="Interactive pixel-art museum. Use the List view button below for an accessible grid."
+        aria-label="Interactive pixel-art museum. Use the List view button above for an accessible grid."
         role="application"
         tabIndex={0}
+        className="museum-canvas focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         style={{
           display: "block",
           width: "100%",
@@ -158,7 +149,6 @@ export function MuseumCanvas({
           imageRendering: "pixelated",
           backgroundColor: "#0a0a0a",
           borderRadius: "0.75rem",
-          outline: "none",
         }}
       />
       {livePainting && (
