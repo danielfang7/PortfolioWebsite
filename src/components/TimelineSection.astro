@@ -1,0 +1,584 @@
+---
+import { getCollection } from "astro:content";
+
+/* ── Data shaping ─────────────────────────────────────────────────────────── */
+type TimelineEntry = {
+  kind: "built" | "invested";
+  year: number;
+  role: string;
+  title: string;
+  description: string;
+  tags: string[];
+  href: string | null;
+  external: boolean;
+};
+
+const works = await getCollection("works");
+const investments = await getCollection("investments");
+
+const entries: TimelineEntry[] = [
+  ...works.map((w) => ({
+    kind: "built" as const,
+    year: parseInt(w.data.year, 10),
+    role: w.data.role,
+    title: w.data.title,
+    description: w.data.description,
+    tags: w.data.stack.slice(0, 4),
+    href: `/works/${w.id.replace(/\.(md|mdx)$/, "")}`,
+    external: false,
+  })),
+  ...investments.map((i) => ({
+    kind: "invested" as const,
+    year: i.data.year,
+    role: `${i.data.stage} · ${i.data.sector}`,
+    title: i.data.company,
+    description: i.data.description,
+    tags: [],
+    href: i.data.url ?? null,
+    external: true,
+  })),
+];
+
+// Newest first; "built" ranks above "invested" within the same year
+entries.sort((a, b) => {
+  if (a.year !== b.year) return b.year - a.year;
+  if (a.kind !== b.kind) return a.kind === "built" ? -1 : 1;
+  return a.title.localeCompare(b.title);
+});
+
+const yearGroups: { year: number; entries: TimelineEntry[] }[] = [];
+for (const entry of entries) {
+  const last = yearGroups[yearGroups.length - 1];
+  if (last && last.year === entry.year) last.entries.push(entry);
+  else yearGroups.push({ year: entry.year, entries: [entry] });
+}
+---
+
+<section
+  id="timeline"
+  class="container-content pt-14 md:pt-20 pb-24 md:pb-28"
+  aria-labelledby="timeline-heading"
+>
+  <div class="border-t border-border-subtle pt-16 md:pt-20">
+    <!-- Eyebrow -->
+    <div class="flex items-center gap-3 mb-4 anim-fade-up">
+      <span class="accent-line" aria-hidden="true" />
+      <span class="text-sm font-medium tracking-widest text-accent uppercase">
+        Builder Journey
+      </span>
+    </div>
+
+    <!-- Headline -->
+    <div class="flex flex-col gap-4 mb-14 md:mb-20 anim-fade-up">
+      <h2
+        id="timeline-heading"
+        class="font-display text-display-lg font-bold text-text-primary leading-[1.05] max-w-3xl"
+      >
+        Built<span class="text-text-secondary">.</span> Backed<span class="text-text-secondary">.</span>
+      </h2>
+      <p class="text-base text-text-secondary leading-relaxed max-w-xl">
+        The arc so far — projects I've shipped as a founder,
+        and companies I've backed as an angel.
+      </p>
+    </div>
+
+    <!-- Timeline -->
+    <ol class="timeline-list" role="list">
+      {
+        yearGroups.map((group) => (
+          <li class="year-group relative">
+            {/* Ghost year watermark — decorative chrome */}
+            <span class="ghost-year" aria-hidden="true">
+              {group.year}
+            </span>
+
+            <ul class="timeline-entries" role="list">
+              {group.entries.map((entry) => (
+                <li class="timeline-entry anim-fade-up" data-kind={entry.kind}>
+                  {/* Meta row: status + role */}
+                  <div class="flex items-center gap-3 mb-3 flex-wrap">
+                    <span
+                      class:list={[
+                        "status-pill",
+                        entry.kind === "built" ? "status-built" : "status-invested",
+                      ]}
+                    >
+                      <span class="status-dot" aria-hidden="true" />
+                      {entry.kind === "built" ? "Built" : "Invested"}
+                    </span>
+                    <span class="text-[11px] font-mono text-text-muted tracking-widest uppercase">
+                      {entry.role}
+                    </span>
+                  </div>
+
+                  {/* Title */}
+                  {entry.href ? (
+                    <a
+                      href={entry.href}
+                      target={entry.external ? "_blank" : undefined}
+                      rel={entry.external ? "noopener noreferrer" : undefined}
+                      class="entry-title group/link"
+                    >
+                      <span>{entry.title}</span>
+                      <svg
+                        class="entry-title__arrow"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M4 12L12 4M12 4H6M12 4v6"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </a>
+                  ) : (
+                    <h3 class="entry-title entry-title--static">{entry.title}</h3>
+                  )}
+
+                  {/* Description */}
+                  <p class="text-base text-text-secondary leading-relaxed max-w-[52ch] mt-3">
+                    {entry.description}
+                  </p>
+
+                  {/* Tags */}
+                  {entry.tags.length > 0 && (
+                    <div class="flex flex-wrap gap-1.5 mt-5">
+                      {entry.tags.map((tag) => (
+                        <span class="tech-chip">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ol>
+
+    <!-- Footer -->
+    <div
+      class="flex flex-wrap gap-6 items-center justify-between pt-10 mt-16 md:mt-20 border-t border-border-subtle anim-fade-up"
+    >
+      <p class="text-sm text-text-muted">More in the archive.</p>
+      <div class="flex items-center gap-4">
+        <a href="/works" class="timeline-cta group">
+          All works
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M3 8h10M9 4l4 4-4 4"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+        <span class="w-px h-4 bg-border-subtle" aria-hidden="true" />
+        <a href="/investments" class="timeline-cta group">
+          All investments
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M3 8h10M9 4l4 4-4 4"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── Year groups ──────────────────────────────────────────────────────── */
+  .timeline-list {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+  }
+
+  .year-group {
+    position: relative;
+  }
+
+  /* ── Ghost year watermark ─────────────────────────────────────────────── */
+  .ghost-year {
+    position: absolute;
+    top: -0.18em;
+    left: -0.04em;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(6rem, 15vw, 12rem);
+    line-height: 0.9;
+    letter-spacing: -0.045em;
+    user-select: none;
+    pointer-events: none;
+    color: transparent;
+    background: linear-gradient(
+      180deg,
+      rgba(240, 240, 240, 0.07) 0%,
+      rgba(0, 216, 255, 0.09) 55%,
+      rgba(240, 240, 240, 0) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    z-index: 0;
+    will-change: transform;
+  }
+
+  /* Mobile: ghost year stacks above, smaller, in-flow */
+  @media (max-width: 767px) {
+    .ghost-year {
+      position: relative;
+      top: 0;
+      left: 0;
+      display: block;
+      font-size: clamp(2.75rem, 14vw, 4rem);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(
+        90deg,
+        rgba(240, 240, 240, 0.18) 0%,
+        rgba(0, 216, 255, 0.22) 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+  }
+
+  /* ── Entries list (left-rail timeline) ────────────────────────────────── */
+  .timeline-entries {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    padding-left: 1.75rem;
+    z-index: 1;
+  }
+
+  @media (min-width: 768px) {
+    .timeline-entries {
+      padding-left: 10rem;
+      gap: 3.5rem;
+    }
+  }
+
+  /* Vertical spine (per year-group → chapter separation) */
+  .timeline-entries::before {
+    content: "";
+    position: absolute;
+    top: 0.35rem;
+    bottom: 0.35rem;
+    left: calc(1.75rem - 0.5px);
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--color-border-subtle) 12%,
+      var(--color-border-subtle) 88%,
+      transparent 100%
+    );
+    z-index: 0;
+  }
+
+  @media (min-width: 768px) {
+    .timeline-entries::before {
+      left: calc(10rem - 0.5px);
+    }
+  }
+
+  /* ── Individual entry ─────────────────────────────────────────────────── */
+  .timeline-entry {
+    position: relative;
+  }
+
+  /* Dot on the spine — centered on the line, ringed by bg-base */
+  .timeline-entry::before {
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: 0.65rem;
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: var(--color-accent);
+    box-shadow:
+      0 0 0 4px var(--color-bg-base),
+      0 0 12px rgba(0, 216, 255, 0.45);
+    z-index: 2;
+    transition: transform var(--duration-fast) var(--ease-out-expo),
+      box-shadow var(--duration-fast) var(--ease-out-expo);
+  }
+
+  .timeline-entry[data-kind="invested"]::before {
+    background: var(--color-text-secondary);
+    box-shadow:
+      0 0 0 4px var(--color-bg-base),
+      0 0 0 1px var(--color-border);
+  }
+
+  .timeline-entry:hover::before {
+    transform: scale(1.25);
+  }
+
+  .timeline-entry[data-kind="built"]:hover::before {
+    box-shadow:
+      0 0 0 4px var(--color-bg-base),
+      0 0 18px rgba(0, 216, 255, 0.75);
+  }
+
+  /* ── Status pills ─────────────────────────────────────────────────────── */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.6rem 0.25rem 0.55rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+    border: 1px solid;
+    white-space: nowrap;
+    line-height: 1;
+  }
+
+  .status-pill .status-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 9999px;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .status-built {
+    background: rgba(0, 216, 255, 0.08);
+    color: var(--color-accent);
+    border-color: rgba(0, 216, 255, 0.25);
+  }
+
+  .status-invested {
+    background: var(--color-bg-elevated);
+    color: var(--color-text-secondary);
+    border-color: var(--color-border-subtle);
+  }
+
+  /* ── Entry title ──────────────────────────────────────────────────────── */
+  .entry-title {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    line-height: 1.15;
+    transition: color var(--duration-fast) var(--ease-out-expo);
+  }
+
+  .entry-title:hover {
+    color: var(--color-accent);
+  }
+
+  .entry-title--static {
+    cursor: default;
+  }
+
+  .entry-title__arrow {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+    transform: translate(0, 0);
+    transition: color var(--duration-fast) var(--ease-out-expo),
+      transform var(--duration-fast) var(--ease-out-expo);
+  }
+
+  .entry-title:hover .entry-title__arrow {
+    color: var(--color-accent);
+    transform: translate(2px, -2px);
+  }
+
+  /* ── Tech chips ───────────────────────────────────────────────────────── */
+  .tech-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.55rem;
+    border-radius: 0.375rem;
+    font-size: 0.6875rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    background: transparent;
+    border: 1px solid var(--color-border-subtle);
+    transition: color var(--duration-fast) var(--ease-out-expo),
+      border-color var(--duration-fast) var(--ease-out-expo);
+    line-height: 1.4;
+  }
+
+  .timeline-entry:hover .tech-chip {
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+  }
+
+  /* ── Footer CTA links ─────────────────────────────────────────────────── */
+  .timeline-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    transition: color var(--duration-fast) var(--ease-out-expo);
+  }
+
+  .timeline-cta svg {
+    transform: translateX(-2px);
+    transition: transform var(--duration-fast) var(--ease-out-expo);
+  }
+
+  .timeline-cta:hover {
+    color: var(--color-accent);
+  }
+
+  .timeline-cta:hover svg {
+    transform: translateX(0);
+  }
+
+  /* ── Reduced motion ───────────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    .timeline-entry,
+    .anim-fade-up {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    .ghost-year {
+      transform: none !important;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  let timelineAbort: AbortController | null = null;
+
+  function initTimeline() {
+    const section = document.getElementById("timeline");
+    if (!section) return;
+
+    if (timelineAbort) timelineAbort.abort();
+    timelineAbort = new AbortController();
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    const entries = gsap.utils.toArray<HTMLElement>(
+      "#timeline .timeline-entry"
+    );
+    const fadeUps = gsap.utils.toArray<HTMLElement>(
+      "#timeline .anim-fade-up:not(.timeline-entry)"
+    );
+    const ghosts = gsap.utils.toArray<HTMLElement>("#timeline .ghost-year");
+
+    // Always ensure visible as fallback
+    [...entries, ...fadeUps].forEach((el) => {
+      el.style.opacity = "1";
+      el.style.transform = "none";
+    });
+
+    if (prefersReducedMotion) return;
+
+    // Clean up existing triggers inside #timeline (handles soft-nav)
+    ScrollTrigger.getAll().forEach((t) => {
+      const trigger = t.trigger as HTMLElement | null;
+      if (trigger && trigger.closest("#timeline")) t.kill();
+    });
+
+    // Eyebrow / headline / footer
+    fadeUps.forEach((el) => {
+      gsap.fromTo(
+        el,
+        { opacity: 0, y: 20 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 88%",
+            toggleActions: "play none none none",
+          },
+        }
+      );
+    });
+
+    // Entries — slide in from the rail, subtle stagger
+    entries.forEach((el) => {
+      gsap.fromTo(
+        el,
+        { opacity: 0, x: -12, y: 16 },
+        {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          duration: 0.7,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 85%",
+            toggleActions: "play none none none",
+          },
+        }
+      );
+    });
+
+    // Cinematic parallax on ghost years (desktop only — mobile is in-flow)
+    const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+    if (isDesktop) {
+      ghosts.forEach((el) => {
+        const group = el.parentElement;
+        if (!group) return;
+        gsap.fromTo(
+          el,
+          { yPercent: -8 },
+          {
+            yPercent: 8,
+            ease: "none",
+            scrollTrigger: {
+              trigger: group,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: 0.6,
+            },
+          }
+        );
+      });
+    }
+
+    ScrollTrigger.refresh();
+  }
+
+  let _timelineFired = false;
+  document.addEventListener("astro:page-load", () => {
+    _timelineFired = true;
+    initTimeline();
+  });
+  requestAnimationFrame(() => {
+    if (!_timelineFired) initTimeline();
+  });
+  document.addEventListener("astro:after-swap", () => initTimeline());
+</script>

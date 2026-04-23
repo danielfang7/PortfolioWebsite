@@ -34,8 +34,8 @@ const works = (await getCollection("works"))
           Lab
         </h1>
         <p class="text-text-secondary max-w-xl leading-relaxed">
-          Walk through the museum. Paintings are experiments, computer desks
-          are works. Stand in front of anything glowing cyan and press E to
+          Walk through the museum with WASD or arrow keys. Paintings are front end experiments, computer desks
+          are works. Stand in front of anything glowing and press E to
           interact.
         </p>
       </div>
@@ -98,11 +98,27 @@ const works = (await getCollection("works"))
     window.__setLabView = setView;
     backBtn?.addEventListener("click", () => setView("museum"));
 
+    let stored: string | null = null;
     try {
-      if (sessionStorage.getItem("labView") === "list") setView("list");
+      stored = sessionStorage.getItem("labView");
     } catch {
-      /* storage blocked — default museum view */
+      /* storage blocked */
     }
+
+    if (stored === "list" || stored === "museum") {
+      setView(stored as "list" | "museum");
+      return;
+    }
+
+    // No explicit choice — auto-fall-back to list when the museum would be a
+    // poor fit: users who prefer reduced motion, narrow viewports, or coarse
+    // (touch) pointers with no viable d-pad yet.
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const narrow = window.innerWidth < 768;
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    if (reduceMotion || narrow || coarse) setView("list");
   }
 
   document.addEventListener("astro:page-load", initLabView);
