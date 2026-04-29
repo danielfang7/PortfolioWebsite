@@ -46,11 +46,10 @@ export function createHallScene(interactables: Interactable[]): Tilemap {
         const i = y * HALL_WIDTH + x;
         if (it.kind === "painting") {
           tiles[i] = TILE.WALL;
-          walkable[i] = false;
-        } else {
-          tiles[i] = TILE.DESK;
-          walkable[i] = false;
         }
+        // Computers leave the underlying floor tile and draw their sprite on
+        // top in a later render pass, just like paintings.
+        walkable[i] = false;
       }
     }
   }

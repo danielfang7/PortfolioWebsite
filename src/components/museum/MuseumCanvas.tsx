@@ -15,6 +15,7 @@ import {
   type Interactable,
 } from "./engine/interactables";
 import { drawPaintingSprite } from "./engine/paintingSprite";
+import { drawComputerSprite } from "./engine/computerSprite";
 import { buildHallInteractables, type WorkRef } from "./data";
 import {
   createHallScene,
@@ -58,6 +59,7 @@ export function MuseumCanvas({
     const charSprite = createCharacterSprite();
     const interactables = buildHallInteractables(experiments, works);
     const paintings = interactables.filter((i) => i.kind === "painting");
+    const computers = interactables.filter((i) => i.kind === "computer");
     const tilemap = createHallScene(interactables);
     const character = createCharacter(HALL_SPAWN.tileX, HALL_SPAWN.tileY);
     const input = createInput();
@@ -107,6 +109,10 @@ export function MuseumCanvas({
         ctx.fillStyle = "#050506";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         drawTilemap(ctx, tilemap, atlas);
+        // Computers drawn as sprites over their floor footprint.
+        for (const c of computers) {
+          drawComputerSprite(ctx, c.tileX, c.tileY, c.width, c.height);
+        }
         // Paintings drawn as sprites over wall tiles.
         for (const p of paintings) {
           drawPaintingSprite(
