@@ -1,14 +1,14 @@
 export const TILE_SIZE = 32;
 
 /**
- * Base tile palette. Paintings are no longer tiles — they're rendered as sprites
- * on top of wall tiles (see paintingSprite.ts). Painting footprint tiles are
- * stored as WALL in the tilemap and marked non-walkable.
+ * Base tile palette. Paintings and computers are sprites drawn over wall/floor
+ * tiles (see paintingSprite.ts, computerSprite.ts). Painting footprint tiles
+ * are stored as WALL; computer footprint tiles stay FLOOR. Both are marked
+ * non-walkable in the scene builder.
  */
 export const TILE = {
   FLOOR: 0,
   WALL: 1,
-  DESK: 2,
 } as const;
 
 export type TileId = (typeof TILE)[keyof typeof TILE];
@@ -20,11 +20,6 @@ const PALETTE = {
   wallBase: "#16161a",
   wallTop: "#2a2a30",
   wallShadow: "#050506",
-  deskBody: "#2a2a30",
-  deskBodyShadow: "#1a1a1e",
-  deskScreenFrame: "#00d8ff",
-  deskScreen: "#050506",
-  deskScreenGlow: "#003845",
 } as const;
 
 export function createTileAtlas(): HTMLCanvasElement {
@@ -38,7 +33,6 @@ export function createTileAtlas(): HTMLCanvasElement {
 
   drawFloor(ctx, TILE.FLOOR * TILE_SIZE);
   drawWall(ctx, TILE.WALL * TILE_SIZE);
-  drawDesk(ctx, TILE.DESK * TILE_SIZE);
 
   return atlas;
 }
@@ -63,28 +57,4 @@ function drawWall(ctx: CanvasRenderingContext2D, ox: number) {
   ctx.fillStyle = PALETTE.wallShadow;
   ctx.fillRect(ox, TILE_SIZE - 2, TILE_SIZE, 2);
   ctx.fillRect(ox + TILE_SIZE / 2, 4, 1, TILE_SIZE - 6);
-}
-
-function drawDesk(ctx: CanvasRenderingContext2D, ox: number) {
-  drawFloor(ctx, ox);
-  const bx = ox + 2,
-    by = 12,
-    bw = TILE_SIZE - 4,
-    bh = 18;
-  ctx.fillStyle = PALETTE.deskBody;
-  ctx.fillRect(bx, by, bw, bh);
-  ctx.fillStyle = PALETTE.deskBodyShadow;
-  ctx.fillRect(bx, by + bh - 2, bw, 2);
-  const sx = ox + 8,
-    sy = 4,
-    sw = TILE_SIZE - 16,
-    sh = 12;
-  ctx.fillStyle = PALETTE.deskScreenFrame;
-  ctx.fillRect(sx, sy, sw, sh);
-  ctx.fillStyle = PALETTE.deskScreen;
-  ctx.fillRect(sx + 1, sy + 1, sw - 2, sh - 2);
-  ctx.fillStyle = PALETTE.deskScreenGlow;
-  ctx.fillRect(sx + 2, sy + 2, sw - 4, 2);
-  ctx.fillStyle = PALETTE.deskBodyShadow;
-  ctx.fillRect(ox + TILE_SIZE / 2 - 1, sy + sh, 2, 2);
 }
