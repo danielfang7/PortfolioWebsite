@@ -9,7 +9,7 @@ images:
   - "/images/works/VibeLearning_ProjectImage.png"
   - "/images/works/VibeLearning_ExampleImage.png"
 featured: true
-order: 4
+order: 6
 ---
 
 ## Overview
