@@ -5,13 +5,14 @@ import LabGrid from "@/components/LabGrid.astro";
 import { experiments } from "@/data/experiments";
 import { getCollection } from "astro:content";
 
-const works = (await getCollection("works"))
-  .sort((a, b) => a.data.order - b.data.order)
-  .slice(0, 6)
-  .map((w) => ({
-    slug: w.id.replace(/\.(md|mdx)$/, ""),
-    title: w.data.title,
-  }));
+const allWorks = (await getCollection("works")).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+
+const museumWorks = allWorks.slice(0, 6).map((w) => ({
+  slug: w.id.replace(/\.(md|mdx)$/, ""),
+  title: w.data.title,
+}));
 ---
 
 <BaseLayout
@@ -41,7 +42,7 @@ const works = (await getCollection("works"))
       </div>
 
       <div data-lab-pane="museum">
-        <Museum client:only="react" experiments={experiments} works={works} />
+        <Museum client:only="react" experiments={experiments} works={museumWorks} />
       </div>
 
       <div data-lab-pane="list" hidden>
@@ -62,7 +63,7 @@ const works = (await getCollection("works"))
             Museum view
           </button>
         </div>
-        <LabGrid experiments={experiments} />
+        <LabGrid experiments={experiments} works={allWorks} />
       </div>
     </div>
   </section>

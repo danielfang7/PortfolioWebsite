@@ -1,81 +1,204 @@
 ---
 import type { Experiment } from "@/data/experiments";
+import type { CollectionEntry } from "astro:content";
 
 interface Props {
   experiments: Experiment[];
+  works: CollectionEntry<"works">[];
 }
 
-const { experiments } = Astro.props;
+const { experiments, works } = Astro.props;
+
+const gradients = [
+  ["#00D8FF", "#A78BFA"],
+  ["#06B6D4", "#3B82F6"],
+  ["#10B981", "#06B6D4"],
+  ["#F59E0B", "#EF4444"],
+  ["#EC4899", "#8B5CF6"],
+];
+
+function workSlug(id: string) {
+  return id.replace(/\.(md|mdx)$/, "");
+}
 ---
 
-<ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="list">
-  {
-    experiments.map((exp, i) => (
-      <li class="lab-grid-card" style={`--delay: ${i * 60}ms`}>
-        <a
-          href={`/lab/${exp.slug}`}
-          class="group flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-bg-surface hover:border-border hover:-translate-y-1 transition-all duration-300 ease-out-expo shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30"
-        >
-          {/* Preview canvas area */}
-          <div class="relative aspect-[16/10] overflow-hidden bg-bg-base">
-            {/* Animated gradient preview */}
-            <div
-              class="absolute inset-0 transition-transform duration-500 ease-out-expo group-hover:scale-[1.04]"
-              style={`background: radial-gradient(ellipse at 30% 50%, ${exp.color}25 0%, transparent 60%), radial-gradient(ellipse at 70% 30%, ${exp.color}18 0%, transparent 50%);`}
-              aria-hidden="true"
-            />
-            {/* Animated dot grid pattern */}
-            <div
-              class="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-500"
-              style={`background-image: radial-gradient(${exp.color}60 1px, transparent 1px); background-size: 20px 20px;`}
-              aria-hidden="true"
-            />
-            {/* Hover overlay */}
-            <div class="absolute inset-0 bg-gradient-to-t from-bg-base/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
-            <div class="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out-expo">
-              <span class="inline-flex items-center gap-2 text-sm font-semibold text-white tracking-wide">
-                Open experiment
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </span>
-            </div>
-          </div>
+<div class="flex flex-col gap-12">
+  <section aria-labelledby="lab-works-heading">
+    <div class="flex items-center gap-3 mb-3">
+      <span class="accent-line" aria-hidden="true" />
+      <span class="text-sm font-medium tracking-widest text-accent uppercase">
+        Works
+      </span>
+    </div>
+    <h2
+      id="lab-works-heading"
+      class="font-display text-display-md font-bold text-text-primary mb-6"
+    >
+      Projects
+    </h2>
 
-          <div class="flex flex-col gap-3 p-5 flex-1 min-h-0">
-            <div class="flex items-center gap-3">
-              <span
-                class="h-1 w-8 rounded-full transition-all duration-300 group-hover:w-10 shrink-0"
-                style={`background: ${exp.color};`}
-                aria-hidden="true"
-              />
-              <h2 class="font-display font-semibold text-text-primary group-hover:text-accent transition-colors duration-200 min-w-0">
-                {exp.title}
-              </h2>
-            </div>
-
-            <p class="text-sm text-text-secondary leading-relaxed line-clamp-2">
-              {exp.description}
-            </p>
-
-            <div class="flex items-center justify-between gap-3 pt-1 mt-auto border-t border-border-subtle/80">
-              <ul class="flex flex-wrap gap-1.5" role="list" aria-label="Technologies">
-                {exp.tech.slice(0, 3).map((t) => (
-                  <li>
-                    <span class="text-[11px] px-2 py-0.5 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
-                      {t}
+    <ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="list">
+      {
+        works.map((work, i) => {
+          const [from, to] = gradients[i % gradients.length];
+          return (
+            <li class="lab-grid-card" style={`--delay: ${i * 60}ms`}>
+              <a
+                href={`/works/${workSlug(work.id)}`}
+                class="group flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-bg-surface hover:border-border hover:-translate-y-1 transition-all duration-300 ease-out-expo shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30"
+              >
+                <div class="relative aspect-[16/10] overflow-hidden shrink-0">
+                  <img
+                    src={work.data.thumbnail}
+                    alt=""
+                    class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out-expo group-hover:scale-[1.04]"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div
+                    class="absolute inset-0 pointer-events-none transition-opacity duration-300 group-hover:opacity-90 opacity-60"
+                    style={`background: linear-gradient(165deg, ${from}22 0%, transparent 45%, rgba(10,10,10,0.85) 100%);`}
+                    aria-hidden="true"
+                  />
+                  <div
+                    class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style="background: linear-gradient(to top, rgba(10,10,10,0.92) 0%, transparent 55%);"
+                    aria-hidden="true"
+                  />
+                  <div class="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out-expo">
+                    <span class="inline-flex items-center gap-2 text-sm font-semibold text-white tracking-wide">
+                      View project
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
                     </span>
-                  </li>
-                ))}
-              </ul>
-              <span class="text-xs text-text-muted shrink-0">{exp.year}</span>
-            </div>
-          </div>
-        </a>
-      </li>
-    ))
-  }
-</ul>
+                  </div>
+                  <div class="absolute top-3 right-3 px-2 py-0.5 rounded-md text-[10px] font-medium uppercase tracking-wider text-white/90 bg-black/45 backdrop-blur-sm border border-white/10">
+                    {work.data.year}
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-3 p-5 flex-1 min-h-0">
+                  <div class="flex items-center gap-3">
+                    <span
+                      class="h-1 w-8 rounded-full transition-all duration-300 group-hover:w-10 shrink-0"
+                      style={`background: linear-gradient(90deg, ${from}, ${to});`}
+                      aria-hidden="true"
+                    />
+                    <h3 class="font-display font-semibold text-text-primary group-hover:text-accent transition-colors duration-200 min-w-0">
+                      {work.data.title}
+                    </h3>
+                  </div>
+
+                  <p class="text-sm text-text-secondary leading-relaxed line-clamp-2">
+                    {work.data.description}
+                  </p>
+
+                  <div class="flex items-center justify-between gap-3 pt-1 mt-auto border-t border-border-subtle/80">
+                    <ul class="flex flex-wrap gap-1.5" role="list" aria-label="Tech stack">
+                      {work.data.stack.slice(0, 3).map((tech) => (
+                        <li>
+                          <span class="text-[11px] px-2 py-0.5 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
+                            {tech}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <span class="text-xs text-text-muted shrink-0">{work.data.role}</span>
+                  </div>
+                </div>
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </section>
+
+  <section aria-labelledby="lab-experiments-heading">
+    <div class="flex items-center gap-3 mb-3">
+      <span class="accent-line" aria-hidden="true" />
+      <span class="text-sm font-medium tracking-widest text-accent uppercase">
+        Experiments
+      </span>
+    </div>
+    <h2
+      id="lab-experiments-heading"
+      class="font-display text-display-md font-bold text-text-primary mb-6"
+    >
+      Lab
+    </h2>
+
+    <ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="list">
+      {
+        experiments.map((exp, i) => (
+          <li class="lab-grid-card" style={`--delay: ${i * 60}ms`}>
+            <a
+              href={`/lab/${exp.slug}`}
+              class="group flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-bg-surface hover:border-border hover:-translate-y-1 transition-all duration-300 ease-out-expo shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30"
+            >
+              {/* Preview canvas area */}
+              <div class="relative aspect-[16/10] overflow-hidden bg-bg-base">
+                {/* Animated gradient preview */}
+                <div
+                  class="absolute inset-0 transition-transform duration-500 ease-out-expo group-hover:scale-[1.04]"
+                  style={`background: radial-gradient(ellipse at 30% 50%, ${exp.color}25 0%, transparent 60%), radial-gradient(ellipse at 70% 30%, ${exp.color}18 0%, transparent 50%);`}
+                  aria-hidden="true"
+                />
+                {/* Animated dot grid pattern */}
+                <div
+                  class="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-500"
+                  style={`background-image: radial-gradient(${exp.color}60 1px, transparent 1px); background-size: 20px 20px;`}
+                  aria-hidden="true"
+                />
+                {/* Hover overlay */}
+                <div class="absolute inset-0 bg-gradient-to-t from-bg-base/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" aria-hidden="true" />
+                <div class="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out-expo">
+                  <span class="inline-flex items-center gap-2 text-sm font-semibold text-white tracking-wide">
+                    Open experiment
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M4 12L12 4M12 4H6M12 4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-3 p-5 flex-1 min-h-0">
+                <div class="flex items-center gap-3">
+                  <span
+                    class="h-1 w-8 rounded-full transition-all duration-300 group-hover:w-10 shrink-0"
+                    style={`background: ${exp.color};`}
+                    aria-hidden="true"
+                  />
+                  <h3 class="font-display font-semibold text-text-primary group-hover:text-accent transition-colors duration-200 min-w-0">
+                    {exp.title}
+                  </h3>
+                </div>
+
+                <p class="text-sm text-text-secondary leading-relaxed line-clamp-2">
+                  {exp.description}
+                </p>
+
+                <div class="flex items-center justify-between gap-3 pt-1 mt-auto border-t border-border-subtle/80">
+                  <ul class="flex flex-wrap gap-1.5" role="list" aria-label="Technologies">
+                    {exp.tech.slice(0, 3).map((t) => (
+                      <li>
+                        <span class="text-[11px] px-2 py-0.5 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
+                          {t}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <span class="text-xs text-text-muted shrink-0">{exp.year}</span>
+                </div>
+              </div>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</div>
 
 <script>
   import { gsap } from "gsap";
