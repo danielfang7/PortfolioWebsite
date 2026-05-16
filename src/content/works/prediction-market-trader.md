@@ -3,7 +3,7 @@ title: "Prediction Market Trader"
 description: "Autonomous trading agent for specific Kalshi markets"
 role: "Solo Developer"
 year: "2026"
-stack: ["Python", "Claude Agent SDK", "MCP", "NWS API", "Kalshi API"]
+stack: ["Python", "Claude Agent SDK", "MCP", "Kalshi API"]
 thumbnail: "/images/works/PredictionMarketTrader_ProjectImage.png"
 images:
   - "/images/works/PredictionMarketTrader_ProjectImage.png"
