@@ -1,0 +1,182 @@
+---
+title: "Write Tool Schemas that AI Agents Reliably Use (pt. 2)"
+date: 2026-05-17T09:00:00.000Z
+excerpt: "Your tool schemas are prompts, whether you treat them that way or not."
+tags: ["AI", "Engineering"]
+readingTime: "9 min read"
+---
+
+This is part 2 of my "Lessons from Building an AI Agent" series. Read the first part [here](/blog/what-is-an-ai-agent-the-loop-explained).
+
+When I first let our AI agent ***cook***, I brewed some coffee and settled in to see how well it would do. Around 4 prompts in, I knew we had a serious problem.
+
+It created a material, then forgot to attach that material to anything. It called *modify_script* on a file that didn't even exist. It also came up with a shader name that looked good but caused the editor to crash.
+
+Everything else worked as intended (the loop worked and the provider worked), but the agent just seemed bad at its job.
+
+I thought that tool schemas were the boring part of the system. You'd write the name, list off the parameter(s), and move on. However, the schema is the only way to tell the model what each tool can do, when to use it, and how to populate the input for it.
+
+This was when I began to realize that tool schemas are NOT metadata… they are prompts. And most of mine were terrible.
+
+## What the schema is actually doing
+
+A tool schema appears similar to an API contract. To the model though, it's much closer to a tiny instruction manual that is embedded inside the prompt. An effective tool schema:
+
+1. Tells the model when to select this tool instead of every other available tool
+2. Tells the model how to populate the arguments correctly
+3. Documents the tool for whomever will have to read through the code base
+
+Most of my initial schemas were optimized for #3 while ignoring both #1 and #2. The model is not going to read your schema like an engineer reads documentation. Instead, it scans the sea of JSON data and makes a probabilistic determination about which schema best matches the user's intent. If your schema doesn't assist that determination, you're essentially tossing away accuracy.
+
+Here is an example of a poorly written tool schema that intends to generically set a property on a Game Object in Unity:
+
+```json
+{
+  "name": "set_property",
+  "description": "Sets a property on an object",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "path": { "type": "string" },
+      "name": { "type": "string" },
+      "value": { "type": "string" }
+    }
+  }
+}
+```
+
+Quite a few questions naturally arise when reviewing the tool above, and as such a model will be even more confused. What does "object" represent - a GameObject, a Material, or a Component? When setting a position what is the proper format: name = "Position" and value = "0,0,0"? Or value = "0 0 0"? And is path a file path, an asset path, or a Unity hierarchy path?
+
+These uncertainties will cause the model to guess. And more importantly, the model will make different guesses on different runs of the same prompt and you'll waste hours trying to understand what is going on.
+
+Here is an improved tool from our Unity AI agent ([GladeKit](https://gladekit.com)) - also focused on the more granular task of setting *transform* instead of generically setting a *property*:
+
+```json
+{
+  "name": "set_transform",
+  "description": "Set world position/rotation/scale of a GameObject. Required after create_primitive when positioning is specified. Use get_gameobject_info to find a reference object's position, then calculate and set the target.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "gameObjectPath": { "type": "string", "description": "Name of the GameObject to move (e.g., 'RedCube'). REQUIRED when you created multiple objects." },
+      "position":  { "type": "string", "description": "Position as 'x,y,z' (e.g., '5,1,0')." },
+      "rotation":  { "type": "string", "description": "Rotation as 'x,y,z' Euler angles in degrees." },
+      "scale":     { "type": "string", "description": "Scale as 'x,y,z'." },
+      "operation": { "type": "string", "enum": ["set", "add", "multiply"], "default": "set",
+                     "description": "'set' (absolute), 'add' (offset), 'multiply' (scale)" }
+    },
+    "required": []
+  }
+}
+```
+
+Notice how this tool schema tells the model exactly where it operates and what it targets (specifically sets *transform* on a *GameObject*). It also provides typed number values for axis entries, and requires only one field entry.
+
+I'll explain why all of this matters, starting from the tool name itself.
+
+## Names are the first prompt
+
+At first, I named tools similarly to how I'd name REST endpoints: *set_property*, *create_object*, *update_asset*. But this failed to scale past roughly 30 tools. The model had to parse each description to select the correct tool, and more often than not selected the wrong tool. The solution was to change the names of the tools to describe exactly what they would accomplish.
+
+**More specific names almost always work better**:
+
+- *create_game_object* is clearly different from *create_primitive*
+- *assign_material_to_renderer* is clearly different from *create_material*
+- *set_transform* is clearly different from *set_component_property*
+
+While these names were less "aesthetically pleasing", they provided clear guidance for the model to utilize the appropriate tool, which was the ultimate goal of providing a descriptive name for each tool.
+
+## Don't ship your REST API as tools
+
+Upon initially adding tools for working with materials and renderers in Unity, my instinct was to replicate Unity's API one to one. In terms of functionality, there's a material asset, a renderer component, and an array of materials contained within the renderer. Therefore, the "clean" tool set would have included *create_material*, *get_renderer*, and *set_renderer_materials*.
+
+To paint a cube red using this method, the model would create the required material, retrieve the associated renderer, read the current array of materials, add the new material to the existing array, and then replace the current array with the updated one. While this methodology functioned correctly, I watched as the model extensively consumed tokens upon each invocation, wasting tokens and effort.
+
+Sure, good restful APIs are built around resources (documents, IDs, arrays you patch). But **models wish to operate based on actions** (e.g. "change color"). Each conversion between the action-based mindset of models and the resource-oriented design principles of restful APIs provides a potential point of failure for models.
+
+Building a tool layer is a chance to also review and edit your own API. For example, collapsing three unnecessarily separate API calls into a single call utilizing one tool. Renaming parameters called "*n*" due to legacy or random reasons. Removing fields that are simply unnecessary.
+
+Ultimately, what provided value in my case was *create_material* + *assign_material_to_renderer*: one tool that accepts both the path to the renderer and the path to the material and performs all necessary array manipulation. The model stopped thinking and simply made calls to it.
+
+The best tool is NOT the cleanest wrapper around your code. The best tool is the **smallest reliable action the model can understand and complete**.
+
+## Descriptions are where the work happens
+
+A useful mental model I've learned from Anthropic: **models are intelligent but lazy**. They can accomplish impressive things if you hand the task to them on a silver platter, but will also take shortcuts whenever possible. Effective tool descriptions usually achieve four main objectives:
+
+1. Clearly state what the tool does
+2. Indicate when the tool is called
+3. Identify tools that usually come before or after it is called
+4. Give a concrete shape for its arguments
+
+The original description for primitive creation in GladeKit was something like "Creates a primitive GameObject." True, accurate, but also useless. The model would dutifully spawn a gray cube at the origin and stop. So I rewrote it:
+
+> Create a primitive object (Cube, Sphere, Capsule, Cylinder, Plane, Quad) at origin with default material. Always follow up with *set_transform* for positioning and *create_material* + *assign_material_to_renderer* for colors.
+
+The model started chaining the right calls more often. No modification to the loop or system prompt.
+
+The same pattern fixed the hallucinated file problem, as *modify_script* was getting called on files the model hallucinated. So I edited the description to say:
+
+> File MUST exist in the project - verify against the Unity context first. If the file isn't listed, it doesn't exist; use *create_script* instead.
+
+Adding that single sentence killed most of those failures. Remember, a tool description isn't documentation. **Tool descriptions are tiny instruction following tasks that run EVERY TIME the model considers your tool.**
+
+## Design arguments for the model
+
+For far too long, I treated arguments as a typing issue. String, int, bool, array, done. However, these really resemble UX problems. What dictates how frequently the model will successfully fill in an argument? Here are some patterns which made a big difference.
+
+1. **Use enums for fixed sets.** If a parameter has six valid values, list all six. The primitive type field is an enum, and I have never once seen the model try to spawn a "Pyramid." If it were a free-form string, it would.
+2. **Don't overuse "required".** Each field marked as required provides an additional location the model may manufacture data. For one tool, I had designated too many items as required so instead of leaving them blank, the model began manufacturing numbers that fit each schema requirement. Loosening the list and writing defaults into the description ("Default: 200") fixed it.
+3. **Keep argument names consistent across the whole tool set.** For example, use *gameObjectPath* everywhere, not *path* in one tool and *targetPath* in another. Once the model learns that *gameObjectPath* takes either a name or a hierarchy path, that knowledge transfers across the various tools that use it.
+4. **Avoid fancy formatting.** I represent color as *r,g,b,a* (i.e a single string). As an engineer, you might instinctively choose to define color as an \{*r,g,b,a*\} object. While this appears to make sense, describing it in a single sentence ("Values 0-1. For example '1,0,0,1' represents red") makes it much easier to write a description that the model understands and uses correctly.
+
+Here's what those principles look like in a schema example:
+
+```json
+{
+  "name": "create_primitive",
+  "description": "Create a primitive GameObject at the origin with a default material. Always follow up with set_transform for positioning, and create_material + assign_material_to_renderer if you want a non-default color.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "primitiveType": {
+        "type": "string",
+        "enum": ["Cube", "Sphere", "Capsule", "Cylinder", "Plane", "Quad"]
+      },
+      "name": {
+        "type": "string",
+        "description": "Name for the new GameObject. Default: same as primitiveType."
+      },
+      "parentPath": {
+        "type": "string",
+        "description": "Optional hierarchy path of a parent GameObject. If omitted, the primitive is created at the scene root."
+      }
+    },
+    "required": ["primitiveType"]
+  }
+}
+```
+
+Notice the specific name as well as the description that tells the model what to call before and after. An enum for the closed set, one required field, and defaults written into the description instead of marked required. *parentPath* and *gameObjectPath* (in the earlier schema) use the same convention, so anything the model has learned about hierarchy paths transfers between tools.
+
+## The schema and the implementation have different readers
+
+This part took me the longest to internalize. The schema is for the model; the implementation is for you.
+
+The schema description should be focused on getting the model to choose the best tool and provide the best arguments. On the other hand, the C#, Python, or whatever code for the implementation needs to assume that the model will give it something completely unexpected - string instead of an integer, floating point number with way too many decimal places, path with or without a leading slash. And almost all implementations in GladeKit have a defensive parser at the top. For example: Try int.TryParse first, then try float.TryParse, then try ToString() followed by a pattern match. Defensive parsing is just as important as making sure the schema is tightened, given the nature of LLMs being non-deterministic.
+
+> Here's a quick gut check you can use for any tool: could a smart but lazy junior engineer figure out how to use it from the name, description, and argument names alone?
+
+## The TLDR advice that may help
+
+- More specific tool names almost always beat generic ones
+- Think of the tool description as a prompt, not documentation
+- Reference companion tools in descriptions as needed
+- Use enums where there's a fixed set of valid values
+- Don't aggressively mark too many parameters as required
+- Utilize argument names that are consistent across your whole tool set
+- Plan for the worst: distrust the model in the implementation, add defensive checks
+
+View tool schemas as a means to teach. Each word in each tool name and/or description should be high signal and thoughtfully chosen - otherwise they are simply wasted characters.
+
+*Coming Next: Tool Results Are Part of the Prompt - what comes back from a tool matters as much as what goes in.*
