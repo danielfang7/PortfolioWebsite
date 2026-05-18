@@ -1,6 +1,8 @@
 # danielfang.me
 
-Personal portfolio and showcase site for **Daniel Fang** - engineering, projects, investments, and writing. 
+Personal site for **Daniel Fang** — works, lab experiments, investments, and writing.
+
+Live at [danielfang.me](https://danielfang.me).
 
 ---
 
@@ -8,11 +10,12 @@ Personal portfolio and showcase site for **Daniel Fang** - engineering, projects
 
 | Layer | Technology |
 |-------|------------|
-| **Framework** | [Astro](https://astro.build) 5 (static by default, React islands where needed) |
-| **Styling** | [Tailwind CSS](https://tailwindcss.com) + CSS custom properties (design tokens) |
-| **Animation** | [GSAP](https://gsap.com) (ScrollTrigger, ScrollToPlugin)
-| **Content** | Astro Content Collections - Markdown for works, MDX for blog |
-| **Deployment** | [Netlify](https://netlify.com) 
+| Framework | [Astro 5](https://astro.build) — static by default, React islands where needed |
+| UI | [React 18](https://react.dev) for interactive components |
+| Styling | [Tailwind CSS](https://tailwindcss.com) + CSS custom properties for design tokens |
+| Animation | [GSAP](https://gsap.com) (ScrollTrigger) and [Lenis](https://lenis.darkroom.engineering) for smooth scroll |
+| Content | Astro Content Collections — Markdown for works, MDX for blog, JSON for investments |
+| Deployment | [Netlify](https://netlify.com) |
 
 ---
 
@@ -20,17 +23,22 @@ Personal portfolio and showcase site for **Daniel Fang** - engineering, projects
 
 ```
 src/
-├── pages/           # Astro routes (index, works, blog, investments, contact, 404)
+├── pages/           # Routes: /, /works, /works/[slug], /lab, /blog, /blog/[slug],
+│                    #         /investments, /contact, /404
 ├── layouts/         # BaseLayout (meta, nav, footer)
-├── components/      # Nav, Footer, HeroSection, WorksCarousel
-├── content/         # Content Collections
-│   ├── works/       # Project entries (Markdown)
+├── components/      # Nav, Footer, HeroSection, WorksCarousel, LabGrid,
+│   ├── case-studies/    #   interactive case studies for select works
+│   ├── lab/             #   shader / particle experiments
+│   └── museum/          #   museum-style media components
+├── content/
+│   ├── works/       # Project entries (Markdown + frontmatter)
 │   ├── blog/        # Posts (MDX)
 │   └── investments/ # Investment entries (JSON)
-├── styles/          # global.css (tokens, base, utilities)
-└── lib/             # (optional) helpers, animation utilities
+├── data/            # Static data (e.g. experiments index)
+├── scripts/         # Client-side enhancements (magnetic CTA, etc.)
+└── styles/          # global.css — tokens, base, utilities
 
-public/               # Static assets, favicon
+public/              # Static assets — favicon, og image, images, videos, museum
 ```
 
 ---
@@ -39,55 +47,46 @@ public/               # Static assets, favicon
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start dev server (default port 4321) |
+| `npm run dev` | Start dev server at `http://localhost:4321` |
 | `npm run build` | Production build → `dist/` |
-| `npm run preview` | Preview production build locally |
+| `npm run preview` | Preview the production build locally |
 
 ---
 
-## PRD overview (plan)
-
-The site follows a single-page–style flow with scroll sections and deep-linkable routes.
-
-### Goals
-
-- **Demonstrate frontend craft** — The site is the portfolio; every interaction and transition should reflect strong design and engineering.
-- **Showcase work** — Projects in an engaging 3D card carousel (scroll-linked, with snap).
-- **Keep it simple** — Clean, readable layout; animations that enhance, not distract.
-- **Drive engagement** — Clear paths to works, blog, investments, and contact.
-
-### Non-goals
-
-- No CMS or admin panel (content via code/markdown).
-- No e-commerce or payments.
-- No heavy 3D/WebGL beyond the card carousel.
-- No user accounts or auth.
-
-### Site map
+## Routes
 
 | Route | Description |
 |-------|-------------|
-| `/` | Landing + hero, works carousel |
-| `/works` | Full works list + carousel |
-| `/works/:slug` | Individual project detail |
+| `/` | Landing — hero, works carousel, timeline |
+| `/works` | Full works list |
+| `/works/:slug` | Project detail with media gallery and optional interactive case study |
+| `/lab` | Generative experiments (shaders, particles, vertex fields) |
+| `/lab/:experiment` | Individual experiment page |
+| `/blog` | Writing index |
+| `/blog/:slug` | Post (MDX) |
 | `/investments` | Investment portfolio |
-| `/blog` | Blog listing |
-| `/blog/:slug` | Blog post (MDX) |
 | `/contact` | Contact + social links |
 
-### Development phases (from PRD)
+---
 
-1. **Foundation & design system** — Astro, Tailwind, tokens, typography, Nav, grid.
-2. **Hero & landing** — Staggered entrance, social links, scroll cue.
-3. **Works carousel** — 3D scroll-linked cards, GSAP ScrollTrigger, snap, metadata under cards.
-4. **Works detail** — Project pages, media, back nav.
-5. **Investments** — Grid, scroll-triggered entrances, data from content.
-6. **Blog** — Content collections, listing, post template, MDX, code highlight, TOC.
-7. **Contact & footer** — Contact section, optional Netlify Forms.
-8. **Polish** — Performance, a11y, SEO, motion preferences, Netlify config.
+## Design system
 
-### Design system (summary)
+- **Palette** — Dark base (`#0A0A0A`), surface shades, off-white text, single accent.
+- **Typography** — Display (Syne), body (Plus Jakarta Sans), mono (JetBrains Mono).
+- **Motion** — Consistent easing (`cubic-bezier(0.16, 1, 0.3, 1)`), durations 150–600ms; all animations respect `prefers-reduced-motion`.
 
-- **Palette:** Dark base (`#0A0A0A`), surface shades, off-white text, single accent (e.g. `#6C63FF`).
-- **Typography:** Display (Syne), body (Plus Jakarta Sans), mono (JetBrains Mono).
-- **Motion:** Consistent easing (`cubic-bezier(0.16, 1, 0.3, 1)`), durations 150–600ms; all animations respect `prefers-reduced-motion`.
+---
+
+## Adding content
+
+Works, blog posts, and investments are defined as content collections in `src/content/`. See `src/content/config.ts` for the schema of each collection.
+
+- **Works** — Add a `.md` file under `src/content/works/`. Required frontmatter: `title`, `description`, `role`, `year`, `stack`, `thumbnail`. Set `featured: true` to surface on the home carousel.
+- **Blog** — Add a `.mdx` file under `src/content/blog/` with `title`, `date`, `excerpt`, and optional `tags`.
+- **Investments** — Add a `.json` file under `src/content/investments/`.
+
+---
+
+## License
+
+Source code is available for reference. Content (writing, images, project descriptions) is © Daniel Fang. Please don't redeploy this site as your own.
