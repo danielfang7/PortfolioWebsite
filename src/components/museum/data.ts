@@ -2,7 +2,17 @@ import type { Experiment } from "@/data/experiments";
 import type { Interactable } from "./engine/interactables";
 import type { Direction } from "./engine/character";
 
-export type WorkRef = { slug: string; title: string };
+export type WorkRef = {
+  slug: string;
+  title: string;
+  description: string;
+  role: string;
+  year: string;
+  stack: string[];
+  thumbnail: string;
+  liveUrl?: string;
+  sourceUrl?: string;
+};
 
 /**
  * Painting slots in the 14x10 hall. Paintings sit flush on the wall — 2x1 on

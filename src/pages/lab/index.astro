@@ -12,6 +12,13 @@ const allWorks = (await getCollection("works")).sort(
 const museumWorks = allWorks.slice(0, 6).map((w) => ({
   slug: w.id.replace(/\.(md|mdx)$/, ""),
   title: w.data.title,
+  description: w.data.description,
+  role: w.data.role,
+  year: w.data.year,
+  stack: w.data.stack,
+  thumbnail: w.data.thumbnail,
+  liveUrl: w.data.liveUrl,
+  sourceUrl: w.data.sourceUrl,
 }));
 ---
 

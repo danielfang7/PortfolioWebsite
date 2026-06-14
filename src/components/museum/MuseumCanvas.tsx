@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { navigate } from "astro:transitions/client";
 import { createLoop } from "./engine/loop";
 import { createInput } from "./engine/input";
 import { createTileAtlas, TILE_SIZE } from "./engine/tileAtlas";
@@ -47,12 +46,18 @@ export type MuseumCanvasProps = {
   experiments: Experiment[];
   works: WorkRef[];
   onFocusChange?: (focused: Interactable | null) => void;
+  /** Fired when the player activates the focused exhibit (E / tap). */
+  onInteract?: (focused: Interactable) => void;
+  /** When true, the scene freezes — used while the summary overlay is open. */
+  paused?: boolean;
 };
 
 export function MuseumCanvas({
   experiments,
   works,
   onFocusChange,
+  onInteract,
+  paused = false,
 }: MuseumCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [livePainting, setLivePainting] = useState<Interactable | null>(null);
@@ -64,6 +69,10 @@ export function MuseumCanvas({
   );
   const onFocusChangeRef = useRef(onFocusChange);
   onFocusChangeRef.current = onFocusChange;
+  const onInteractRef = useRef(onInteract);
+  onInteractRef.current = onInteract;
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -89,6 +98,13 @@ export function MuseumCanvas({
 
     const loop = createLoop({
       update: (dt) => {
+        // While the summary overlay is open the scene is frozen: the character
+        // holds position and a queued interact is dropped so it can't re-fire
+        // when the overlay closes.
+        if (pausedRef.current) {
+          input.clearInteract();
+          return;
+        }
         updateCharacter(character, input.state, tilemap, dt);
         dust.update(character, dt);
         if (!movedOnce && character.moving) {
@@ -120,11 +136,8 @@ export function MuseumCanvas({
         if (input.state.interact) {
           input.clearInteract();
           if (focused) {
-            const href =
-              focused.kind === "painting"
-                ? `/lab/${focused.slug}`
-                : `/works/${focused.slug}`;
-            navigate(href);
+            // Open the in-page summary overlay instead of navigating away.
+            onInteractRef.current?.(focused);
           }
         }
       },

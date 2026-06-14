@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import MuseumCanvas, { CANVAS_W, CANVAS_H, TILE_SIZE } from "./MuseumCanvas";
 import type { Interactable } from "./engine/interactables";
 import InteractPrompt from "./ui/InteractPrompt";
 import ListViewToggle from "./ui/ListViewToggle";
+import ItemModal from "./ui/ItemModal";
 import type { Experiment } from "@/data/experiments";
 import type { WorkRef } from "./data";
 
@@ -19,12 +20,28 @@ declare global {
 
 export function Museum({ experiments, works }: MuseumProps) {
   const [focus, setFocus] = useState<Interactable | null>(null);
+  const [selected, setSelected] = useState<Interactable | null>(null);
+
+  const expBySlug = useMemo(
+    () => new Map(experiments.map((e) => [e.slug, e])),
+    [experiments],
+  );
+  const workBySlug = useMemo(
+    () => new Map(works.map((w) => [w.slug, w])),
+    [works],
+  );
 
   function switchToList() {
     if (typeof window !== "undefined" && window.__setLabView) {
       window.__setLabView("list");
     }
   }
+
+  const selectedExperiment =
+    selected?.kind === "painting" ? expBySlug.get(selected.slug) : undefined;
+  const selectedWork =
+    selected?.kind === "computer" ? workBySlug.get(selected.slug) : undefined;
+  const modalOpen = Boolean(selectedExperiment || selectedWork);
 
   return (
     <div
@@ -47,14 +64,30 @@ export function Museum({ experiments, works }: MuseumProps) {
           experiments={experiments}
           works={works}
           onFocusChange={setFocus}
+          onInteract={setSelected}
+          paused={modalOpen}
         />
         <InteractPrompt
-          focused={focus}
+          focused={modalOpen ? null : focus}
           tileSize={TILE_SIZE}
           canvasW={CANVAS_W}
           canvasH={CANVAS_H}
         />
       </div>
+      {selectedExperiment && (
+        <ItemModal
+          kind="painting"
+          experiment={selectedExperiment}
+          onClose={() => setSelected(null)}
+        />
+      )}
+      {selectedWork && (
+        <ItemModal
+          kind="computer"
+          work={selectedWork}
+          onClose={() => setSelected(null)}
+        />
+      )}
       <nav aria-label="Exhibits" className="sr-only">
         <h2>Exhibits</h2>
         <ul>
