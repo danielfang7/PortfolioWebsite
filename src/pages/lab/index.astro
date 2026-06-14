@@ -35,9 +35,9 @@ const museumWorks = allWorks.slice(0, 6).map((w) => ({
           Lab
         </h1>
         <p class="text-text-secondary max-w-xl leading-relaxed">
-          Walk through the museum with WASD or arrow keys. Paintings are front end experiments, computer desks
-          are works. Stand in front of anything glowing and press E to
-          interact.
+          Walk through the museum with WASD or arrow keys (or drag to move on
+          touch). Paintings are front end experiments, computer desks are works.
+          Stand in front of anything glowing and press E to interact.
         </p>
       </div>
 
@@ -111,15 +111,15 @@ const museumWorks = allWorks.slice(0, 6).map((w) => ({
       return;
     }
 
-    // No explicit choice — auto-fall-back to list when the museum would be a
-    // poor fit: users who prefer reduced motion, narrow viewports, or coarse
-    // (touch) pointers with no viable d-pad yet.
+    // No explicit choice — the museum now ships a touch joystick, so coarse
+    // pointers and narrow viewports are supported. Only auto-fall-back to the
+    // list for visitors who prefer reduced motion (an animated walker is a poor
+    // fit there) or on very small screens where the canvas gets cramped.
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
-    const narrow = window.innerWidth < 768;
-    const coarse = window.matchMedia("(pointer: coarse)").matches;
-    if (reduceMotion || narrow || coarse) setView("list");
+    const veryNarrow = window.innerWidth < 380;
+    if (reduceMotion || veryNarrow) setView("list");
   }
 
   document.addEventListener("astro:page-load", initLabView);

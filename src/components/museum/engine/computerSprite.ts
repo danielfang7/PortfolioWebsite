@@ -24,6 +24,8 @@ export function drawComputerSprite(
   ty: number,
   tileW: number,
   tileH: number,
+  time = 0,
+  phase = 0,
 ): void {
   const x = tx * TILE_SIZE;
   const y = ty * TILE_SIZE;
@@ -69,16 +71,19 @@ export function drawComputerSprite(
   ctx.fillStyle = PALETTE.screen;
   ctx.fillRect(screenX, screenY, screenW, screenH);
 
-  // Screen glow band along the top.
+  // Screen glow band along the top, gently pulsing so each monitor "breathes".
+  const pulse = 0.6 + 0.4 * Math.sin(time * 2 + phase);
+  ctx.save();
+  ctx.globalAlpha = pulse;
   ctx.fillStyle = PALETTE.screenGlow;
   ctx.fillRect(screenX + 1, screenY + 1, screenW - 2, 4);
+  ctx.restore();
 
-  // A single bright scanline near the middle for "alive" character.
+  // A bright scanline scrolling down the screen for "alive" character.
+  const innerH = screenH - 2;
+  const scanY = screenY + 1 + Math.floor(((time * 14 + phase * 7) % innerH));
   ctx.fillStyle = PALETTE.screenScanline;
-  ctx.fillRect(
-    screenX + 3,
-    screenY + Math.floor(screenH / 2),
-    screenW - 6,
-    1,
-  );
+  ctx.globalAlpha = 0.7;
+  ctx.fillRect(screenX + 2, scanY, screenW - 4, 1);
+  ctx.globalAlpha = 1;
 }

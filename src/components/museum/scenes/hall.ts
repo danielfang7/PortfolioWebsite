@@ -20,6 +20,14 @@ export function createHallScene(interactables: Interactable[]): Tilemap {
   const tiles: number[] = new Array(HALL_WIDTH * HALL_HEIGHT).fill(TILE.FLOOR);
   const walkable: boolean[] = new Array(HALL_WIDTH * HALL_HEIGHT).fill(true);
 
+  // Lay a marble checkerboard across the interior floor.
+  for (let y = 0; y < HALL_HEIGHT; y++) {
+    for (let x = 0; x < HALL_WIDTH; x++) {
+      tiles[y * HALL_WIDTH + x] =
+        (x + y) % 2 === 0 ? TILE.FLOOR : TILE.FLOOR_ALT;
+    }
+  }
+
   for (let x = 0; x < HALL_WIDTH; x++) {
     const top = x;
     const bottom = (HALL_HEIGHT - 1) * HALL_WIDTH + x;

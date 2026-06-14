@@ -16,6 +16,16 @@ import {
 } from "./engine/interactables";
 import { drawPaintingSprite } from "./engine/paintingSprite";
 import { drawComputerSprite } from "./engine/computerSprite";
+import {
+  drawAmbientFloor,
+  drawFloorDecor,
+  drawPaintingSpotlights,
+  drawPlayerGlow,
+  drawDust,
+  drawVignette,
+} from "./engine/lighting";
+import { createTouchControls, drawJoystick } from "./engine/touch";
+import { DustField } from "./engine/particles";
 import { buildHallInteractables, type WorkRef } from "./data";
 import {
   createHallScene,
@@ -46,6 +56,12 @@ export function MuseumCanvas({
 }: MuseumCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [livePainting, setLivePainting] = useState<Interactable | null>(null);
+  const [hasMoved, setHasMoved] = useState(false);
+  const [isTouch] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(pointer: coarse)").matches,
+  );
   const onFocusChangeRef = useRef(onFocusChange);
   onFocusChangeRef.current = onFocusChange;
 
@@ -62,15 +78,23 @@ export function MuseumCanvas({
     const computers = interactables.filter((i) => i.kind === "computer");
     const tilemap = createHallScene(interactables);
     const character = createCharacter(HALL_SPAWN.tileX, HALL_SPAWN.tileY);
-    const input = createInput();
+    const input = createInput(canvas);
+    const touch = createTouchControls(canvas, input);
+    const dust = new DustField();
 
     let focused: Interactable | null = null;
     let prevLiveSlug: string | null = null;
     let prevFocusKey: string | null = null;
+    let movedOnce = false;
 
     const loop = createLoop({
       update: (dt) => {
         updateCharacter(character, input.state, tilemap, dt);
+        dust.update(character, dt);
+        if (!movedOnce && character.moving) {
+          movedOnce = true;
+          setHasMoved(true);
+        }
         focused = focusedInteractable(character, interactables, TILE_SIZE);
 
         // Notify parent when the focused hotspot changes — drives InteractPrompt.
@@ -104,15 +128,22 @@ export function MuseumCanvas({
           }
         }
       },
-      render: () => {
+      render: (time) => {
         ctx.imageSmoothingEnabled = false;
         ctx.fillStyle = "#050506";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Floor + light pools (under sprites so light reads as cast on the floor).
         drawTilemap(ctx, tilemap, atlas);
-        // Computers drawn as sprites over their floor footprint.
-        for (const c of computers) {
-          drawComputerSprite(ctx, c.tileX, c.tileY, c.width, c.height);
-        }
+        drawFloorDecor(ctx, canvas.width, canvas.height);
+        drawAmbientFloor(ctx, canvas.width, canvas.height);
+        drawPaintingSpotlights(ctx, paintings);
+
+        // Computers drawn as sprites over their floor footprint. A per-desk
+        // phase offset keeps their screen animations out of sync.
+        computers.forEach((c, i) => {
+          drawComputerSprite(ctx, c.tileX, c.tileY, c.width, c.height, time, i * 1.7);
+        });
         // Paintings drawn as sprites over wall tiles.
         for (const p of paintings) {
           drawPaintingSprite(
@@ -124,16 +155,36 @@ export function MuseumCanvas({
             p.color ?? null,
           );
         }
-        if (focused) drawFocusGlow(ctx, focused, performance.now() / 1000);
-        drawCharacter(ctx, charSprite, character);
+
+        if (focused) drawFocusGlow(ctx, focused, time);
+        drawPlayerGlow(ctx, character);
+        dust.draw(ctx);
+        drawCharacter(ctx, charSprite, character, time);
+
+        // Overlay atmosphere on top of everything in the scene.
+        drawDust(ctx, canvas.width, canvas.height, time);
+        drawVignette(ctx, canvas.width, canvas.height);
+        // Touch joystick is UI — drawn last, over everything.
+        drawJoystick(ctx, touch.joystick);
       },
     });
 
-    loop.start();
+    // Only run the loop while the canvas is on-screen — saves CPU/battery when
+    // the visitor scrolls past the museum.
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loop.start();
+        else loop.stop();
+      },
+      { threshold: 0.01 },
+    );
+    io.observe(canvas);
 
     return () => {
+      io.disconnect();
       loop.stop();
       input.destroy();
+      touch.destroy();
       onFocusChangeRef.current?.(null);
     };
   }, [experiments, works]);
@@ -164,6 +215,34 @@ export function MuseumCanvas({
           canvasH={CANVAS_H}
         />
       )}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          left: "50%",
+          bottom: "5%",
+          transform: "translateX(-50%)",
+          pointerEvents: "none",
+          opacity: hasMoved ? 0 : 1,
+          transition: "opacity 400ms ease-out",
+          padding: "0.35rem 0.75rem",
+          borderRadius: "9999px",
+          background: "rgba(10, 10, 10, 0.78)",
+          border: "1px solid rgba(0, 216, 255, 0.35)",
+          color: "#dfeff3",
+          fontSize: "0.72rem",
+          fontFamily:
+            '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
+          letterSpacing: "0.02em",
+          whiteSpace: "nowrap",
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
+        }}
+      >
+        {isTouch
+          ? "Drag to move · tap an exhibit to open"
+          : "Move with WASD / arrows · press E to interact"}
+      </div>
     </>
   );
 }

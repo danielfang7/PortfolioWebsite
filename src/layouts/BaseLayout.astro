@@ -97,6 +97,7 @@ const fullTitle = title.includes("Daniel Fang")
 
     <script>
       import { initMagneticCTAs } from "@/scripts/magnetic-cta";
+      import type { TransitionBeforeSwapEvent } from "astro:transitions/client";
 
       let _magneticPageLoad = false;
       document.addEventListener("astro:page-load", () => {
@@ -105,6 +106,35 @@ const fullTitle = title.includes("Daniel Fang")
       });
       requestAnimationFrame(() => {
         if (!_magneticPageLoad) initMagneticCTAs();
+      });
+
+      // Scroll-reveal entrance elements render visible in the server HTML (so
+      // they're shown without JS). On a view-transition navigation the GSAP
+      // entrance re-runs and hides them *after* the new page has painted,
+      // producing a visible→hidden flicker. We pre-hide the incoming page's
+      // reveal targets (inline opacity, before paint) so the entrance only ever
+      // plays once, from hidden. Inline style is used (not CSS) so GSAP's
+      // clearProps on reveal returns elements to their visible default.
+      const REVEAL_SELECTOR = [
+        ".anim-fade-up",
+        ".timeline-entry",
+        ".investment-card",
+        ".pillar-card",
+        ".blog-post-item",
+        ".works-grid-card",
+        ".lab-grid-card",
+        ".detail-fade-up",
+        ".gallery-card",
+      ].join(",");
+
+      document.addEventListener("astro:before-swap", (event) => {
+        const e = event as TransitionBeforeSwapEvent;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        e.newDocument
+          .querySelectorAll<HTMLElement>(REVEAL_SELECTOR)
+          .forEach((el) => {
+            el.style.opacity = "0";
+          });
       });
     </script>
   </body>
