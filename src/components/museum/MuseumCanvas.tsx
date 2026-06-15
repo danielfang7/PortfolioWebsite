@@ -15,6 +15,8 @@ import {
 } from "./engine/interactables";
 import { drawPaintingSprite } from "./engine/paintingSprite";
 import { drawComputerSprite } from "./engine/computerSprite";
+import { drawPlaques } from "./engine/plaque";
+import { drawDoorways, drawDoorwaySigns } from "./engine/doorway";
 import {
   drawAmbientFloor,
   drawFloorDecor,
@@ -25,19 +27,40 @@ import {
 } from "./engine/lighting";
 import { createTouchControls, drawJoystick } from "./engine/touch";
 import { DustField } from "./engine/particles";
-import { buildHallInteractables, type WorkRef } from "./data";
+import { createAudio, type MuseumAudio } from "./engine/audio";
+import { createCRT } from "./engine/postprocess";
 import {
-  createHallScene,
-  HALL_WIDTH,
-  HALL_HEIGHT,
-  HALL_SPAWN,
-} from "./scenes/hall";
+  createCamera,
+  setCameraTarget,
+  updateCamera,
+} from "./engine/camera";
+import { buildWorldInteractables, type WorkRef } from "./data";
+import {
+  createWorldScene,
+  roomIndexForX,
+  roomOriginPx,
+  ROOMS,
+  VIEW_COLS,
+  VIEW_ROWS,
+  WORLD_SPAWN,
+} from "./scenes/world";
+import WingBanner from "./ui/WingBanner";
 import LivePainting from "./paintings/LivePainting";
 import type { Experiment } from "@/data/experiments";
 
-export const CANVAS_W = HALL_WIDTH * TILE_SIZE; // 14 * 32 = 448
-export const CANVAS_H = HALL_HEIGHT * TILE_SIZE; // 10 * 32 = 320
+export const CANVAS_W = VIEW_COLS * TILE_SIZE; // 14 * 32 = 448
+export const CANVAS_H = VIEW_ROWS * TILE_SIZE; // 10 * 32 = 320
 export { TILE_SIZE };
+
+/** Per-room light rects, derived once from the world definition. */
+const ROOM_LIGHTS = ROOMS.map((r) => ({
+  x: r.originX,
+  y: 0,
+  cols: r.cols,
+  rows: r.rows,
+  floorTint: r.floorTint,
+  ambient: r.ambient,
+}));
 
 /** Activation radius for live painting mount (Manhattan tiles). */
 const LIVE_RADIUS = 3;
@@ -50,6 +73,8 @@ export type MuseumCanvasProps = {
   onInteract?: (focused: Interactable) => void;
   /** When true, the scene freezes — used while the summary overlay is open. */
   paused?: boolean;
+  /** Silences all procedural audio when true. */
+  muted?: boolean;
 };
 
 export function MuseumCanvas({
@@ -58,9 +83,16 @@ export function MuseumCanvas({
   onFocusChange,
   onInteract,
   paused = false,
+  muted = true,
 }: MuseumCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioRef = useRef<MuseumAudio | null>(null);
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
   const [livePainting, setLivePainting] = useState<Interactable | null>(null);
+  const [roomIndex, setRoomIndex] = useState(() =>
+    roomIndexForX(WORLD_SPAWN.tileX * TILE_SIZE),
+  );
   const [hasMoved, setHasMoved] = useState(false);
   const [isTouch] = useState(
     () =>
@@ -74,6 +106,12 @@ export function MuseumCanvas({
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
 
+  // Mute toggling lives in a separate effect so flipping it never rebuilds the
+  // scene (the heavy effect below only depends on the exhibit data).
+  useEffect(() => {
+    audioRef.current?.setMuted(muted);
+  }, [muted]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -81,19 +119,31 @@ export function MuseumCanvas({
     if (!ctx) return;
 
     const atlas = createTileAtlas();
+    const crt = createCRT(canvas.width, canvas.height);
+    const audio = createAudio(mutedRef.current);
+    audioRef.current = audio;
     const charSprite = createCharacterSprite();
-    const interactables = buildHallInteractables(experiments, works);
+    const interactables = buildWorldInteractables(experiments, works);
     const paintings = interactables.filter((i) => i.kind === "painting");
     const computers = interactables.filter((i) => i.kind === "computer");
-    const tilemap = createHallScene(interactables);
-    const character = createCharacter(HALL_SPAWN.tileX, HALL_SPAWN.tileY);
+    const tilemap = createWorldScene(interactables);
+    const character = createCharacter(WORLD_SPAWN.tileX, WORLD_SPAWN.tileY);
+    const camera = createCamera(roomOriginPx(roomIndexForX(character.x)), 0);
     const input = createInput(canvas);
     const touch = createTouchControls(canvas, input);
     const dust = new DustField();
 
+    // Audio can't start until the visitor interacts (browser autoplay policy).
+    // The first key or pointer brings the context to life and kicks off the hum.
+    const wakeAudio = () => audio.resume();
+    window.addEventListener("keydown", wakeAudio, { once: true });
+    canvas.addEventListener("pointerdown", wakeAudio, { once: true });
+
     let focused: Interactable | null = null;
     let prevLiveSlug: string | null = null;
     let prevFocusKey: string | null = null;
+    let prevWalkHalf = 0;
+    let prevRoom = roomIndexForX(character.x);
     let movedOnce = false;
 
     const loop = createLoop({
@@ -111,12 +161,31 @@ export function MuseumCanvas({
           movedOnce = true;
           setHasMoved(true);
         }
+
+        // Room-snap camera: when the player crosses a doorway, retarget the
+        // camera to the new room's origin and let updateCamera glide it there.
+        const room = roomIndexForX(character.x);
+        if (room !== prevRoom) {
+          prevRoom = room;
+          setCameraTarget(camera, roomOriginPx(room), 0);
+          setRoomIndex(room);
+        }
+        updateCamera(camera, dt);
+
+        // Footstep audio on each stride boundary, matched to the dust puffs.
+        const walkHalf = Math.floor(character.walkPhase * 2);
+        if (character.moving && walkHalf !== prevWalkHalf) {
+          audio.footstep();
+        }
+        prevWalkHalf = walkHalf;
+
         focused = focusedInteractable(character, interactables, TILE_SIZE);
 
         // Notify parent when the focused hotspot changes — drives InteractPrompt.
         const focusKey = focused ? `${focused.kind}:${focused.slug}` : null;
         if (focusKey !== prevFocusKey) {
           prevFocusKey = focusKey;
+          if (focused) audio.focus();
           onFocusChangeRef.current?.(focused);
         }
 
@@ -137,6 +206,7 @@ export function MuseumCanvas({
           input.clearInteract();
           if (focused) {
             // Open the in-page summary overlay instead of navigating away.
+            audio.interact();
             onInteractRef.current?.(focused);
           }
         }
@@ -146,18 +216,22 @@ export function MuseumCanvas({
         ctx.fillStyle = "#050506";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // Everything in the room is drawn in world space under the camera
+        // transform; screen-space atmosphere is drawn after the restore.
+        ctx.save();
+        ctx.translate(-Math.round(camera.x), -Math.round(camera.y));
+
         // Floor + light pools (under sprites so light reads as cast on the floor).
         drawTilemap(ctx, tilemap, atlas);
-        drawFloorDecor(ctx, canvas.width, canvas.height);
-        drawAmbientFloor(ctx, canvas.width, canvas.height);
+        drawFloorDecor(ctx, ROOM_LIGHTS);
+        drawAmbientFloor(ctx, ROOM_LIGHTS);
         drawPaintingSpotlights(ctx, paintings);
+        drawPlayerGlow(ctx, character);
 
-        // Computers drawn as sprites over their floor footprint. A per-desk
-        // phase offset keeps their screen animations out of sync.
-        computers.forEach((c, i) => {
-          drawComputerSprite(ctx, c.tileX, c.tileY, c.width, c.height, time, i * 1.7);
-        });
-        // Paintings drawn as sprites over wall tiles.
+        // Doorways: arch, light spill, and the wayfinding signs between wings.
+        drawDoorways(ctx, time);
+
+        // Paintings live on the walls — always behind the actors in the room.
         for (const p of paintings) {
           drawPaintingSprite(
             ctx,
@@ -169,14 +243,46 @@ export function MuseumCanvas({
           );
         }
 
-        if (focused) drawFocusGlow(ctx, focused, time);
-        drawPlayerGlow(ctx, character);
-        dust.draw(ctx);
-        drawCharacter(ctx, charSprite, character, time);
+        // Engraved nameplates sit with the exhibits, under the moving actors.
+        drawPlaques(ctx, interactables);
 
-        // Overlay atmosphere on top of everything in the scene.
+        // Depth sort the desks and the player by their floor baseline so the
+        // character walks *behind* a desk when standing north of it, and in
+        // front when below — cheap 2.5D occlusion.
+        const actors: Array<{ baseline: number; draw: () => void }> = [
+          ...computers.map((c, i) => ({
+            baseline: (c.tileY + c.height) * TILE_SIZE,
+            draw: () =>
+              drawComputerSprite(
+                ctx,
+                c.tileX,
+                c.tileY,
+                c.width,
+                c.height,
+                time,
+                i * 1.7,
+              ),
+          })),
+          {
+            baseline: character.y + 9,
+            draw: () => drawCharacter(ctx, charSprite, character, time),
+          },
+        ];
+        actors.sort((a, b) => a.baseline - b.baseline);
+        dust.draw(ctx);
+        for (const a of actors) a.draw();
+
+        // Doorway signs hang at the doorway plane, above the desks/player.
+        drawDoorwaySigns(ctx);
+
+        if (focused) drawFocusGlow(ctx, focused, time);
+        ctx.restore();
+
+        // Overlay atmosphere on top of everything in the scene (screen space).
         drawDust(ctx, canvas.width, canvas.height, time);
         drawVignette(ctx, canvas.width, canvas.height);
+        // CRT scanlines + rolling band as the final screen-space pass.
+        crt.draw(ctx, time);
         // Touch joystick is UI — drawn last, over everything.
         drawJoystick(ctx, touch.joystick);
       },
@@ -198,6 +304,10 @@ export function MuseumCanvas({
       loop.stop();
       input.destroy();
       touch.destroy();
+      window.removeEventListener("keydown", wakeAudio);
+      canvas.removeEventListener("pointerdown", wakeAudio);
+      audio.destroy();
+      audioRef.current = null;
       onFocusChangeRef.current?.(null);
     };
   }, [experiments, works]);
@@ -228,6 +338,7 @@ export function MuseumCanvas({
           canvasH={CANVAS_H}
         />
       )}
+      <WingBanner key={roomIndex} name={ROOMS[roomIndex].name} />
       <div
         aria-hidden="true"
         style={{

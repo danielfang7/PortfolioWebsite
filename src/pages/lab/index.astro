@@ -118,15 +118,10 @@ const museumWorks = allWorks.slice(0, 6).map((w) => ({
       return;
     }
 
-    // No explicit choice — the museum now ships a touch joystick, so coarse
-    // pointers and narrow viewports are supported. Only auto-fall-back to the
-    // list for visitors who prefer reduced motion (an animated walker is a poor
-    // fit there) or on very small screens where the canvas gets cramped.
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    const veryNarrow = window.innerWidth < 380;
-    if (reduceMotion || veryNarrow) setView("list");
+    // No explicit choice — the museum is the default experience (it ships a
+    // touch joystick, so coarse pointers and narrow viewports are supported).
+    // Visitors can still switch to the accessible list view at any time.
+    setView("museum");
   }
 
   document.addEventListener("astro:page-load", initLabView);

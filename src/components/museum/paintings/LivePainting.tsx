@@ -15,6 +15,11 @@ type Props = {
  * the live experiment component lazily. Positioned in percentages of the
  * parent container (which matches the canvas CSS box), so it tracks the canvas
  * at any responsive size.
+ *
+ * The world is a row of viewport-sized rooms, so the painting's world-x is
+ * offset by its room. We subtract that room offset to map back into the
+ * visible viewport — correct whenever the camera is framing the painting's
+ * room, which is the only time a live preview is mounted.
  */
 export function LivePainting({ painting, canvasW, canvasH }: Props) {
   const Component = LIVE_PAINTINGS[painting.slug];
@@ -24,10 +29,11 @@ export function LivePainting({ painting, canvasW, canvasH }: Props) {
     painting.width,
     painting.height,
   );
+  const roomOffsetX = Math.floor(rect.x / canvasW) * canvasW;
 
   const style: React.CSSProperties = {
     position: "absolute",
-    left: `${(rect.x / canvasW) * 100}%`,
+    left: `${((rect.x - roomOffsetX) / canvasW) * 100}%`,
     top: `${(rect.y / canvasH) * 100}%`,
     width: `${(rect.w / canvasW) * 100}%`,
     height: `${(rect.h / canvasH) * 100}%`,

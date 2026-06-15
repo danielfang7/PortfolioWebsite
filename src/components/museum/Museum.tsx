@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MuseumCanvas, { CANVAS_W, CANVAS_H, TILE_SIZE } from "./MuseumCanvas";
 import type { Interactable } from "./engine/interactables";
 import InteractPrompt from "./ui/InteractPrompt";
 import ListViewToggle from "./ui/ListViewToggle";
+import SoundToggle from "./ui/SoundToggle";
 import ItemModal from "./ui/ItemModal";
 import type { Experiment } from "@/data/experiments";
 import type { WorkRef } from "./data";
@@ -18,9 +19,33 @@ declare global {
   }
 }
 
+const SOUND_PREF_KEY = "museumSoundOn";
+
 export function Museum({ experiments, works }: MuseumProps) {
   const [focus, setFocus] = useState<Interactable | null>(null);
   const [selected, setSelected] = useState<Interactable | null>(null);
+  // Sound is opt-in: start muted, then honor the visitor's saved preference.
+  const [muted, setMuted] = useState(true);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(SOUND_PREF_KEY) === "1") setMuted(false);
+    } catch {
+      /* storage blocked — stay muted */
+    }
+  }, []);
+
+  function toggleMuted() {
+    setMuted((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SOUND_PREF_KEY, next ? "0" : "1");
+      } catch {
+        /* storage blocked — preference just won't persist */
+      }
+      return next;
+    });
+  }
 
   const expBySlug = useMemo(
     () => new Map(experiments.map((e) => [e.slug, e])),
@@ -51,7 +76,15 @@ export function Museum({ experiments, works }: MuseumProps) {
         margin: "0 auto",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.75rem" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: "0.5rem",
+          marginBottom: "0.75rem",
+        }}
+      >
+        <SoundToggle muted={muted} onToggle={toggleMuted} />
         <ListViewToggle onSwitch={switchToList} />
       </div>
       <div
@@ -66,6 +99,7 @@ export function Museum({ experiments, works }: MuseumProps) {
           onFocusChange={setFocus}
           onInteract={setSelected}
           paused={modalOpen}
+          muted={muted}
         />
         <InteractPrompt
           focused={modalOpen ? null : focus}

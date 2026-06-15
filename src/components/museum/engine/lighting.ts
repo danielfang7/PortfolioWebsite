@@ -10,69 +10,107 @@ import type { Interactable } from "./interactables";
  */
 
 /**
- * Static floor decor: a baseboard trim where the walls meet the floor and a
- * decorative medallion in the centre of the room. Drawn right after the
+ * A room rectangle (in world tiles) plus the colors that give that wing its
+ * identity. The renderer passes one per room so decor and ambient light are
+ * drawn per-room rather than once across the whole world.
+ */
+export type RoomLight = {
+  x: number;
+  y: number;
+  cols: number;
+  rows: number;
+  floorTint: string;
+  ambient: string;
+};
+
+/**
+ * Static floor decor per room: a baseboard trim where the walls meet the floor
+ * and a decorative medallion in the room's centre. Drawn right after the
  * tilemap so ambient light and spotlights fall over it.
  */
 export function drawFloorDecor(
   ctx: CanvasRenderingContext2D,
-  w: number,
-  h: number,
+  rooms: RoomLight[],
 ): void {
-  // Baseboard trim: a thin line just inside the perimeter walls.
   ctx.save();
-  ctx.strokeStyle = "rgba(0, 216, 255, 0.10)";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(TILE_SIZE + 0.5, TILE_SIZE + 0.5, w - 2 * TILE_SIZE - 1, h - 2 * TILE_SIZE - 1);
+  for (const room of rooms) {
+    const px = room.x * TILE_SIZE;
+    const py = room.y * TILE_SIZE;
+    const w = room.cols * TILE_SIZE;
+    const h = room.rows * TILE_SIZE;
 
-  // Centre medallion: concentric rings + a soft filled core.
-  const cx = w / 2;
-  const cy = h / 2;
-  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
-  core.addColorStop(0, "rgba(0, 216, 255, 0.05)");
-  core.addColorStop(1, "rgba(0, 216, 255, 0)");
-  ctx.fillStyle = core;
-  ctx.fillRect(cx - 60, cy - 60, 120, 120);
+    // Baseboard trim: a thin line just inside the perimeter walls.
+    ctx.strokeStyle = "rgba(0, 216, 255, 0.10)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(
+      px + TILE_SIZE + 0.5,
+      py + TILE_SIZE + 0.5,
+      w - 2 * TILE_SIZE - 1,
+      h - 2 * TILE_SIZE - 1,
+    );
 
-  ctx.strokeStyle = "rgba(0, 216, 255, 0.14)";
-  for (const r of [64, 42]) {
+    // Centre medallion: concentric rings + a soft filled core.
+    const cx = px + w / 2;
+    const cy = py + h / 2;
+    const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
+    core.addColorStop(0, "rgba(0, 216, 255, 0.05)");
+    core.addColorStop(1, "rgba(0, 216, 255, 0)");
+    ctx.fillStyle = core;
+    ctx.fillRect(cx - 60, cy - 60, 120, 120);
+
+    ctx.strokeStyle = "rgba(0, 216, 255, 0.14)";
+    for (const r of [64, 42]) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // Four cardinal ticks on the inner ring for a compass-rose feel.
+    ctx.strokeStyle = "rgba(0, 216, 255, 0.20)";
     ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.moveTo(cx, cy - 48);
+    ctx.lineTo(cx, cy - 36);
+    ctx.moveTo(cx, cy + 36);
+    ctx.lineTo(cx, cy + 48);
+    ctx.moveTo(cx - 48, cy);
+    ctx.lineTo(cx - 36, cy);
+    ctx.moveTo(cx + 36, cy);
+    ctx.lineTo(cx + 48, cy);
     ctx.stroke();
   }
-  // Four cardinal ticks on the inner ring for a compass-rose feel.
-  ctx.strokeStyle = "rgba(0, 216, 255, 0.20)";
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - 48);
-  ctx.lineTo(cx, cy - 36);
-  ctx.moveTo(cx, cy + 36);
-  ctx.lineTo(cx, cy + 48);
-  ctx.moveTo(cx - 48, cy);
-  ctx.lineTo(cx - 36, cy);
-  ctx.moveTo(cx + 36, cy);
-  ctx.lineTo(cx + 48, cy);
-  ctx.stroke();
   ctx.restore();
 }
 
-/** Warm-cool ambient pool in the centre of the room, on the floor. */
+/**
+ * Per-room ambient: a faint floor wash that color-codes each wing, plus a soft
+ * light pool in the room's centre. Gives the Gallery a cool cast and the
+ * Workshop a warm one.
+ */
 export function drawAmbientFloor(
   ctx: CanvasRenderingContext2D,
-  w: number,
-  h: number,
+  rooms: RoomLight[],
 ): void {
-  const grad = ctx.createRadialGradient(
-    w / 2,
-    h / 2,
-    0,
-    w / 2,
-    h / 2,
-    Math.max(w, h) * 0.6,
-  );
-  grad.addColorStop(0, "rgba(80, 92, 104, 0.16)");
-  grad.addColorStop(1, "rgba(80, 92, 104, 0)");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, h);
+  for (const room of rooms) {
+    const px = room.x * TILE_SIZE;
+    const py = room.y * TILE_SIZE;
+    const w = room.cols * TILE_SIZE;
+    const h = room.rows * TILE_SIZE;
+
+    // Faint wash over the whole room floor for wing identity.
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = room.floorTint;
+    ctx.fillRect(px, py, w, h);
+    ctx.restore();
+
+    // Centre ambient pool.
+    const cx = px + w / 2;
+    const cy = py + h / 2;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.6);
+    grad.addColorStop(0, room.ambient);
+    grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(px, py, w, h);
+  }
 }
 
 /**

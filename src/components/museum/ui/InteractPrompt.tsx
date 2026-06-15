@@ -26,11 +26,14 @@ export function InteractPrompt({
   const target = focused ?? lastRef.current;
 
   // Anchor above the top-center of the interactable's footprint, with a small
-  // gap so the pill doesn't touch the sprite.
+  // gap so the pill doesn't touch the sprite. The world is a row of
+  // viewport-sized rooms, so subtract the exhibit's room offset to map its
+  // world-x back into the visible viewport (the camera frames that room
+  // whenever this prompt is shown).
   const GAP_PX = 6;
-  const anchorX = target
-    ? (target.tileX + target.width / 2) * tileSize
-    : 0;
+  const worldX = target ? (target.tileX + target.width / 2) * tileSize : 0;
+  const roomOffsetX = Math.floor(worldX / canvasW) * canvasW;
+  const anchorX = worldX - roomOffsetX;
   const anchorY = target ? target.tileY * tileSize - GAP_PX : 0;
 
   return (

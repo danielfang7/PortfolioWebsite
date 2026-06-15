@@ -15,9 +15,10 @@ export type WorkRef = {
 };
 
 /**
- * Painting slots in the 14x10 hall. Paintings sit flush on the wall — 2x1 on
- * top/bottom walls, 1x2 on side walls — so they read as smaller artworks and
- * leave the perimeter row of the interior fully walkable.
+ * Painting slots on the Gallery walls (room 0, world cols 0-13). Paintings sit
+ * flush on the wall — 2x1 on top/bottom walls, 1x2 on side walls — so they read
+ * as smaller artworks and leave the perimeter row of the interior walkable.
+ * Kept clear of the east doorway (cols 13, rows 4-5).
  */
 const PAINTING_SLOTS: Array<{
   tileX: number;
@@ -28,26 +29,28 @@ const PAINTING_SLOTS: Array<{
 }> = [
   { tileX: 2, tileY: 0, width: 2, height: 1, face: "up" },
   { tileX: 6, tileY: 0, width: 2, height: 1, face: "up" },
-  { tileX: 10, tileY: 0, width: 2, height: 1, face: "up" },
-  { tileX: 13, tileY: 4, width: 1, height: 2, face: "right" },
-  { tileX: 6, tileY: 9, width: 2, height: 1, face: "down" },
-  { tileX: 0, tileY: 4, width: 1, height: 2, face: "left" },
+  { tileX: 9, tileY: 0, width: 2, height: 1, face: "up" },
+  { tileX: 3, tileY: 9, width: 2, height: 1, face: "down" },
+  { tileX: 8, tileY: 9, width: 2, height: 1, face: "down" },
+  { tileX: 0, tileY: 4, width: 1, height: 2, face: "right" },
 ];
 
 /**
- * Computer-desk floor slots. Desks are 2x2 — they're the headline exhibits, so
- * they take up more visual space than the wall paintings.
+ * Computer-desk floor slots in the Workshop (room 1, world cols 14-27). Desks
+ * are 2x2 — the headline exhibits — spread across the full width with a clear
+ * lane left of the first column (cols 15-16) so the west doorway and its sign
+ * stay unobstructed.
  */
 const DESK_SLOTS: Array<{ tileX: number; tileY: number }> = [
-  { tileX: 2, tileY: 2 },
-  { tileX: 7, tileY: 2 },
-  { tileX: 11, tileY: 2 },
-  { tileX: 2, tileY: 6 },
-  { tileX: 7, tileY: 6 },
-  { tileX: 11, tileY: 6 },
+  { tileX: 17, tileY: 2 },
+  { tileX: 21, tileY: 2 },
+  { tileX: 25, tileY: 2 },
+  { tileX: 17, tileY: 6 },
+  { tileX: 21, tileY: 6 },
+  { tileX: 25, tileY: 6 },
 ];
 
-export function buildHallInteractables(
+export function buildWorldInteractables(
   experiments: Experiment[],
   works: WorkRef[],
 ): Interactable[] {
