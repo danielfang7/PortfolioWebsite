@@ -17,19 +17,24 @@ type Particle = {
  */
 export class DustField {
   private particles: Particle[] = [];
-  /** Tracks stride crossings so we emit once per footfall, not per frame. */
-  private lastPhase = 0;
+  /** Per-actor stride phase, so one field can ground the player *and* every
+   * visitor while still emitting exactly once per footfall each. */
+  private lastPhase = new Map<Character, number>();
 
-  /** Call every frame; spawns on stride boundaries, ages everything out. */
-  update(ch: Character, dt: number): void {
+  /** Emit a footfall puff for `ch` when it crosses a stride boundary. Call once
+   * per actor per frame, before {@link step}. */
+  track(ch: Character): void {
     if (ch.moving) {
       // Emit when the walk phase crosses a half-cycle (each footfall).
       const half = Math.floor(ch.walkPhase * 2);
-      const lastHalf = Math.floor(this.lastPhase * 2);
+      const lastHalf = Math.floor((this.lastPhase.get(ch) ?? 0) * 2);
       if (half !== lastHalf) this.emit(ch);
     }
-    this.lastPhase = ch.walkPhase;
+    this.lastPhase.set(ch, ch.walkPhase);
+  }
 
+  /** Age every live particle and retire the dead ones. Call once per frame. */
+  step(dt: number): void {
     for (const p of this.particles) {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
@@ -41,7 +46,8 @@ export class DustField {
   }
 
   private emit(ch: Character): void {
-    if (this.particles.length > 40) return;
+    // Headroom for the player plus a handful of strolling visitors.
+    if (this.particles.length > 90) return;
     const count = 2;
     for (let i = 0; i < count; i++) {
       const ang = Math.PI + (i === 0 ? -0.5 : 0.5); // kick out to the sides/back

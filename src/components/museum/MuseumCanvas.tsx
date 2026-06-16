@@ -26,6 +26,7 @@ import {
   drawVignette,
 } from "./engine/lighting";
 import { createTouchControls, drawJoystick } from "./engine/touch";
+import { createNpcs, drawNpcBubble, updateNpc } from "./engine/npc";
 import { DustField } from "./engine/particles";
 import { createAudio, type MuseumAudio } from "./engine/audio";
 import { createCRT } from "./engine/postprocess";
@@ -127,6 +128,7 @@ export function MuseumCanvas({
     const paintings = interactables.filter((i) => i.kind === "painting");
     const computers = interactables.filter((i) => i.kind === "computer");
     const tilemap = createWorldScene(interactables);
+    const npcs = createNpcs(tilemap, interactables);
     const character = createCharacter(WORLD_SPAWN.tileX, WORLD_SPAWN.tileY);
     const camera = createCamera(roomOriginPx(roomIndexForX(character.x)), 0);
     const input = createInput(canvas);
@@ -156,7 +158,11 @@ export function MuseumCanvas({
           return;
         }
         updateCharacter(character, input.state, tilemap, dt);
-        dust.update(character, dt);
+        for (const n of npcs) updateNpc(n, tilemap, dt, character);
+        // Footstep dust grounds the player and every walking visitor alike.
+        dust.track(character);
+        for (const n of npcs) dust.track(n);
+        dust.step(dt);
         if (!movedOnce && character.moving) {
           movedOnce = true;
           setHasMoved(true);
@@ -267,10 +273,19 @@ export function MuseumCanvas({
             baseline: character.y + 9,
             draw: () => drawCharacter(ctx, charSprite, character, time),
           },
+          // Visitors and the curator share the same floor-baseline sort so they
+          // occlude (and are occluded by) the desks and player correctly.
+          ...npcs.map((n) => ({
+            baseline: n.y + 9,
+            draw: () => drawCharacter(ctx, n.sheet, n, time),
+          })),
         ];
         actors.sort((a, b) => a.baseline - b.baseline);
         dust.draw(ctx);
         for (const a of actors) a.draw();
+
+        // Curator greetings float above the actors, still in world space.
+        for (const n of npcs) drawNpcBubble(ctx, n);
 
         // Doorway signs hang at the doorway plane, above the desks/player.
         drawDoorwaySigns(ctx);

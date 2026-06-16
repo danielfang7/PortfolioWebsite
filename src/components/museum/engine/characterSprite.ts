@@ -5,74 +5,95 @@ const SPRITE_H = 24;
 /** Two walk frames per direction. Frame 0 = contact/idle, frame 1 = mid-step. */
 const FRAMES = 2;
 
-type Rect = { x: number; y: number; w: number; h: number; c: string };
+/**
+ * Every drawable region of the character references a palette slot rather than a
+ * literal color, so the same 16x24 art can be re-skinned for the player, museum
+ * visitors, and the curator just by swapping the palette.
+ */
+export type CharacterPalette = {
+  hair: string;
+  skin: string;
+  skinShadow: string;
+  shirt: string;
+  shirtHi: string;
+  pants: string;
+  shoes: string;
+  eye: string;
+};
 
-const HAIR = "#0a0a0a";
-const SKIN = "#d4a887";
-const SKIN_SHADOW = "#b8906f";
-const SHIRT = "#0b3a46";
-const SHIRT_HI = "#00d8ff";
-const PANTS = "#17171a";
-const SHOES = "#050506";
-const EYE = "#00d8ff";
+/** The player: signature electric-cyan shirt trim and eyes so "you" read at a
+ * glance against the muted NPC crowd. */
+export const PLAYER_PALETTE: CharacterPalette = {
+  hair: "#0a0a0a",
+  skin: "#d4a887",
+  skinShadow: "#b8906f",
+  shirt: "#0b3a46",
+  shirtHi: "#00d8ff",
+  pants: "#17171a",
+  shoes: "#050506",
+  eye: "#00d8ff",
+};
+
+type Slot = keyof CharacterPalette;
+type Rect = { x: number; y: number; w: number; h: number; c: Slot };
 
 // Body (everything above the legs) is shared across a direction's frames; only
 // the legs/shoes swap between frames to animate the stride.
 const BODY_DOWN: Rect[] = [
-  { x: 5, y: 2, w: 6, h: 5, c: HAIR },
-  { x: 5, y: 6, w: 6, h: 3, c: SKIN },
-  { x: 6, y: 7, w: 1, h: 1, c: EYE },
-  { x: 9, y: 7, w: 1, h: 1, c: EYE },
-  { x: 6, y: 9, w: 4, h: 1, c: SKIN_SHADOW },
-  { x: 3, y: 10, w: 10, h: 7, c: SHIRT },
-  { x: 3, y: 13, w: 10, h: 1, c: SHIRT_HI },
-  { x: 2, y: 11, w: 1, h: 4, c: SKIN },
-  { x: 13, y: 11, w: 1, h: 4, c: SKIN },
+  { x: 5, y: 2, w: 6, h: 5, c: "hair" },
+  { x: 5, y: 6, w: 6, h: 3, c: "skin" },
+  { x: 6, y: 7, w: 1, h: 1, c: "eye" },
+  { x: 9, y: 7, w: 1, h: 1, c: "eye" },
+  { x: 6, y: 9, w: 4, h: 1, c: "skinShadow" },
+  { x: 3, y: 10, w: 10, h: 7, c: "shirt" },
+  { x: 3, y: 13, w: 10, h: 1, c: "shirtHi" },
+  { x: 2, y: 11, w: 1, h: 4, c: "skin" },
+  { x: 13, y: 11, w: 1, h: 4, c: "skin" },
 ];
 
 const BODY_UP: Rect[] = [
-  { x: 5, y: 2, w: 6, h: 6, c: HAIR },
-  { x: 6, y: 8, w: 4, h: 2, c: SKIN_SHADOW },
-  { x: 3, y: 10, w: 10, h: 7, c: SHIRT },
-  { x: 5, y: 10, w: 6, h: 1, c: SHIRT_HI },
-  { x: 2, y: 11, w: 1, h: 4, c: SKIN },
-  { x: 13, y: 11, w: 1, h: 4, c: SKIN },
+  { x: 5, y: 2, w: 6, h: 6, c: "hair" },
+  { x: 6, y: 8, w: 4, h: 2, c: "skinShadow" },
+  { x: 3, y: 10, w: 10, h: 7, c: "shirt" },
+  { x: 5, y: 10, w: 6, h: 1, c: "shirtHi" },
+  { x: 2, y: 11, w: 1, h: 4, c: "skin" },
+  { x: 13, y: 11, w: 1, h: 4, c: "skin" },
 ];
 
 const BODY_LEFT: Rect[] = [
-  { x: 5, y: 2, w: 6, h: 5, c: HAIR },
-  { x: 5, y: 6, w: 5, h: 3, c: SKIN },
-  { x: 5, y: 7, w: 1, h: 1, c: EYE },
-  { x: 6, y: 9, w: 4, h: 1, c: SKIN_SHADOW },
-  { x: 3, y: 10, w: 10, h: 7, c: SHIRT },
-  { x: 3, y: 13, w: 10, h: 1, c: SHIRT_HI },
-  { x: 3, y: 11, w: 1, h: 5, c: SKIN },
+  { x: 5, y: 2, w: 6, h: 5, c: "hair" },
+  { x: 5, y: 6, w: 5, h: 3, c: "skin" },
+  { x: 5, y: 7, w: 1, h: 1, c: "eye" },
+  { x: 6, y: 9, w: 4, h: 1, c: "skinShadow" },
+  { x: 3, y: 10, w: 10, h: 7, c: "shirt" },
+  { x: 3, y: 13, w: 10, h: 1, c: "shirtHi" },
+  { x: 3, y: 11, w: 1, h: 5, c: "skin" },
 ];
 
 // Leg sets: index 0 is the planted/contact pose, index 1 is mid-stride.
 const LEGS_VERT: Rect[][] = [
   [
-    { x: 4, y: 17, w: 8, h: 4, c: PANTS },
-    { x: 4, y: 21, w: 3, h: 2, c: SHOES },
-    { x: 9, y: 21, w: 3, h: 2, c: SHOES },
+    { x: 4, y: 17, w: 8, h: 4, c: "pants" },
+    { x: 4, y: 21, w: 3, h: 2, c: "shoes" },
+    { x: 9, y: 21, w: 3, h: 2, c: "shoes" },
   ],
   [
-    { x: 4, y: 17, w: 8, h: 4, c: PANTS },
-    { x: 5, y: 20, w: 3, h: 2, c: SHOES }, // lead foot lifted + forward
-    { x: 8, y: 22, w: 3, h: 1, c: SHOES }, // trailing foot pushed back
+    { x: 4, y: 17, w: 8, h: 4, c: "pants" },
+    { x: 5, y: 20, w: 3, h: 2, c: "shoes" }, // lead foot lifted + forward
+    { x: 8, y: 22, w: 3, h: 1, c: "shoes" }, // trailing foot pushed back
   ],
 ];
 
 const LEGS_LEFT: Rect[][] = [
   [
-    { x: 4, y: 17, w: 8, h: 4, c: PANTS },
-    { x: 3, y: 21, w: 4, h: 2, c: SHOES },
-    { x: 8, y: 21, w: 4, h: 2, c: SHOES },
+    { x: 4, y: 17, w: 8, h: 4, c: "pants" },
+    { x: 3, y: 21, w: 4, h: 2, c: "shoes" },
+    { x: 8, y: 21, w: 4, h: 2, c: "shoes" },
   ],
   [
-    { x: 4, y: 17, w: 8, h: 4, c: PANTS },
-    { x: 5, y: 20, w: 4, h: 2, c: SHOES }, // front foot swung forward + up
-    { x: 7, y: 22, w: 4, h: 1, c: SHOES }, // back foot trailing
+    { x: 4, y: 17, w: 8, h: 4, c: "pants" },
+    { x: 5, y: 20, w: 4, h: 2, c: "shoes" }, // front foot swung forward + up
+    { x: 7, y: 22, w: 4, h: 1, c: "shoes" }, // back foot trailing
   ],
 ];
 
@@ -99,7 +120,13 @@ const DIR_ROW: Record<Direction, number> = {
   right: 3,
 };
 
-export function createCharacterSprite(): HTMLCanvasElement {
+/**
+ * Bakes a 4-direction x 2-frame sprite sheet for the given palette. Built once
+ * per character skin and reused across the session.
+ */
+export function createCharacterSprite(
+  palette: CharacterPalette = PLAYER_PALETTE,
+): HTMLCanvasElement {
   const sprite = document.createElement("canvas");
   sprite.width = SPRITE_W * FRAMES;
   sprite.height = SPRITE_H * 4;
@@ -112,7 +139,7 @@ export function createCharacterSprite(): HTMLCanvasElement {
     POSES[dir].forEach((pose, f) => {
       const ox = f * SPRITE_W;
       for (const r of pose) {
-        ctx.fillStyle = r.c;
+        ctx.fillStyle = palette[r.c];
         ctx.fillRect(ox + r.x, oy + r.y, r.w, r.h);
       }
     });
@@ -157,3 +184,5 @@ export function drawCharacter(
     SPRITE_H,
   );
 }
+
+export { SPRITE_H, SPRITE_W };

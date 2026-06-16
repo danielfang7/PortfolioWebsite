@@ -101,7 +101,7 @@ export function updateCharacter(
   }
 }
 
-function canStand(
+export function canStand(
   map: Tilemap,
   cx: number,
   cy: number,
