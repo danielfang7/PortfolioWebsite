@@ -1,0 +1,72 @@
+---
+import Museum from "@/components/museum/Museum";
+import { getMuseumData } from "@/data/museum";
+
+const { experiments, works, investments } = await getMuseumData();
+---
+
+<section
+  id="lab-preview"
+  class="container-content pb-10 md:pb-14"
+  aria-labelledby="lab-preview-heading"
+>
+  <div class="border-t border-border-subtle pt-16">
+    <div class="flex items-center gap-3 mb-3">
+      <span class="accent-line" aria-hidden="true"></span>
+      <span class="text-sm font-medium tracking-widest text-accent uppercase">
+        Step Into The Lab
+      </span>
+    </div>
+
+    <div class="flex items-end justify-between mb-8 gap-4 flex-wrap">
+      <div class="max-w-xl">
+        <h2
+          id="lab-preview-heading"
+          class="font-display text-2xl sm:text-3xl font-bold text-text-primary leading-tight mb-3"
+        >
+          A playable museum of my work
+        </h2>
+        <p class="text-sm sm:text-base text-text-secondary leading-relaxed">
+          Walk a pixel art gallery where paintings are frontend experiments,
+          desks are shipped works, and pedestals are companies I've backed. Take
+          control and explore - or
+          <a
+            href="/lab"
+            class="text-text-primary underline underline-offset-4 decoration-border hover:decoration-accent transition-colors"
+            >enter the full Lab</a
+          >.
+        </p>
+      </div>
+
+      <a
+        href="/lab"
+        class="group inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border text-sm font-medium text-text-primary hover:border-accent hover:text-accent transition-colors shrink-0"
+      >
+        Enter the full Lab
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 16 16"
+          fill="none"
+          aria-hidden="true"
+          class="transition-transform duration-200 group-hover:translate-x-0.5"
+        >
+          <path
+            d="M6 4l4 4-4 4"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </a>
+    </div>
+
+    <Museum
+      client:visible
+      experiments={experiments}
+      works={works}
+      investments={investments}
+      attract={true}
+    />
+  </div>
+</section>

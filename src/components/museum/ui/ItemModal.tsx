@@ -1,15 +1,91 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import type { Experiment } from "@/data/experiments";
-import type { WorkRef } from "../data";
+import type { WorkRef, InvestmentRef } from "../data";
 import { LIVE_PAINTINGS } from "../paintings/paintingRegistry";
 
 type Props =
   | { kind: "painting"; experiment: Experiment; onClose: () => void }
-  | { kind: "computer"; work: WorkRef; onClose: () => void };
+  | { kind: "computer"; work: WorkRef; onClose: () => void }
+  | { kind: "investment"; investment: InvestmentRef; onClose: () => void };
 
 const ACCENT = "#00D8FF";
 const MONO =
   '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace';
+
+type ExternalLink = { label: string; href: string };
+
+/** Normalized presentation model so the markup stays kind-agnostic. */
+type View = {
+  kindLabel: string;
+  title: string;
+  description: string;
+  year: string;
+  tags: string[];
+  accent: string;
+  /** Primary CTA. */
+  href: string;
+  ctaLabel: string;
+  /** Optional subtitle under the title (e.g. a work's role). */
+  subtitle?: string;
+  /** Header preview. */
+  preview:
+    | { type: "live"; Comp: React.LazyExoticComponent<React.ComponentType> }
+    | { type: "image"; src: string }
+    | { type: "logo"; src: string }
+    | { type: "none" };
+  external: ExternalLink[];
+};
+
+function buildView(props: Props): View {
+  if (props.kind === "painting") {
+    const e = props.experiment;
+    const Comp = LIVE_PAINTINGS[e.slug];
+    return {
+      kindLabel: "Experiment",
+      title: e.title,
+      description: e.description,
+      year: e.year,
+      tags: e.tech,
+      accent: e.color || ACCENT,
+      href: `/lab/${e.slug}`,
+      ctaLabel: "View experiment",
+      preview: Comp ? { type: "live", Comp } : { type: "none" },
+      external: [],
+    };
+  }
+  if (props.kind === "computer") {
+    const w = props.work;
+    const external: ExternalLink[] = [];
+    if (w.liveUrl) external.push({ label: "Live ↗", href: w.liveUrl });
+    if (w.sourceUrl) external.push({ label: "Source ↗", href: w.sourceUrl });
+    return {
+      kindLabel: "Work",
+      title: w.title,
+      description: w.description,
+      year: w.year,
+      tags: w.stack,
+      accent: ACCENT,
+      href: `/works/${w.slug}`,
+      ctaLabel: "View project",
+      subtitle: w.role,
+      preview: { type: "image", src: w.thumbnail },
+      external,
+    };
+  }
+  const inv = props.investment;
+  return {
+    kindLabel: "Investment",
+    title: inv.company,
+    description: inv.description,
+    year: inv.year,
+    tags: [inv.sector, inv.stage],
+    accent: inv.color || ACCENT,
+    href: "/investments",
+    ctaLabel: "View portfolio",
+    preview: inv.logo ? { type: "logo", src: inv.logo } : { type: "none" },
+    external: inv.url ? [{ label: "Visit ↗", href: inv.url }] : [],
+  };
+}
 
 /**
  * In-page summary overlay for a museum exhibit. Opens over the museum canvas
@@ -17,7 +93,7 @@ const MONO =
  * out to the full project page for visitors who want more detail.
  */
 export function ItemModal(props: Props) {
-  const { kind, onClose } = props;
+  const { onClose } = props;
   const [shown, setShown] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -46,25 +122,14 @@ export function ItemModal(props: Props) {
     };
   }, [onClose]);
 
-  const isPainting = kind === "painting";
-  const title = isPainting ? props.experiment.title : props.work.title;
-  const description = isPainting
-    ? props.experiment.description
-    : props.work.description;
-  const year = isPainting ? props.experiment.year : props.work.year;
-  const tags = isPainting ? props.experiment.tech : props.work.stack;
-  const accent = isPainting ? props.experiment.color || ACCENT : ACCENT;
-  const href = isPainting
-    ? `/lab/${props.experiment.slug}`
-    : `/works/${props.work.slug}`;
-  const kindLabel = isPainting ? "Experiment" : "Work";
-  const Live = isPainting ? LIVE_PAINTINGS[props.experiment.slug] : undefined;
+  const v = buildView(props);
+  const { accent } = v;
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`${title} — ${kindLabel}`}
+      aria-label={`${v.title} — ${v.kindLabel}`}
       onClick={onClose}
       style={{
         position: "fixed",
@@ -98,7 +163,7 @@ export function ItemModal(props: Props) {
           transition: "transform 240ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >
-        {/* Preview header — live experiment or work thumbnail. */}
+        {/* Preview header — live experiment, work thumbnail, or company logo. */}
         <div
           style={{
             position: "relative",
@@ -106,23 +171,39 @@ export function ItemModal(props: Props) {
             overflow: "hidden",
             borderTopLeftRadius: "1rem",
             borderTopRightRadius: "1rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             background: `radial-gradient(circle at 50% 40%, ${accent}1f, #08080a 72%)`,
           }}
         >
-          {isPainting && Live ? (
+          {v.preview.type === "live" ? (
             <Suspense fallback={null}>
-              <Live />
+              <v.preview.Comp />
             </Suspense>
-          ) : !isPainting ? (
+          ) : v.preview.type === "image" ? (
             <img
-              src={props.work.thumbnail}
-              alt={title}
+              src={v.preview.src}
+              alt={v.title}
               loading="lazy"
               style={{
                 width: "100%",
                 height: "100%",
                 objectFit: "cover",
                 display: "block",
+              }}
+            />
+          ) : v.preview.type === "logo" ? (
+            <img
+              src={v.preview.src}
+              alt={`${v.title} logo`}
+              loading="lazy"
+              style={{
+                maxWidth: "44%",
+                maxHeight: "56%",
+                objectFit: "contain",
+                display: "block",
+                filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.5))",
               }}
             />
           ) : null}
@@ -185,9 +266,9 @@ export function ItemModal(props: Props) {
               marginBottom: "0.55rem",
             }}
           >
-            <span>{kindLabel}</span>
+            <span>{v.kindLabel}</span>
             <span style={{ color: "rgba(223,239,243,0.4)" }}>·</span>
-            <span style={{ color: "rgba(223,239,243,0.6)" }}>{year}</span>
+            <span style={{ color: "rgba(223,239,243,0.6)" }}>{v.year}</span>
           </div>
 
           <h2
@@ -199,10 +280,10 @@ export function ItemModal(props: Props) {
               lineHeight: 1.15,
             }}
           >
-            {title}
+            {v.title}
           </h2>
 
-          {!isPainting && (
+          {v.subtitle && (
             <p
               style={{
                 margin: "0.4rem 0 0",
@@ -210,7 +291,7 @@ export function ItemModal(props: Props) {
                 color: "rgba(223,239,243,0.55)",
               }}
             >
-              {props.work.role}
+              {v.subtitle}
             </p>
           )}
 
@@ -222,10 +303,10 @@ export function ItemModal(props: Props) {
               color: "rgba(223,239,243,0.82)",
             }}
           >
-            {description}
+            {v.description}
           </p>
 
-          {tags.length > 0 && (
+          {v.tags.length > 0 && (
             <div
               style={{
                 display: "flex",
@@ -234,7 +315,7 @@ export function ItemModal(props: Props) {
                 marginTop: "1rem",
               }}
             >
-              {tags.map((t) => (
+              {v.tags.map((t) => (
                 <span
                   key={t}
                   style={{
@@ -262,7 +343,7 @@ export function ItemModal(props: Props) {
             }}
           >
             <a
-              href={href}
+              href={v.href}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -276,7 +357,7 @@ export function ItemModal(props: Props) {
                 textDecoration: "none",
               }}
             >
-              View full project
+              {v.ctaLabel}
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path
                   d="M6 4l4 4-4 4"
@@ -288,26 +369,17 @@ export function ItemModal(props: Props) {
               </svg>
             </a>
 
-            {!isPainting && props.work.liveUrl && (
+            {v.external.map((link) => (
               <a
-                href={props.work.liveUrl}
+                key={link.href}
+                href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={secondaryLink}
               >
-                Live ↗
+                {link.label}
               </a>
-            )}
-            {!isPainting && props.work.sourceUrl && (
-              <a
-                href={props.work.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={secondaryLink}
-              >
-                Source ↗
-              </a>
-            )}
+            ))}
           </div>
 
           <p

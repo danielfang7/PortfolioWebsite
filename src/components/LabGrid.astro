@@ -5,9 +5,10 @@ import type { CollectionEntry } from "astro:content";
 interface Props {
   experiments: Experiment[];
   works: CollectionEntry<"works">[];
+  investments?: CollectionEntry<"investments">[];
 }
 
-const { experiments, works } = Astro.props;
+const { experiments, works, investments = [] } = Astro.props;
 
 const gradients = [
   ["#00D8FF", "#A78BFA"],
@@ -198,6 +199,78 @@ function workSlug(id: string) {
       }
     </ul>
   </section>
+
+  {
+    investments.length > 0 && (
+      <section aria-labelledby="lab-investments-heading">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="accent-line" aria-hidden="true" />
+          <span class="text-sm font-medium tracking-widest text-accent uppercase">
+            Investing
+          </span>
+        </div>
+        <h2
+          id="lab-investments-heading"
+          class="font-display text-display-md font-bold text-text-primary mb-6"
+        >
+          Portfolio
+        </h2>
+
+        <ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" role="list">
+          {investments.map((inv, i) => (
+            <li class="lab-grid-card" style={`--delay: ${i * 60}ms`}>
+              <a
+                href={inv.data.url ?? "/investments"}
+                target={inv.data.url ? "_blank" : undefined}
+                rel={inv.data.url ? "noopener noreferrer" : undefined}
+                class="group flex flex-col gap-5 p-6 rounded-2xl border border-border-subtle bg-bg-surface hover:border-border hover:-translate-y-1 transition-all duration-300 ease-out-expo h-full"
+              >
+                <div class="flex items-start justify-between gap-4">
+                  <div class="w-12 h-12 rounded-xl bg-bg-elevated border border-border-subtle flex items-center justify-center overflow-hidden shrink-0">
+                    {inv.data.logo ? (
+                      <img
+                        src={inv.data.logo}
+                        alt={`${inv.data.company} logo`}
+                        class="w-full h-full object-cover"
+                        width="48"
+                        height="48"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span class="font-display font-bold text-base text-accent">
+                        {inv.data.company.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+                  <span class="text-xs font-mono text-text-muted mt-1">
+                    {inv.data.year}
+                  </span>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                  <h3 class="font-display font-semibold text-text-primary group-hover:text-accent transition-colors duration-200">
+                    {inv.data.company}
+                  </h3>
+                  <p class="text-sm text-text-secondary leading-relaxed line-clamp-2">
+                    {inv.data.description}
+                  </p>
+                </div>
+
+                <div class="flex items-center gap-2 mt-auto flex-wrap">
+                  <span class="text-xs px-2.5 py-1 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
+                    {inv.data.sector}
+                  </span>
+                  <span class="text-xs px-2.5 py-1 rounded-full bg-bg-elevated text-text-muted border border-border-subtle">
+                    {inv.data.stage}
+                  </span>
+                </div>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
 </div>
 
 <script>

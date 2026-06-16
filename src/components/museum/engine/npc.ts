@@ -232,6 +232,8 @@ export function createNpcs(
     { room: 0, tx: 8, ty: 6 },
     { room: 1, tx: 19, ty: 4 },
     { room: 1, tx: 24, ty: 7 },
+    { room: 2, tx: 34, ty: 5 },
+    { room: 2, tx: 38, ty: 8 },
   ];
   VISITOR_SPAWNS.forEach((s, i) => {
     if (!isWalkable(map, s.tx, s.ty)) return;

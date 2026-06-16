@@ -1,6 +1,6 @@
 import type { Character, Direction } from "./character";
 
-export type InteractableKind = "painting" | "computer";
+export type InteractableKind = "painting" | "computer" | "investment";
 
 export type Interactable = {
   kind: InteractableKind;
@@ -9,7 +9,7 @@ export type Interactable = {
   /** Anchor (top-left) tile. */
   tileX: number;
   tileY: number;
-  /** Size in tiles. Paintings are 2x2, desks are 1x1. */
+  /** Size in tiles. Paintings are 2x1/1x2, desks and pedestals are 2x2. */
   width: number;
   height: number;
   /**

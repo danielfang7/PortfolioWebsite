@@ -150,6 +150,33 @@ export function drawPaintingSpotlights(
   ctx.restore();
 }
 
+/**
+ * Accent light pools cast on the floor around each Portfolio pedestal — a soft
+ * downlight that grounds the plinth and color-codes the wing per company.
+ * Drawn additively in the same floor pass as the painting spotlights.
+ */
+export function drawPedestalSpotlights(
+  ctx: CanvasRenderingContext2D,
+  pedestals: Interactable[],
+): void {
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  for (const p of pedestals) {
+    const color = p.color ?? "#a78bfa";
+    const cx = (p.tileX + p.width / 2) * TILE_SIZE;
+    // Pool sits at the foot of the pedestal, biased toward the room.
+    const cy = (p.tileY + p.height) * TILE_SIZE - TILE_SIZE * 0.4;
+    const r = TILE_SIZE * 2;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    grad.addColorStop(0, hexToRgba(color, 0.2));
+    grad.addColorStop(0.5, hexToRgba(color, 0.07));
+    grad.addColorStop(1, hexToRgba(color, 0));
+    ctx.fillStyle = grad;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+  }
+  ctx.restore();
+}
+
 /** Soft cyan glow around the player, sells them as lit in the dark room. */
 export function drawPlayerGlow(
   ctx: CanvasRenderingContext2D,

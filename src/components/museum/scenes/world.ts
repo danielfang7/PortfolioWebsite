@@ -5,8 +5,9 @@ import type { Interactable } from "../engine/interactables";
 /**
  * The museum world: a row of viewport-sized rooms joined by doorways. Room 0 is
  * the Gallery (front-end experiments hang as paintings on the walls); room 1 is
- * the Workshop (shipped works sit on computer desks). Each room is exactly the
- * size of the visible canvas so the camera can frame one room at a time.
+ * the Workshop (shipped works sit on computer desks); room 2 is the Portfolio
+ * (investments stand on lit pedestals). Each room is exactly the size of the
+ * visible canvas so the camera can frame one room at a time.
  */
 
 /** Visible viewport in tiles — matches one room and the canvas size. */
@@ -46,6 +47,15 @@ export const ROOMS: RoomDef[] = [
     rows: ROOM_ROWS,
     floorTint: "#1f1608",
     ambient: "rgba(120, 96, 56, 0.16)",
+  },
+  {
+    id: "portfolio",
+    name: "The Portfolio",
+    originX: ROOM_COLS * 2,
+    cols: ROOM_COLS,
+    rows: ROOM_ROWS,
+    floorTint: "#1a1226",
+    ambient: "rgba(124, 92, 156, 0.16)",
   },
 ];
 

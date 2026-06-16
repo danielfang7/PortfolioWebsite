@@ -2,24 +2,10 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Museum from "@/components/museum/Museum";
 import LabGrid from "@/components/LabGrid.astro";
-import { experiments } from "@/data/experiments";
-import { getCollection } from "astro:content";
+import { getMuseumData } from "@/data/museum";
 
-const allWorks = (await getCollection("works")).sort(
-  (a, b) => a.data.order - b.data.order,
-);
-
-const museumWorks = allWorks.map((w) => ({
-  slug: w.id.replace(/\.(md|mdx)$/, ""),
-  title: w.data.title,
-  description: w.data.description,
-  role: w.data.role,
-  year: w.data.year,
-  stack: w.data.stack,
-  thumbnail: w.data.thumbnail,
-  liveUrl: w.data.liveUrl,
-  sourceUrl: w.data.sourceUrl,
-}));
+const { experiments, works, investments, workEntries, investmentEntries } =
+  await getMuseumData();
 ---
 
 <BaseLayout
@@ -43,13 +29,19 @@ const museumWorks = allWorks.map((w) => ({
         </h1>
         <p class="text-text-secondary max-w-xl leading-relaxed">
           Walk through the museum with WASD or arrow keys (or drag to move on
-          touch). Paintings are front end experiments, computer desks are works.
-          Stand in front of anything glowing and press E to interact.
+          touch). Paintings are front end experiments, computer desks are works,
+          and pedestals are companies I've backed. Stand in front of anything
+          glowing and press E to interact.
         </p>
       </div>
 
       <div data-lab-pane="museum">
-        <Museum client:only="react" experiments={experiments} works={museumWorks} />
+        <Museum
+          client:only="react"
+          experiments={experiments}
+          works={works}
+          investments={investments}
+        />
       </div>
 
       <div data-lab-pane="list" hidden>
@@ -70,7 +62,11 @@ const museumWorks = allWorks.map((w) => ({
             Museum view
           </button>
         </div>
-        <LabGrid experiments={experiments} works={allWorks} />
+        <LabGrid
+          experiments={experiments}
+          works={workEntries}
+          investments={investmentEntries}
+        />
       </div>
     </div>
   </section>

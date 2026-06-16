@@ -194,6 +194,12 @@
     100% { transform: translateY(200%); }
   }
 
+  /* Pulsing dot on the museum "take control" attract overlay. */
+  @keyframes museum-attract-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
   /* Accent line decorations */
   .accent-line {
     display: block;

@@ -14,6 +14,19 @@ export type WorkRef = {
   sourceUrl?: string;
 };
 
+export type InvestmentRef = {
+  slug: string;
+  company: string;
+  description: string;
+  sector: string;
+  stage: string;
+  year: string;
+  url?: string;
+  logo?: string;
+  /** Accent color used for the pedestal trim, plaque, and modal. */
+  color: string;
+};
+
 /**
  * Painting slots on the Gallery walls (room 0, world cols 0-13). Paintings sit
  * flush on the wall — 2x1 on top/bottom walls, 1x2 on side walls — so they read
@@ -56,9 +69,26 @@ const DESK_SLOTS: Array<{ tileX: number; tileY: number }> = [
   { tileX: 25, tileY: 7 },
 ];
 
+/**
+ * Pedestal floor slots in the Portfolio wing (room 2, world cols 28-41).
+ * Pedestals are 2x2 lit plinths laid out as a 3×2 grid (cols 31/35/39) flush to
+ * the top and bottom rows (rows 2 and 6), mirroring the Workshop so the central
+ * lane (rows 4-5) — fed by the west doorway — stays a clear walk-through.
+ * Capacity (6) exceeds the current investment count so a new entry still lands.
+ */
+const PEDESTAL_SLOTS: Array<{ tileX: number; tileY: number }> = [
+  { tileX: 31, tileY: 2 },
+  { tileX: 35, tileY: 2 },
+  { tileX: 39, tileY: 2 },
+  { tileX: 31, tileY: 6 },
+  { tileX: 35, tileY: 6 },
+  { tileX: 39, tileY: 6 },
+];
+
 export function buildWorldInteractables(
   experiments: Experiment[],
   works: WorkRef[],
+  investments: InvestmentRef[] = [],
 ): Interactable[] {
   const result: Interactable[] = [];
 
@@ -73,6 +103,11 @@ export function buildWorldInteractables(
     if (works.length > DESK_SLOTS.length) {
       console.warn(
         `[museum] ${works.length - DESK_SLOTS.length} work(s) hidden — add DESK_SLOTS in data.ts.`,
+      );
+    }
+    if (investments.length > PEDESTAL_SLOTS.length) {
+      console.warn(
+        `[museum] ${investments.length - PEDESTAL_SLOTS.length} investment(s) hidden — add PEDESTAL_SLOTS in data.ts.`,
       );
     }
   }
@@ -103,6 +138,21 @@ export function buildWorldInteractables(
       width: 2,
       height: 2,
       face: null,
+    });
+  });
+
+  investments.slice(0, PEDESTAL_SLOTS.length).forEach((inv, i) => {
+    const slot = PEDESTAL_SLOTS[i];
+    result.push({
+      kind: "investment",
+      slug: inv.slug,
+      title: inv.company,
+      tileX: slot.tileX,
+      tileY: slot.tileY,
+      width: 2,
+      height: 2,
+      face: null,
+      color: inv.color,
     });
   });
 

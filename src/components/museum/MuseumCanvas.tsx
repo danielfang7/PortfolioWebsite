@@ -15,12 +15,15 @@ import {
 } from "./engine/interactables";
 import { drawPaintingSprite } from "./engine/paintingSprite";
 import { drawComputerSprite } from "./engine/computerSprite";
+import { drawInvestmentSprite } from "./engine/investmentSprite";
 import { drawPlaques } from "./engine/plaque";
 import { drawDoorways, drawDoorwaySigns } from "./engine/doorway";
+import { createAutopilot } from "./engine/autopilot";
 import {
   drawAmbientFloor,
   drawFloorDecor,
   drawPaintingSpotlights,
+  drawPedestalSpotlights,
   drawPlayerGlow,
   drawDust,
   drawVignette,
@@ -35,7 +38,7 @@ import {
   setCameraTarget,
   updateCamera,
 } from "./engine/camera";
-import { buildWorldInteractables, type WorkRef } from "./data";
+import { buildWorldInteractables, type WorkRef, type InvestmentRef } from "./data";
 import {
   createWorldScene,
   roomIndexForX,
@@ -69,6 +72,7 @@ const LIVE_RADIUS = 3;
 export type MuseumCanvasProps = {
   experiments: Experiment[];
   works: WorkRef[];
+  investments: InvestmentRef[];
   onFocusChange?: (focused: Interactable | null) => void;
   /** Fired when the player activates the focused exhibit (E / tap). */
   onInteract?: (focused: Interactable) => void;
@@ -76,15 +80,22 @@ export type MuseumCanvasProps = {
   paused?: boolean;
   /** Silences all procedural audio when true. */
   muted?: boolean;
+  /** Attract mode: the character auto-tours the wings until the visitor acts. */
+  attract?: boolean;
+  /** Fired once, when the visitor takes control during attract mode. */
+  onUserControl?: () => void;
 };
 
 export function MuseumCanvas({
   experiments,
   works,
+  investments,
   onFocusChange,
   onInteract,
   paused = false,
   muted = true,
+  attract = false,
+  onUserControl,
 }: MuseumCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioRef = useRef<MuseumAudio | null>(null);
@@ -104,6 +115,8 @@ export function MuseumCanvas({
   onFocusChangeRef.current = onFocusChange;
   const onInteractRef = useRef(onInteract);
   onInteractRef.current = onInteract;
+  const onUserControlRef = useRef(onUserControl);
+  onUserControlRef.current = onUserControl;
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
   // Honours the OS "reduce motion" setting: ambient animation (strolling NPCs,
@@ -140,9 +153,10 @@ export function MuseumCanvas({
     const audio = createAudio(mutedRef.current);
     audioRef.current = audio;
     const charSprite = createCharacterSprite();
-    const interactables = buildWorldInteractables(experiments, works);
+    const interactables = buildWorldInteractables(experiments, works, investments);
     const paintings = interactables.filter((i) => i.kind === "painting");
     const computers = interactables.filter((i) => i.kind === "computer");
+    const pedestals = interactables.filter((i) => i.kind === "investment");
     const tilemap = createWorldScene(interactables);
     const npcs = createNpcs(tilemap, interactables);
     const character = createCharacter(WORLD_SPAWN.tileX, WORLD_SPAWN.tileY);
@@ -150,12 +164,35 @@ export function MuseumCanvas({
     const input = createInput(canvas);
     const touch = createTouchControls(canvas, input);
     const dust = new DustField();
+    // Attract mode: the character strolls a guided tour of the wings until the
+    // visitor takes over (first pointer press, or a movement key once engaged).
+    const autopilot = attract ? createAutopilot() : null;
 
     // Audio can't start until the visitor interacts (browser autoplay policy).
     // The first key or pointer brings the context to life and kicks off the hum.
     const wakeAudio = () => audio.resume();
     window.addEventListener("keydown", wakeAudio, { once: true });
     canvas.addEventListener("pointerdown", wakeAudio, { once: true });
+
+    // Attract-mode handover: the first deliberate interaction (a press on the
+    // canvas, or a movement key while the canvas is engaged) stops the tour and
+    // gives the visitor the controls.
+    const MOVE_KEYS = new Set([
+      "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight",
+      "w", "a", "s", "d", "W", "A", "S", "D",
+    ]);
+    const takeOver = () => {
+      if (!autopilot || !autopilot.active) return;
+      autopilot.stop(input.state);
+      onUserControlRef.current?.();
+    };
+    const onTakeoverKey = (e: KeyboardEvent) => {
+      if (MOVE_KEYS.has(e.key) && input.isActive()) takeOver();
+    };
+    if (autopilot) {
+      canvas.addEventListener("pointerdown", takeOver);
+      window.addEventListener("keydown", onTakeoverKey);
+    }
 
     let focused: Interactable | null = null;
     let prevLiveSlug: string | null = null;
@@ -174,6 +211,12 @@ export function MuseumCanvas({
           return;
         }
         const reduced = reducedMotionRef.current;
+        // Drive the guided tour before reading input. Under reduced-motion the
+        // tour holds still (no scripted movement); the visitor can still take
+        // control and walk. Once they do, autopilot goes dormant.
+        if (autopilot?.active && !reduced) {
+          autopilot.steer(character, input.state, dt);
+        }
         updateCharacter(character, input.state, tilemap, dt);
         // Under reduced-motion the visitors hold position and no dust drifts;
         // only the player (user-driven) keeps moving.
@@ -258,6 +301,7 @@ export function MuseumCanvas({
         drawFloorDecor(ctx, ROOM_LIGHTS);
         drawAmbientFloor(ctx, ROOM_LIGHTS);
         drawPaintingSpotlights(ctx, paintings);
+        drawPedestalSpotlights(ctx, pedestals);
         drawPlayerGlow(ctx, character);
 
         // Doorways: arch, light spill, and the wayfinding signs between wings.
@@ -293,6 +337,21 @@ export function MuseumCanvas({
                 c.height,
                 animTime,
                 i * 1.7,
+              ),
+          })),
+          ...pedestals.map((p, i) => ({
+            baseline: (p.tileY + p.height) * TILE_SIZE,
+            draw: () =>
+              drawInvestmentSprite(
+                ctx,
+                p.tileX,
+                p.tileY,
+                p.width,
+                p.height,
+                p.color ?? "#a78bfa",
+                p.title.charAt(0),
+                animTime,
+                i * 2.1,
               ),
           })),
           {
@@ -348,11 +407,15 @@ export function MuseumCanvas({
       touch.destroy();
       window.removeEventListener("keydown", wakeAudio);
       canvas.removeEventListener("pointerdown", wakeAudio);
+      if (autopilot) {
+        canvas.removeEventListener("pointerdown", takeOver);
+        window.removeEventListener("keydown", onTakeoverKey);
+      }
       audio.destroy();
       audioRef.current = null;
       onFocusChangeRef.current?.(null);
     };
-  }, [experiments, works]);
+  }, [experiments, works, investments, attract]);
 
   return (
     <>
