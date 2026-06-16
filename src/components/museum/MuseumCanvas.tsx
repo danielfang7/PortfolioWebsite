@@ -106,6 +106,22 @@ export function MuseumCanvas({
   onInteractRef.current = onInteract;
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
+  // Honours the OS "reduce motion" setting: ambient animation (strolling NPCs,
+  // drifting dust, the CRT roll, breathing glows) is frozen while the
+  // user-driven walk still plays. Read into a ref + live listener so toggling
+  // the setting takes effect without rebuilding the scene.
+  const reducedMotionRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    reducedMotionRef.current = mq.matches;
+    const onChange = (e: MediaQueryListEvent) => {
+      reducedMotionRef.current = e.matches;
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   // Mute toggling lives in a separate effect so flipping it never rebuilds the
   // scene (the heavy effect below only depends on the exhibit data).
@@ -157,12 +173,17 @@ export function MuseumCanvas({
           input.clearInteract();
           return;
         }
+        const reduced = reducedMotionRef.current;
         updateCharacter(character, input.state, tilemap, dt);
-        for (const n of npcs) updateNpc(n, tilemap, dt, character);
-        // Footstep dust grounds the player and every walking visitor alike.
-        dust.track(character);
-        for (const n of npcs) dust.track(n);
-        dust.step(dt);
+        // Under reduced-motion the visitors hold position and no dust drifts;
+        // only the player (user-driven) keeps moving.
+        if (!reduced) {
+          for (const n of npcs) updateNpc(n, tilemap, dt, character);
+          // Footstep dust grounds the player and every walking visitor alike.
+          dust.track(character);
+          for (const n of npcs) dust.track(n);
+          dust.step(dt);
+        }
         if (!movedOnce && character.moving) {
           movedOnce = true;
           setHasMoved(true);
@@ -218,6 +239,11 @@ export function MuseumCanvas({
         }
       },
       render: (time) => {
+        const reduced = reducedMotionRef.current;
+        // Frozen clock fed to the ambient sprite animation (idle bob, screen
+        // flicker) so they hold still under reduced-motion; the walk cycle is
+        // driven by walkPhase and keeps animating regardless.
+        const animTime = reduced ? 0 : time;
         ctx.imageSmoothingEnabled = false;
         ctx.fillStyle = "#050506";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -235,7 +261,7 @@ export function MuseumCanvas({
         drawPlayerGlow(ctx, character);
 
         // Doorways: arch, light spill, and the wayfinding signs between wings.
-        drawDoorways(ctx, time);
+        drawDoorways(ctx, time, reduced);
 
         // Paintings live on the walls — always behind the actors in the room.
         for (const p of paintings) {
@@ -265,23 +291,23 @@ export function MuseumCanvas({
                 c.tileY,
                 c.width,
                 c.height,
-                time,
+                animTime,
                 i * 1.7,
               ),
           })),
           {
             baseline: character.y + 9,
-            draw: () => drawCharacter(ctx, charSprite, character, time),
+            draw: () => drawCharacter(ctx, charSprite, character, animTime),
           },
           // Visitors and the curator share the same floor-baseline sort so they
           // occlude (and are occluded by) the desks and player correctly.
           ...npcs.map((n) => ({
             baseline: n.y + 9,
-            draw: () => drawCharacter(ctx, n.sheet, n, time),
+            draw: () => drawCharacter(ctx, n.sheet, n, animTime),
           })),
         ];
         actors.sort((a, b) => a.baseline - b.baseline);
-        dust.draw(ctx);
+        if (!reduced) dust.draw(ctx);
         for (const a of actors) a.draw();
 
         // Curator greetings float above the actors, still in world space.
@@ -290,14 +316,15 @@ export function MuseumCanvas({
         // Doorway signs hang at the doorway plane, above the desks/player.
         drawDoorwaySigns(ctx);
 
-        if (focused) drawFocusGlow(ctx, focused, time);
+        if (focused) drawFocusGlow(ctx, focused, time, reduced);
         ctx.restore();
 
         // Overlay atmosphere on top of everything in the scene (screen space).
-        drawDust(ctx, canvas.width, canvas.height, time);
+        // The drifting motes are ambient motion, so they're skipped when reduced.
+        if (!reduced) drawDust(ctx, canvas.width, canvas.height, time);
         drawVignette(ctx, canvas.width, canvas.height);
         // CRT scanlines + rolling band as the final screen-space pass.
-        crt.draw(ctx, time);
+        crt.draw(ctx, time, reduced);
         // Touch joystick is UI — drawn last, over everything.
         drawJoystick(ctx, touch.joystick);
       },
@@ -390,8 +417,10 @@ function drawFocusGlow(
   ctx: CanvasRenderingContext2D,
   it: Interactable,
   timeSec: number,
+  reduced = false,
 ): void {
-  const pulse = 0.55 + 0.35 * Math.sin(timeSec * 4);
+  // Steady highlight under reduced-motion instead of the pulsing beacon.
+  const pulse = reduced ? 0.7 : 0.55 + 0.35 * Math.sin(timeSec * 4);
   const px = it.tileX * TILE_SIZE;
   const py = it.tileY * TILE_SIZE;
   const w = it.width * TILE_SIZE;

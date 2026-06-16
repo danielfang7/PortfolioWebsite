@@ -6,7 +6,11 @@
  */
 
 export type CRT = {
-  draw: (ctx: CanvasRenderingContext2D, time: number) => void;
+  draw: (
+    ctx: CanvasRenderingContext2D,
+    time: number,
+    reduced?: boolean,
+  ) => void;
 };
 
 export function createCRT(width: number, height: number): CRT {
@@ -23,14 +27,21 @@ export function createCRT(width: number, height: number): CRT {
   }
 
   return {
-    draw: (ctx, time) => {
+    draw: (ctx, time, reduced = false) => {
       ctx.save();
 
-      // Scanlines with a subtle mains-hum flicker on their strength.
-      const flicker = 0.9 + 0.1 * Math.sin(time * 11);
+      // Scanlines with a subtle mains-hum flicker on their strength. Under
+      // reduced-motion the lines stay (they're a static texture) but the
+      // flicker is pinned and the rolling band is dropped entirely.
+      const flicker = reduced ? 1 : 0.9 + 0.1 * Math.sin(time * 11);
       ctx.globalAlpha = flicker;
       ctx.drawImage(lines, 0, 0);
       ctx.globalAlpha = 1;
+
+      if (reduced) {
+        ctx.restore();
+        return;
+      }
 
       // Rolling refresh band: a soft bright sweep travelling down the screen.
       const bandH = height * 0.32;

@@ -32,8 +32,9 @@ function signLabel(roomName: string): string {
 export function drawDoorways(
   ctx: CanvasRenderingContext2D,
   timeSec: number,
+  reduced = false,
 ): void {
-  for (const d of DOORWAYS) drawDoorwayArch(ctx, d, timeSec);
+  for (const d of DOORWAYS) drawDoorwayArch(ctx, d, timeSec, reduced);
 }
 
 /** Hanging wayfinding signs — drawn after the actors so a desk never clips the
@@ -50,6 +51,7 @@ function drawDoorwayArch(
   ctx: CanvasRenderingContext2D,
   d: Doorway,
   timeSec: number,
+  reduced = false,
 ): void {
   const w = d.rightPx - d.leftPx;
   const h = d.bottomPx - d.topPx;
@@ -57,8 +59,8 @@ function drawDoorwayArch(
   const cy = (d.topPx + d.bottomPx) / 2;
 
   // Warm light spilling through onto the floor, breathing gently so the eye
-  // catches the opening even across the room.
-  const pulse = 0.5 + 0.18 * Math.sin(timeSec * 1.6);
+  // catches the opening even across the room — held steady under reduced-motion.
+  const pulse = reduced ? 0.6 : 0.5 + 0.18 * Math.sin(timeSec * 1.6);
   const glow = ctx.createRadialGradient(cx, cy, 4, cx, cy, w * 1.7);
   glow.addColorStop(0, `rgba(${GLOW}, ${0.22 * pulse + 0.12})`);
   glow.addColorStop(1, `rgba(${GLOW}, 0)`);

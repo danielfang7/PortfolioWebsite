@@ -9,7 +9,7 @@ const allWorks = (await getCollection("works")).sort(
   (a, b) => a.data.order - b.data.order,
 );
 
-const museumWorks = allWorks.slice(0, 6).map((w) => ({
+const museumWorks = allWorks.map((w) => ({
   slug: w.id.replace(/\.(md|mdx)$/, ""),
   title: w.data.title,
   description: w.data.description,
