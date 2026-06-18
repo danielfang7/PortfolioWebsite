@@ -35,6 +35,17 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
   // Attract mode only: tracks whether the visitor has taken control yet, so the
   // "click to take control" overlay can fade away on their first interaction.
   const [controlled, setControlled] = useState(false);
+  // Touch devices have no keyboard, so the attract overlay swaps "WASD" copy for
+  // tap/drag wording. Resolved after mount to avoid an SSR hydration mismatch.
+  const [coarsePointer, setCoarsePointer] = useState(false);
+
+  useEffect(() => {
+    try {
+      setCoarsePointer(window.matchMedia("(pointer: coarse)").matches);
+    } catch {
+      /* matchMedia unavailable — assume a precise pointer */
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -105,7 +116,11 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
         }}
       >
         <SoundToggle muted={muted} onToggle={toggleMuted} />
-        <ListViewToggle onSwitch={switchToList} />
+        {/* The list-view fallback only exists on the full /lab page (it swaps the
+            host markup via window.__setLabView). The home-page preview has no
+            such host, so the toggle would be a dead button there — hide it and
+            let the prominent "Enter the full Lab" link carry that intent. */}
+        {!attract && <ListViewToggle onSwitch={switchToList} />}
       </div>
       <div
         style={{
@@ -175,7 +190,9 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
                   animation: "museum-attract-pulse 1.6s ease-in-out infinite",
                 }}
               />
-              Click to take control · WASD to move
+              {coarsePointer
+                ? "Tap to take control · drag to move"
+                : "Click to take control · WASD to move"}
             </span>
           </div>
         )}
