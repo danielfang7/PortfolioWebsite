@@ -306,15 +306,50 @@ interface Props {
   initialEvents: DisplayEvent[];
 }
 
+const CACHE_KEY = "gh-activity-cache-v1";
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
 export function GitHubActivity({ initialEvents }: Props) {
   const [events, setEvents] = useState<DisplayEvent[]>(initialEvents);
 
   useEffect(() => {
     const controller = new AbortController();
+
+    // Serve from a fresh client-side cache when available so repeated page
+    // loads / soft navigations don't re-hit the GitHub API every time — the
+    // unauthenticated API is rate-limited to 60 req/hr per IP, and each render
+    // can fan out to several calls (events + per-repo commit lookups).
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const cached = JSON.parse(raw) as { ts: number; events: DisplayEvent[] };
+        if (
+          Date.now() - cached.ts < CACHE_TTL &&
+          Array.isArray(cached.events) &&
+          cached.events.length > 0
+        ) {
+          setEvents(cached.events);
+          return () => controller.abort();
+        }
+      }
+    } catch {
+      /* malformed/unavailable cache — fall through to a network fetch */
+    }
+
     (async () => {
       try {
         const fresh = await fetchGitHubEvents();
-        if (fresh.length > 0 && !controller.signal.aborted) setEvents(fresh);
+        if (fresh.length > 0 && !controller.signal.aborted) {
+          setEvents(fresh);
+          try {
+            localStorage.setItem(
+              CACHE_KEY,
+              JSON.stringify({ ts: Date.now(), events: fresh }),
+            );
+          } catch {
+            /* quota exceeded / private mode — caching is best-effort */
+          }
+        }
       } catch {
         /* keep build-time data */
       }
