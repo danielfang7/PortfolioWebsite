@@ -12,6 +12,9 @@ const ACCENT = "#00D8FF";
 const MONO =
   '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace';
 
+/** Map a raster asset path to its WebP sibling (generated at build time). */
+const toWebp = (src: string) => src.replace(/\.(png|jpe?g)$/i, ".webp");
+
 type ExternalLink = { label: string; href: string };
 
 /** Normalized presentation model so the markup stays kind-agnostic. */
@@ -182,30 +185,36 @@ export function ItemModal(props: Props) {
               <v.preview.Comp />
             </Suspense>
           ) : v.preview.type === "image" ? (
-            <img
-              src={v.preview.src}
-              alt={v.title}
-              loading="lazy"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
-              }}
-            />
+            <picture>
+              <source srcSet={toWebp(v.preview.src)} type="image/webp" />
+              <img
+                src={v.preview.src}
+                alt={v.title}
+                loading="lazy"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+              />
+            </picture>
           ) : v.preview.type === "logo" ? (
-            <img
-              src={v.preview.src}
-              alt={`${v.title} logo`}
-              loading="lazy"
-              style={{
-                maxWidth: "44%",
-                maxHeight: "56%",
-                objectFit: "contain",
-                display: "block",
-                filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.5))",
-              }}
-            />
+            <picture>
+              <source srcSet={toWebp(v.preview.src)} type="image/webp" />
+              <img
+                src={v.preview.src}
+                alt={`${v.title} logo`}
+                loading="lazy"
+                style={{
+                  maxWidth: "44%",
+                  maxHeight: "56%",
+                  objectFit: "contain",
+                  display: "block",
+                  filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.5))",
+                }}
+              />
+            </picture>
           ) : null}
           <div
             aria-hidden="true"

@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
+import Picture from "@/components/Picture.astro";
 import { GladeCorePipeline } from "@/components/case-studies/GladeCorePipeline";
 import { GladeKitAgentLoop } from "@/components/case-studies/GladeKitAgentLoop";
 
@@ -148,7 +149,7 @@ const creativeWorkJsonLd = {
       />
       <!-- Thumbnail image -->
       {work.data.thumbnail && (
-        <img
+        <Picture
           src={work.data.thumbnail}
           alt={work.data.title}
           class="absolute inset-0 w-full h-full object-cover"
@@ -376,8 +377,8 @@ const creativeWorkJsonLd = {
               aria-label={`Open ${item.label} full screen`}
             >
               {item.type === "image" ? (
-                <img
-                  src={item.src}
+                <Picture
+                  src={item.src ?? ""}
                   alt={item.alt ?? ""}
                   class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
@@ -776,7 +777,8 @@ const creativeWorkJsonLd = {
       if (item.type === "video" && item.src) {
         lbContent.innerHTML = `<video src="${item.src}" class="w-full h-full object-contain bg-black" style="max-height:76vh;" controls playsinline></video>`;
       } else if (item.type === "image" && item.src) {
-        lbContent.innerHTML = `<img src="${item.src}" alt="${item.alt}" class="w-full h-full object-cover" style="max-height:76vh;" />`;
+        const webp = item.src.replace(/\.(png|jpe?g)$/i, ".webp");
+        lbContent.innerHTML = `<picture><source srcset="${webp}" type="image/webp" /><img src="${item.src}" alt="${item.alt}" class="w-full h-full object-cover" style="max-height:76vh;" /></picture>`;
       } else {
         const f = item.gradFrom, t = item.gradTo, a = item.angle;
         lbContent.innerHTML = `

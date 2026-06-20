@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import Picture from "@/components/Picture.astro";
 import { getCollection } from "astro:content";
 
 const investments = (await getCollection("investments")).sort(
@@ -67,7 +68,7 @@ const investments = (await getCollection("investments")).sort(
                 <div class="relative flex items-start justify-between gap-4">
                   <div class="w-12 h-12 rounded-xl bg-bg-elevated border border-border-subtle flex items-center justify-center overflow-hidden shrink-0">
                     {inv.data.logo ? (
-                      <img
+                      <Picture
                         src={inv.data.logo}
                         alt={`${inv.data.company} logo`}
                         class="w-full h-full object-cover"

@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import Picture from "@/components/Picture.astro";
 
 const works = (await getCollection("works")).sort(
   (a, b) => a.data.order - b.data.order
@@ -134,7 +135,7 @@ const META_HEIGHT = 108;
                       aria-hidden="true"
                     />
                     {work.data.thumbnail && (
-                      <img
+                      <Picture
                         src={work.data.thumbnail}
                         alt={work.data.title}
                         class="absolute inset-0 w-full h-full object-cover"

@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import WorksCarousel from "@/components/WorksCarousel.astro";
+import Picture from "@/components/Picture.astro";
 import { getCollection } from "astro:content";
 
 const works = (await getCollection("works")).sort(
@@ -56,7 +57,7 @@ const gradients = [
               >
                 <!-- Thumbnail + hover reveal -->
                 <div class="works-grid-visual relative aspect-[16/10] overflow-hidden shrink-0">
-                  <img
+                  <Picture
                     src={work.data.thumbnail}
                     alt=""
                     class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out-expo group-hover:scale-[1.04]"

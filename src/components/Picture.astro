@@ -1,0 +1,32 @@
+---
+/**
+ * Renders an optimized <picture>: a WebP <source> (generated alongside each
+ * raster asset) with the original PNG/JPG as the <img> fallback. This keeps
+ * capability intact for the ~2% of clients without WebP support and lets
+ * og:image / social scrapers keep pointing at the original raster file.
+ *
+ * Drop-in for <img>: pass the original `src` (e.g. /images/works/X.png) plus
+ * any <img> attributes (class, loading, decoding, width, height, …).
+ */
+interface Props {
+  src: string;
+  alt: string;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { src, alt, class: className, ...rest } = Astro.props;
+const isRaster = /\.(png|jpe?g)$/i.test(src);
+const webp = src.replace(/\.(png|jpe?g)$/i, ".webp");
+---
+
+{
+  isRaster ? (
+    <picture>
+      <source srcset={webp} type="image/webp" />
+      <img src={src} alt={alt} class={className} {...rest} />
+    </picture>
+  ) : (
+    <img src={src} alt={alt} class={className} {...rest} />
+  )
+}
