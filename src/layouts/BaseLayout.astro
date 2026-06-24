@@ -22,6 +22,12 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const fullTitle = title.includes("Daniel Fang")
   ? title
   : `${title} — Daniel Fang`;
+
+// Cloudflare Web Analytics — privacy-first, cookieless. Token is set via the
+// PUBLIC_CF_BEACON_TOKEN env var (in Netlify) so it stays out of source.
+// Only loaded in production builds, so local dev/preview never pollutes stats.
+const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
+const enableAnalytics = import.meta.env.PROD && Boolean(cfBeaconToken);
 ---
 
 <!doctype html>
@@ -78,6 +84,21 @@ const fullTitle = title.includes("Daniel Fang")
     <!-- Web manifest -->
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#0a0a0a" />
+
+    <!-- Cloudflare Web Analytics — cookieless, no consent banner needed.
+         SPA navigations (Astro ClientRouter pushState) are tracked automatically.
+         ClientRouter de-dupes this script by src, so it loads once and the
+         History API patch persists across view transitions (no double counts). -->
+    {
+      enableAnalytics && (
+        <script
+          is:inline
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: cfBeaconToken })}
+        />
+      )
+    }
 
     <!-- View Transitions (soft navigation + shared-element morphing) -->
     <ClientRouter />

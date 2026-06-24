@@ -87,6 +87,14 @@ Works, blog posts, and investments are defined as content collections in `src/co
 
 ---
 
+## Analytics
+
+Privacy-first, cookieless analytics via [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/) — no cookies, no consent banner, no PII. The beacon only loads in production builds and only when `PUBLIC_CF_BEACON_TOKEN` is set.
+
+To enable: copy `.env.example` to `.env`, then set `PUBLIC_CF_BEACON_TOKEN` from the Cloudflare dashboard (Analytics & Logs → Web Analytics → site → JS snippet → `token` value). In production, set the same variable in Netlify under Site settings → Environment variables. SPA navigations (Astro's `ClientRouter`) are tracked automatically.
+
+---
+
 ## License
 
 Source code is available for reference. Content (writing, images, project descriptions) is © Daniel Fang. Please don't redeploy this site as your own.
