@@ -1,0 +1,86 @@
+---
+title: "How I Build: Notes on Going Zero to One"
+date: 2026-06-26T09:00:00.000Z
+excerpt: "Zero to one isn't about having the idea. It's about how you decide when nothing is certain yet."
+tags: ["Building", "Engineering"]
+readingTime: "10 min read"
+---
+
+Everybody wants to talk about the idea. The pitch, the market, the wedge. But here's the thing: ideas are cheap, and pretty much everyone has them. What actually separates the projects that go somewhere from the ones that die in a folder isn't the idea. It's the hundred tiny decisions you make before you have any proof the idea is even right.
+
+That's what zero to one really is. It's a long stretch where you're making decisions that matter with almost no information to go on. I've spent the last couple of years living in that stretch, building [GladeKit](/works/gladekit) (an AI agent for Unity game development) from nothing. And I've also sat on the other side as an investor, watching founders feel their way through the exact same fog. So this is just what I've actually figured out about getting through it.
+
+It's not a framework or anything. It's just how I think about it.
+
+## I care way more about how fast I'm learning than how much I'm building
+
+When you start out, the instinct is to measure progress by how much you've made. Lines of code, features shipped, screens designed. It feels like progress because you can see it. But early on, all that output is kind of a trap. You can build a beautiful, polished product around an assumption that turns out to be totally wrong, and now all that work is a liability. It's sunk cost you have to talk yourself out of.
+
+What I actually care about is how fast I'm turning unknowns into knowns. Before I start basically anything, I ask, "what will I know after this that I don't know right now?" If the honest answer is "nothing, I already know this works," then I'm not learning, I'm just building. And that's usually a sign it's too early to be building at all.
+
+When I kicked off GladeKit, the big scary unknown wasn't "can a model call tools." I already knew it could. The real question was whether a model could hold enough context about a live Unity scene to actually change things without breaking everything around them. That was the bet the whole product rested on. So that's the first thing I built. Not the nice interface, not the onboarding, just the ugliest possible version of the thing that would tell me if the core bet was real.
+
+It mostly wasn't, at first. But I found that out in a week instead of three months, which is the whole point.
+
+## I split decisions into "can I undo this" and "am I stuck with this"
+
+The most useful habit I've got is asking whether a decision can be undone.
+
+The reversible ones (which framework, what to name stuff, how to lay out a file, what to try first) I make fast and almost carelessly. If I'm wrong, I just change it later. Honestly, watching smart people agonize over reversible decisions is one of the saddest wastes of energy I know. You're burning your best focus on a choice the universe will happily let you redo for free.
+
+The decisions you're actually stuck with are a different story. The architecture everything else leans on. The core idea your users build their mental model around. The data model you'll have to migrate a thousand records out of someday. Public promises. Those deserve real thought, because if you're wrong, the cost piles up over time.
+
+With GladeKit, the agent loop itself was totally reversible. I rewrote it a bunch of times and each rewrite was cheap. But the tool schema design (how the agent sees and acts on the Unity scene) was basically permanent. Every tool I added, every output format I picked, became something the model's behavior depended on and something I'd be stuck supporting. So I moved fast and loose on the loop and slow and careful on the tools. I wrote about [why tool schemas matter so much](/blog/write-tool-schemas-ai-agents-reliably-use) in its own post, because it's one of those quiet decisions that secretly determines whether the whole thing works.
+
+The mistake I see constantly, in my own work and in companies I look at, is treating both kinds the same. People deliberate forever over reversible stuff and then make the permanent calls in a rush, half-distracted, on a Friday afternoon.
+
+## I cut scope until it almost hurts, then I ship that
+
+The first version of GladeKit did exactly one thing: it could set up a basic character controller in Unity from a plain-English request. That's it. No fancy multi-step planning demo, no slick UI, none of the dozen other workflows I knew people would eventually ask for.
+
+And I wanted to build all of it. The pull to add "just one more thing" before you show anyone is relentless, and it's almost always the wrong move. Every extra piece of scope is another bet you're placing with zero evidence, and it pushes back the moment you actually get to learn whether any of it matters.
+
+So the thing I've had to train myself to do, and it really is a trained skill and not a personality trait, is to cut scope until it almost hurts and then ship that. Not the version I'm proud of. The version that's barely real enough to teach me something. Pride can come later, once the thing has earned it.
+
+Here's my actual test: if the first version doesn't make me a little embarrassed, I waited too long.
+
+## When I genuinely don't know what'll happen, I size the downside, not the upside
+
+When you truly don't know how something will go, you can't optimize for the expected outcome, because you don't actually have a reliable guess at it. What you can do is understand the shape of being wrong.
+
+So instead of asking "what's the best case," I ask "what does it cost me if this blows up, and will I find out fast?" A decision with a small downside that I'll discover quickly? I'll make that right now, even if I'm only fifty-fifty on it. A decision with a big downside that takes forever to surface? That gets real scrutiny even when I feel pretty good about it.
+
+This is also, not by accident, how I think as an investor. The founders I bet on aren't the ones who seem the most certain. At the earliest stage, certainty is usually a sign somebody hasn't looked hard enough. They're the ones who've set up their bets so the cheap experiments come first and the expensive commitments only happen after those cheap experiments have paid for the confidence. They've made the uncertainty survivable.
+
+Building GladeKit beat this into me in the most direct way possible, because agents fail constantly and unpredictably. You can't engineer the failures away. These are language models, they will always find some new way to surprise you. So you stop trying to prevent every failure and instead make failures cheap and recoverable. Iteration limits from day one. Reversible actions. Recovery logic for when the model does something completely incoherent. The goal was never an agent that doesn't fail. It was an agent where failing costs almost nothing.
+
+Turns out the same idea that makes an agent reliable makes a zero-to-one project survivable. Don't try to avoid being wrong. Just make being wrong cheap.
+
+## I treat my own attention as the scarcest thing I have
+
+Money, headcount, compute. Early on, none of those is the real bottleneck. The real bottleneck is the handful of genuinely hard problems you can hold in your head at once and actually think clearly about.
+
+Almost everything I do early is really about protecting that. I'll happily make a worse reversible decision quickly so I don't torch an hour of good thinking on it. I'll cut a feature not because it's bad but because keeping it would split my attention across two hard problems when I can only do one of them justice. When I built GladeKit's context system, the hardest thing to accept wasn't even technical. It was that giving the model more information made it worse, because the signal just drowned. Attention is a budget for models too. And it's honestly the same problem at every level: the system, the model, the founder. Everyone's got a finite budget of clarity, and the real work is deciding what gets to take up space in it.
+
+## What investing taught me about building
+
+I started backing companies ([Chamber, Dimely, Milliray, ODO](/investments)) partly because I wanted to see the zero-to-one problem from outside my own head. You can't really spot your own blind spots while you're sitting inside them.
+
+The thing that surprised me most was that the technical quality of the early product almost never predicted how things turned out. What predicted it was the founder's relationship with being wrong. The ones who treated their first plan as a hypothesis to test moved fast and compounded. The ones who treated it as a thesis to defend spent all their energy explaining away the evidence. Same intelligence, same market, wildly different outcomes, and the only real difference was whether new information felt like a gift or a threat.
+
+That genuinely changed how I build. Now I try to set up every early decision so reality can talk back to me quickly and cheaply, and I try to actually want to hear what it says. Which is way harder than it sounds. The whole emotional pull of zero to one is toward conviction, and conviction is exactly the thing that makes you stop listening.
+
+## The actual loop
+
+If I squash all of this down into how a day or a week really goes, it's something like:
+
+- **Find the biggest unknown.** Not the most fun thing to build, the thing that makes everything else pointless if it turns out to be false.
+- **Build the smallest thing that resolves it.** Ugly is fine. Embarrassing is fine. The only requirement is that it's real.
+- **Let reality talk back.** Ship it, test it, show it to someone who won't be nice about it.
+- **Update, then go find the next biggest unknown.**
+
+It looks a lot like the agent loop I keep writing about (reason, act, observe, repeat), and I don't think that's a coincidence. Building anything new under uncertainty has the same shape. You can't plan your way to the answer because you don't have the information yet. All you can do is take the cheapest next action that gives you more of it, and stay honest about what it tells you.
+
+The myth of zero to one is that it takes some singular vision you hold against all doubt. In my experience it's almost the opposite. It takes a willingness to hold every part of your plan loosely except the discipline of actually finding out. The idea was never the hard part. Staying honest about whether it's working, fast enough and cheap enough that the honesty doesn't kill you, that's the whole game.
+
+That's how I build.
