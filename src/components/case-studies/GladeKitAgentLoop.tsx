@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 
 interface Runtime {
   id: string;
@@ -106,15 +106,14 @@ export function GladeKitAgentLoop() {
             }}
           >
             {RUNTIMES.map((runtime, i) => (
-              <>
+              <Fragment key={runtime.id}>
                 <RuntimeCard
-                  key={runtime.id}
                   runtime={runtime}
                   selected={selected === runtime.id}
                   onClick={() => setSelected(runtime.id)}
                 />
                 {i < RUNTIMES.length - 1 && (
-                  <div key={`conn-${i}`} style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "0 4px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "0 4px" }}>
                     {/* Forward flow */}
                     <FlowConnector
                       color={FLOWS[i * 2]?.color ?? "#00D8FF"}
@@ -131,7 +130,7 @@ export function GladeKitAgentLoop() {
                     />
                   </div>
                 )}
-              </>
+              </Fragment>
             ))}
           </div>
         </div>

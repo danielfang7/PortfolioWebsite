@@ -185,4 +185,71 @@ export function drawCharacter(
   );
 }
 
+/**
+ * A glowing ring on the floor directly beneath the player — the standard
+ * top-down "this one is you" selection marker. Drawn on the floor, under the
+ * sprites, so it reads as cast on the ground. Pulses with the scene clock;
+ * holds steady under reduced-motion (time === 0).
+ */
+export function drawPlayerRing(
+  ctx: CanvasRenderingContext2D,
+  ch: Character,
+  time = 0,
+): void {
+  const sx = Math.round(ch.x);
+  const sy = Math.round(ch.y);
+  const pulse = 0.5 + 0.5 * Math.sin(time * 3);
+  ctx.save();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = `rgba(0, 216, 255, ${0.5 + 0.35 * pulse})`;
+  ctx.beginPath();
+  ctx.ellipse(sx, sy + 8, 9, 3.5, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * A bobbing chevron floating above the player's head — an unmistakable
+ * "you are here" beacon so the visitor never loses themselves in the crowd of
+ * NPCs. Draw it after the actors so nothing in the room occludes it. The bob is
+ * driven by the scene clock and flattens under reduced-motion (time === 0).
+ */
+export function drawPlayerMarker(
+  ctx: CanvasRenderingContext2D,
+  ch: Character,
+  time = 0,
+): void {
+  const sx = Math.round(ch.x);
+  const headTop = Math.round(ch.y) - SPRITE_H + 5;
+  const bob = Math.sin(time * 3) * 2;
+  const cy = headTop - 6 + bob; // bottom tip of the arrow
+  const w = 5; // half-width of the chevron
+  const h = 6; // height of the chevron
+
+  ctx.save();
+  // Soft glow halo so the beacon pops against busy or bright backdrops.
+  const glow = ctx.createRadialGradient(sx, cy - 3, 0, sx, cy - 3, 11);
+  glow.addColorStop(0, "rgba(0, 216, 255, 0.5)");
+  glow.addColorStop(1, "rgba(0, 216, 255, 0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(sx - 12, cy - 14, 24, 22);
+
+  // Downward chevron: a dark outline first for legibility on light floors,
+  // then the signature cyan fill on top.
+  const tri = (inset: number) => {
+    ctx.beginPath();
+    ctx.moveTo(sx - w - inset, cy - h - inset);
+    ctx.lineTo(sx + w + inset, cy - h - inset);
+    ctx.lineTo(sx, cy + inset);
+    ctx.closePath();
+  };
+  ctx.fillStyle = "rgba(5, 6, 6, 0.85)";
+  tri(1.25);
+  ctx.fill();
+  ctx.fillStyle = "#00d8ff";
+  tri(0);
+  ctx.fill();
+  ctx.restore();
+}
+
 export { SPRITE_H, SPRITE_W };

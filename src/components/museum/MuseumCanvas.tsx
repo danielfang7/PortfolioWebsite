@@ -7,6 +7,8 @@ import { createCharacter, updateCharacter } from "./engine/character";
 import {
   createCharacterSprite,
   drawCharacter,
+  drawPlayerMarker,
+  drawPlayerRing,
 } from "./engine/characterSprite";
 import {
   focusedInteractable,
@@ -303,6 +305,9 @@ export function MuseumCanvas({
         drawPaintingSpotlights(ctx, paintings);
         drawPedestalSpotlights(ctx, pedestals);
         drawPlayerGlow(ctx, character);
+        // A pulsing selection ring on the floor marks "you" — drawn on the
+        // floor so it reads as cast under the player, beneath every sprite.
+        drawPlayerRing(ctx, character, animTime);
 
         // Doorways: arch, light spill, and the wayfinding signs between wings.
         drawDoorways(ctx, time, reduced);
@@ -368,6 +373,10 @@ export function MuseumCanvas({
         actors.sort((a, b) => a.baseline - b.baseline);
         if (!reduced) dust.draw(ctx);
         for (const a of actors) a.draw();
+
+        // "You are here" beacon: a bobbing chevron over the player's head,
+        // drawn after the actors so no desk or NPC can hide it.
+        drawPlayerMarker(ctx, character, animTime);
 
         // Curator greetings float above the actors, still in world space.
         for (const n of npcs) drawNpcBubble(ctx, n);
