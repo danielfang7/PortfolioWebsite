@@ -21,20 +21,36 @@ export type Interactable = {
   color?: string;
 };
 
-const DIR_DELTA: Record<Direction, { x: number; y: number }> = {
+export const DIR_DELTA: Record<Direction, { x: number; y: number }> = {
   up: { x: 0, y: -1 },
   down: { x: 0, y: 1 },
   left: { x: -1, y: 0 },
   right: { x: 1, y: 0 },
 };
 
-function occupies(it: Interactable, tx: number, ty: number): boolean {
+export function occupies(
+  it: Interactable,
+  tx: number,
+  ty: number,
+): boolean {
   return (
     tx >= it.tileX &&
     tx < it.tileX + it.width &&
     ty >= it.tileY &&
     ty < it.tileY + it.height
   );
+}
+
+/** The interactable whose footprint covers the given tile, if any. */
+export function interactableAtTile(
+  interactables: Interactable[],
+  tx: number,
+  ty: number,
+): Interactable | null {
+  for (const it of interactables) {
+    if (occupies(it, tx, ty)) return it;
+  }
+  return null;
 }
 
 /**

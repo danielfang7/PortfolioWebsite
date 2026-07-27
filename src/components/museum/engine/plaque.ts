@@ -1,6 +1,7 @@
 import { TILE_SIZE } from "./tileAtlas";
 import type { Interactable } from "./interactables";
 import { drawText, measureText, PIXEL_FONT_HEIGHT } from "./pixelFont";
+import { ROOM_COLS } from "../scenes/world";
 
 /**
  * Engraved brass nameplates beneath each exhibit — the small museum label that
@@ -52,6 +53,22 @@ function plateOrigin(
   }
 }
 
+const ROOM_W_PX = ROOM_COLS * TILE_SIZE;
+
+/**
+ * Keep a plate inside its own room's interior. A long title (whose plate is
+ * wider than the exhibit it labels) would otherwise spill over the perimeter
+ * wall and collide with the doorway signage in the next wing.
+ */
+function clampToRoom(x: number, w: number, exhibitCx: number): number {
+  const roomLeft = Math.floor(exhibitCx / ROOM_W_PX) * ROOM_W_PX;
+  const min = roomLeft + TILE_SIZE + 1;
+  const max = roomLeft + ROOM_W_PX - TILE_SIZE - w - 1;
+  // A plate too wide for the room centres rather than jumping to one edge.
+  if (max < min) return roomLeft + (ROOM_W_PX - w) / 2;
+  return Math.max(min, Math.min(x, max));
+}
+
 /** Draws the nameplate for a single exhibit. */
 export function drawPlaque(
   ctx: CanvasRenderingContext2D,
@@ -62,7 +79,8 @@ export function drawPlaque(
   const w = textW + PAD_X * 2;
   const h = PIXEL_FONT_HEIGHT * SCALE + PAD_Y * 2;
   const { x, y } = plateOrigin(it, w, h);
-  const px = Math.round(x);
+  const exhibitCx = (it.tileX + it.width / 2) * TILE_SIZE;
+  const px = Math.round(clampToRoom(x, w, exhibitCx));
   const py = Math.round(y);
 
   // Brass plate with a top highlight and bottom shadow for a beveled look.

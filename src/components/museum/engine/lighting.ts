@@ -151,18 +151,20 @@ export function drawPaintingSpotlights(
 }
 
 /**
- * Accent light pools cast on the floor around each Portfolio pedestal — a soft
- * downlight that grounds the plinth and color-codes the wing per company.
- * Drawn additively in the same floor pass as the painting spotlights.
+ * Accent light pools cast on the floor around each free-standing exhibit — the
+ * Portfolio's pedestals and the Workshop's desks. A soft downlight that grounds
+ * the object and color-codes it by company or project. Drawn additively in the
+ * same floor pass as the painting spotlights.
  */
-export function drawPedestalSpotlights(
+export function drawFloorSpotlights(
   ctx: CanvasRenderingContext2D,
-  pedestals: Interactable[],
+  exhibits: Interactable[],
+  fallback = "#a78bfa",
 ): void {
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
-  for (const p of pedestals) {
-    const color = p.color ?? "#a78bfa";
+  for (const p of exhibits) {
+    const color = p.color ?? fallback;
     const cx = (p.tileX + p.width / 2) * TILE_SIZE;
     // Pool sits at the foot of the pedestal, biased toward the room.
     const cy = (p.tileY + p.height) * TILE_SIZE - TILE_SIZE * 0.4;

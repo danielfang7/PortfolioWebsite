@@ -192,7 +192,7 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
               />
               {coarsePointer
                 ? "Tap to take control · drag to move"
-                : "Click to take control · WASD to move"}
+                : "Click to take control · click to walk"}
             </span>
           </div>
         )}

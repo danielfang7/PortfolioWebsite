@@ -12,9 +12,19 @@ import {
 } from "./engine/characterSprite";
 import {
   focusedInteractable,
+  interactableAtTile,
   nearbyInteractable,
   type Interactable,
 } from "./engine/interactables";
+import {
+  cancelNavigation,
+  createNavigator,
+  drawNavMarker,
+  navigateToExhibit,
+  navigateToTile,
+  steerNavigator,
+} from "./engine/navigation";
+import { createPointerControls } from "./engine/pointer";
 import { drawPaintingSprite } from "./engine/paintingSprite";
 import { drawComputerSprite } from "./engine/computerSprite";
 import { drawInvestmentSprite } from "./engine/investmentSprite";
@@ -24,8 +34,8 @@ import { createAutopilot } from "./engine/autopilot";
 import {
   drawAmbientFloor,
   drawFloorDecor,
+  drawFloorSpotlights,
   drawPaintingSpotlights,
-  drawPedestalSpotlights,
   drawPlayerGlow,
   drawDust,
   drawVignette,
@@ -166,6 +176,28 @@ export function MuseumCanvas({
     const input = createInput(canvas);
     const touch = createTouchControls(canvas, input);
     const dust = new DustField();
+    // Click-to-walk: the mouse equivalent of WASD. Clicks are resolved against
+    // the camera here because only this scope knows where the camera is.
+    const nav = createNavigator();
+    const pointer = createPointerControls(canvas, (cx, cy) => {
+      const worldX = cx + camera.x;
+      const worldY = cy + camera.y;
+      const tx = Math.floor(worldX / TILE_SIZE);
+      const ty = Math.floor(worldY / TILE_SIZE);
+      const hit = interactableAtTile(interactables, tx, ty);
+      if (hit) {
+        // Walking to the exhibit and opening it on arrival (rather than opening
+        // it from across the room) keeps the click and the keyboard route to
+        // the same exhibit telling the same story.
+        if (navigateToExhibit(nav, tilemap, character, hit) && !nav.active) {
+          // Already in position — open immediately.
+          audio.interact();
+          onInteractRef.current?.(hit);
+        }
+        return;
+      }
+      navigateToTile(nav, tilemap, character, tx, ty);
+    });
     // Attract mode: the character strolls a guided tour of the wings until the
     // visitor takes over (first pointer press, or a movement key once engaged).
     const autopilot = attract ? createAutopilot() : null;
@@ -219,6 +251,18 @@ export function MuseumCanvas({
         if (autopilot?.active && !reduced) {
           autopilot.steer(character, input.state, dt);
         }
+        // Reaching for the keyboard cancels a click-walk in progress, so the
+        // visitor never has to fight the character for control.
+        const s = input.state;
+        if (nav.active && (s.up || s.down || s.left || s.right)) {
+          cancelNavigation(nav, input.state);
+        }
+        steerNavigator(nav, character, input.state, dt, (it) => {
+          // Arriving at a clicked exhibit opens it through the same path the
+          // keyboard takes, so the focus sound and modal behave identically.
+          audio.interact();
+          onInteractRef.current?.(it);
+        });
         updateCharacter(character, input.state, tilemap, dt);
         // Under reduced-motion the visitors hold position and no dust drifts;
         // only the player (user-driven) keeps moving.
@@ -250,6 +294,15 @@ export function MuseumCanvas({
           audio.footstep();
         }
         prevWalkHalf = walkHalf;
+
+        // Hovering an exhibit shows the hand cursor — the affordance that tells
+        // mouse visitors the scene is clickable at all.
+        if (pointer.hover) {
+          const hx = Math.floor((pointer.hover.x + camera.x) / TILE_SIZE);
+          const hy = Math.floor((pointer.hover.y + camera.y) / TILE_SIZE);
+          const over = interactableAtTile(interactables, hx, hy);
+          canvas.style.cursor = over ? "pointer" : "default";
+        }
 
         focused = focusedInteractable(character, interactables, TILE_SIZE);
 
@@ -303,11 +356,14 @@ export function MuseumCanvas({
         drawFloorDecor(ctx, ROOM_LIGHTS);
         drawAmbientFloor(ctx, ROOM_LIGHTS);
         drawPaintingSpotlights(ctx, paintings);
-        drawPedestalSpotlights(ctx, pedestals);
+        drawFloorSpotlights(ctx, pedestals);
+        drawFloorSpotlights(ctx, computers, "#00d8ff");
         drawPlayerGlow(ctx, character);
         // A pulsing selection ring on the floor marks "you" — drawn on the
         // floor so it reads as cast under the player, beneath every sprite.
         drawPlayerRing(ctx, character, animTime);
+        // Click destination, on the floor with the other cast-light markers.
+        drawNavMarker(ctx, nav, time, reduced);
 
         // Doorways: arch, light spill, and the wayfinding signs between wings.
         drawDoorways(ctx, time, reduced);
@@ -342,6 +398,8 @@ export function MuseumCanvas({
                 c.height,
                 animTime,
                 i * 1.7,
+                c.color ?? "#00d8ff",
+                c.title.charAt(0),
               ),
           })),
           ...pedestals.map((p, i) => ({
@@ -414,6 +472,7 @@ export function MuseumCanvas({
       loop.stop();
       input.destroy();
       touch.destroy();
+      pointer.destroy();
       window.removeEventListener("keydown", wakeAudio);
       canvas.removeEventListener("pointerdown", wakeAudio);
       if (autopilot) {
@@ -479,7 +538,7 @@ export function MuseumCanvas({
       >
         {isTouch
           ? "Drag to move · tap an exhibit to open"
-          : "Move with WASD / arrows · press E to interact"}
+          : "Click to walk · WASD / arrows · E to interact"}
       </div>
     </>
   );

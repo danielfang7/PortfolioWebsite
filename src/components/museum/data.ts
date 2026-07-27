@@ -12,6 +12,8 @@ export type WorkRef = {
   thumbnail: string;
   liveUrl?: string;
   sourceUrl?: string;
+  /** Accent color for the desk's monitor, screen glow, and floor spotlight. */
+  color: string;
 };
 
 export type InvestmentRef = {
@@ -138,6 +140,7 @@ export function buildWorldInteractables(
       width: 2,
       height: 2,
       face: null,
+      color: work.color,
     });
   });
 

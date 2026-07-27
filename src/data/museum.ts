@@ -18,6 +18,22 @@ const INVESTMENT_COLORS = [
   "#38BDF8",
 ];
 
+/**
+ * Per-work accent for the Workshop desks. Assigned by carousel order so a
+ * project keeps the same color across visits, and cycled long enough that no
+ * two neighbouring desks in the 4x2 grid share one.
+ */
+const WORK_COLORS = [
+  "#00D8FF",
+  "#F59E0B",
+  "#A78BFA",
+  "#34D399",
+  "#EC4899",
+  "#38BDF8",
+  "#FB7185",
+  "#FACC15",
+];
+
 export type MuseumData = {
   experiments: Experiment[];
   works: WorkRef[];
@@ -31,7 +47,7 @@ export async function getMuseumData(): Promise<MuseumData> {
   const workEntries = (await getCollection("works")).sort(
     (a, b) => a.data.order - b.data.order,
   );
-  const works: WorkRef[] = workEntries.map((w) => ({
+  const works: WorkRef[] = workEntries.map((w, i) => ({
     slug: w.id.replace(/\.(md|mdx)$/, ""),
     title: w.data.title,
     description: w.data.description,
@@ -41,6 +57,7 @@ export async function getMuseumData(): Promise<MuseumData> {
     thumbnail: w.data.thumbnail,
     liveUrl: w.data.liveUrl,
     sourceUrl: w.data.sourceUrl,
+    color: WORK_COLORS[i % WORK_COLORS.length],
   }));
 
   const investmentEntries = (await getCollection("investments")).sort(
