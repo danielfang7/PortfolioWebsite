@@ -7,7 +7,7 @@ import {
 } from "./characterSprite";
 import type { Interactable } from "./interactables";
 import { drawText, measureText, PIXEL_FONT_HEIGHT } from "./pixelFont";
-import { ROOMS, roomIndexForX } from "../scenes/world";
+import { LANE_ROW, roomIndexForX, type RoomDef } from "../scenes/world";
 
 /**
  * Ambient museum-goers. Visitors stroll their wing, pause to admire an exhibit,
@@ -135,8 +135,7 @@ function pick<T>(arr: T[]): T {
 }
 
 /** Interior (walkable-band) tile bounds for a room, excluding its perimeter. */
-function roomBounds(roomIndex: number): Bounds {
-  const r = ROOMS[roomIndex];
+function roomBounds(r: RoomDef): Bounds {
   return {
     minX: r.originX + 1,
     maxX: r.originX + r.cols - 2,
@@ -207,54 +206,122 @@ function makeNpc(
   };
 }
 
+/** Visitors placed per room, and the ceiling once the museum has many rooms. */
+const VISITORS_PER_ROOM = 2;
+const MAX_VISITORS = 8;
+
 /**
- * Populates the museum with a couple of wandering visitors per wing plus a
- * curator near the gallery doorway. Sprite sheets are baked here, once.
+ * The first walkable tile at or after (tx, ty), scanning the room's interior.
+ * Rooms are generated, so a spawn point that was clear in a three-room museum
+ * may be under a desk in a larger one — search rather than assume.
+ */
+function firstOpenTile(
+  map: Tilemap,
+  bounds: Bounds,
+  preferX: number,
+  preferY: number,
+  taken: Set<string>,
+): { tx: number; ty: number } | null {
+  const candidates: Array<{ tx: number; ty: number }> = [];
+  for (let ty = bounds.minY; ty <= bounds.maxY; ty++) {
+    for (let tx = bounds.minX; tx <= bounds.maxX; tx++) {
+      candidates.push({ tx, ty });
+    }
+  }
+  // Nearest to the preferred spot first, so visitors start spread through the
+  // room rather than all bunched in one corner.
+  candidates.sort(
+    (a, b) =>
+      Math.abs(a.tx - preferX) + Math.abs(a.ty - preferY) -
+      (Math.abs(b.tx - preferX) + Math.abs(b.ty - preferY)),
+  );
+  for (const c of candidates) {
+    const key = `${c.tx},${c.ty}`;
+    if (taken.has(key)) continue;
+    if (!isWalkable(map, c.tx, c.ty)) continue;
+    return c;
+  }
+  return null;
+}
+
+/**
+ * Populates the museum with a couple of wandering visitors per room plus a
+ * curator in the first one. Sprite sheets are baked here, once.
  */
 export function createNpcs(
   map: Tilemap,
   interactables: Interactable[],
+  rooms: RoomDef[],
 ): Npc[] {
   // Group exhibit view-spots by the room they belong to.
-  const spotsByRoom: ViewSpot[][] = ROOMS.map(() => []);
+  const spotsByRoom: ViewSpot[][] = rooms.map(() => []);
   for (const it of interactables) {
     const center = (it.tileX + it.width / 2) * TILE_SIZE;
-    const room = roomIndexForX(center);
+    const room = roomIndexForX(rooms, center);
     const spot = viewSpotFor(it, map);
-    if (spot) spotsByRoom[room].push(spot);
+    if (spot) spotsByRoom[room]?.push(spot);
   }
 
   const npcs: Npc[] = [];
+  const taken = new Set<string>();
 
-  // Two visitors per wing, spawned on known-clear interior tiles.
-  const VISITOR_SPAWNS: Array<{ room: number; tx: number; ty: number }> = [
-    { room: 0, tx: 4, ty: 4 },
-    { room: 0, tx: 8, ty: 6 },
-    { room: 1, tx: 19, ty: 4 },
-    { room: 1, tx: 24, ty: 7 },
-    { room: 2, tx: 34, ty: 5 },
-    { room: 2, tx: 38, ty: 8 },
-  ];
-  VISITOR_SPAWNS.forEach((s, i) => {
-    if (!isWalkable(map, s.tx, s.ty)) return;
-    npcs.push(
-      makeNpc(
-        s.tx,
-        s.ty,
-        VISITOR_PALETTES[i % VISITOR_PALETTES.length],
-        roomBounds(s.room),
-        spotsByRoom[s.room],
-        false,
-        "down",
-      ),
-    );
+  // Spread the visitor budget across the rooms so a large museum doesn't end
+  // up with a crowd in every wing (and a frame-rate cost to match).
+  const perRoom = Math.max(
+    1,
+    Math.min(VISITORS_PER_ROOM, Math.floor(MAX_VISITORS / Math.max(1, rooms.length))),
+  );
+
+  let placed = 0;
+  rooms.forEach((room, roomIndex) => {
+    const bounds = roomBounds(room);
+    for (let i = 0; i < perRoom && placed < MAX_VISITORS; i++) {
+      // Aim for opposite quarters of the lane, then settle for what's open.
+      const preferX =
+        room.originX + Math.round(room.cols * (i === 0 ? 0.32 : 0.68));
+      const preferY = i === 0 ? LANE_ROW - 1 : LANE_ROW + 1;
+      const spot = firstOpenTile(map, bounds, preferX, preferY, taken);
+      if (!spot) continue;
+      taken.add(`${spot.tx},${spot.ty}`);
+      npcs.push(
+        makeNpc(
+          spot.tx,
+          spot.ty,
+          VISITOR_PALETTES[placed % VISITOR_PALETTES.length],
+          bounds,
+          spotsByRoom[roomIndex],
+          false,
+          "down",
+        ),
+      );
+      placed++;
+    }
   });
 
-  // Curator: stands in the gallery facing the doorway toward the works wing.
-  if (isWalkable(map, 10, 6)) {
-    npcs.push(
-      makeNpc(10, 6, CURATOR_PALETTE, roomBounds(0), spotsByRoom[0], true, "right"),
+  // Curator: stands in the first room, facing the way through the museum.
+  const first = rooms[0];
+  if (first) {
+    const bounds = roomBounds(first);
+    const spot = firstOpenTile(
+      map,
+      bounds,
+      first.originX + first.cols - 4,
+      LANE_ROW + 1,
+      taken,
     );
+    if (spot) {
+      npcs.push(
+        makeNpc(
+          spot.tx,
+          spot.ty,
+          CURATOR_PALETTE,
+          bounds,
+          spotsByRoom[0],
+          true,
+          "right",
+        ),
+      );
+    }
   }
 
   return npcs;

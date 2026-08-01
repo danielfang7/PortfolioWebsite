@@ -34,7 +34,19 @@ export function InteractPrompt({
   const worldX = target ? (target.tileX + target.width / 2) * tileSize : 0;
   const roomOffsetX = Math.floor(worldX / canvasW) * canvasW;
   const anchorX = worldX - roomOffsetX;
-  const anchorY = target ? target.tileY * tileSize - GAP_PX : 0;
+
+  // Paintings hang on the top wall, where there is no room overhead for the
+  // pill — it would spill out of the canvas and over the page header. When the
+  // headroom isn't there, hang the prompt under the exhibit instead. Roughly
+  // the pill's own height in canvas units; the canvas is upscaled by CSS.
+  const CLEARANCE_PX = 26;
+  const above = target ? target.tileY * tileSize - GAP_PX : 0;
+  const flipBelow = Boolean(target) && above < CLEARANCE_PX;
+  const anchorY = !target
+    ? 0
+    : flipBelow
+      ? (target.tileY + target.height) * tileSize + GAP_PX
+      : above;
 
   return (
     <div
@@ -43,8 +55,9 @@ export function InteractPrompt({
         position: "absolute",
         left: `${(anchorX / canvasW) * 100}%`,
         top: `${(anchorY / canvasH) * 100}%`,
-        // translate pill so its bottom-center sits at the anchor point.
-        transform: "translate(-50%, -100%)",
+        // Pin the pill's bottom-centre to the anchor, or its top-centre when
+        // it had to flip below the exhibit.
+        transform: flipBelow ? "translate(-50%, 0)" : "translate(-50%, -100%)",
         pointerEvents: "none",
         opacity: focused ? 1 : 0,
         transition: "opacity 160ms ease-out",

@@ -225,6 +225,10 @@ export function navigateToTile(
  * direction they'd be facing. Mirrors `focusedInteractable`: the viewer stands
  * one tile off the footprint and looks at it, and wall-mounted pieces (which
  * carry a `face`) can only be viewed from their one open side.
+ *
+ * Free-standing exhibits list their "stand below and look up" spots first,
+ * which is how the nameplates and the strolling visitors already treat them, so
+ * anything picking a single spot gets the natural head-on view.
  */
 function viewingSpots(
   it: Interactable,
@@ -249,6 +253,20 @@ function viewingSpots(
     }
   }
   return spots;
+}
+
+/**
+ * A single standing spot with a clear head-on view of `it`, or null when the
+ * exhibit is walled in. Used to place a visitor who arrived by deep link
+ * directly in front of the thing they came to see.
+ */
+export function exhibitViewpoint(
+  it: Interactable,
+  map: Tilemap,
+): { tileX: number; tileY: number; facing: Direction } | null {
+  const spot = viewingSpots(it).find((s) => isWalkable(map, s.tx, s.ty));
+  if (!spot) return null;
+  return { tileX: spot.tx, tileY: spot.ty, facing: spot.facing };
 }
 
 /**
