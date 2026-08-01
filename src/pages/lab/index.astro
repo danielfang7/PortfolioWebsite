@@ -103,6 +103,19 @@ const { experiments, works, investments, workEntries, investmentEntries } =
     window.__setLabView = setView;
     backBtn?.addEventListener("click", () => setView("museum"));
 
+    // A shared `?exhibit=` link is a request to stand in front of something,
+    // so it wins over a previously remembered list-view preference.
+    let deepLinked = false;
+    try {
+      deepLinked = new URLSearchParams(window.location.search).has("exhibit");
+    } catch {
+      /* URL unavailable — fall through to the stored preference */
+    }
+    if (deepLinked) {
+      setView("museum");
+      return;
+    }
+
     let stored: string | null = null;
     try {
       stored = sessionStorage.getItem("labView");

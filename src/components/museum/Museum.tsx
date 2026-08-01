@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
+// TILE_SIZE is re-exported by MuseumCanvas alongside the canvas dimensions.
 import MuseumCanvas, { CANVAS_W, CANVAS_H, TILE_SIZE } from "./MuseumCanvas";
 import type { Interactable } from "./engine/interactables";
 import InteractPrompt from "./ui/InteractPrompt";
 import ListViewToggle from "./ui/ListViewToggle";
 import SoundToggle from "./ui/SoundToggle";
 import ItemModal from "./ui/ItemModal";
+import RoomWayfinder from "./ui/RoomWayfinder";
+import { planRooms, roomIndexForX, spawnTile } from "./scenes/world";
 import type { Experiment } from "@/data/experiments";
 import type { WorkRef, InvestmentRef } from "./data";
 
@@ -38,6 +41,51 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
   // Touch devices have no keyboard, so the attract overlay swaps "WASD" copy for
   // tap/drag wording. Resolved after mount to avoid an SSR hydration mismatch.
   const [coarsePointer, setCoarsePointer] = useState(false);
+
+  // The floor plan grows with the collection: each wing claims as many rooms as
+  // its exhibits need. Owned here so the canvas and the wayfinder below it read
+  // from the same plan.
+  const rooms = useMemo(
+    () =>
+      planRooms({
+        painting: experiments.length,
+        computer: works.length,
+        investment: investments.length,
+      }),
+    [experiments.length, works.length, investments.length],
+  );
+  const [roomIndex, setRoomIndex] = useState(() =>
+    roomIndexForX(rooms, spawnTile(rooms).tileX * TILE_SIZE),
+  );
+
+  // Deep link: `/lab?exhibit=<slug>` starts the visitor in front of that piece.
+  // Read once, on mount, so later URL rewrites (below) never restart the scene.
+  // The home-page preview is an attract reel, not a destination, so it opts out.
+  const [initialExhibit] = useState<string | null>(() => {
+    if (attract || typeof window === "undefined") return null;
+    try {
+      return new URLSearchParams(window.location.search).get("exhibit");
+    } catch {
+      return null;
+    }
+  });
+
+  // Keep the address bar pointed at whatever the visitor is looking at, so the
+  // link they copy reopens on this exhibit. replaceState keeps the back button
+  // pointing wherever they came from rather than filling it with exhibits.
+  useEffect(() => {
+    if (attract || typeof window === "undefined") return;
+    try {
+      const url = new URL(window.location.href);
+      const slug = selected?.slug ?? null;
+      if (url.searchParams.get("exhibit") === slug) return;
+      if (slug) url.searchParams.set("exhibit", slug);
+      else url.searchParams.delete("exhibit");
+      window.history.replaceState(null, "", url);
+    } catch {
+      /* history unavailable — sharing just falls back to the plain /lab URL */
+    }
+  }, [selected, attract]);
 
   useEffect(() => {
     try {
@@ -132,6 +180,9 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
           experiments={experiments}
           works={works}
           investments={investments}
+          rooms={rooms}
+          onRoomChange={setRoomIndex}
+          initialExhibit={initialExhibit}
           onFocusChange={setFocus}
           onInteract={setSelected}
           paused={modalOpen}
@@ -197,6 +248,7 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
           </div>
         )}
       </div>
+      <RoomWayfinder rooms={rooms} current={roomIndex} />
       {selectedExperiment && (
         <ItemModal
           kind="painting"

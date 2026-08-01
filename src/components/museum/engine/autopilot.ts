@@ -1,6 +1,7 @@
 import { TILE_SIZE } from "./tileAtlas";
 import type { Character, Direction } from "./character";
 import type { InputState } from "./input";
+import { LANE_ROW, type RoomDef } from "../scenes/world";
 
 /**
  * Attract-mode autopilot: walks the player character on a slow guided loop
@@ -21,29 +22,41 @@ type Waypoint = {
 };
 
 /**
- * The tour runs along the central corridor (tile row 5), which is the doorway
- * lane carved open across every room, so the path never collides with a desk,
- * painting, or pedestal. Listed as a closed loop so it repeats seamlessly.
+ * Builds the tour route from the room layout. It runs along the central
+ * corridor (the doorway lane carved open across every room), so the path never
+ * collides with a desk, painting, or pedestal no matter how many rooms the
+ * museum has. Walks the full length of the museum admiring exhibits on the way
+ * out, then strolls back to the start so the loop repeats seamlessly.
  */
-const TOUR: Waypoint[] = [
-  { tx: 20, ty: 5 },
-  { tx: 17, ty: 5, pause: 0.7, face: "up" }, // workshop desk
-  { tx: 14, ty: 5 },
-  { tx: 11, ty: 5 },
-  { tx: 7, ty: 5, pause: 0.7, face: "up" }, // gallery painting (top wall)
-  { tx: 4, ty: 5, pause: 0.7, face: "down" }, // gallery painting (bottom wall)
-  { tx: 8, ty: 5 },
-  { tx: 13, ty: 5 },
-  { tx: 18, ty: 5 },
-  { tx: 23, ty: 5, pause: 0.7, face: "up" }, // workshop desk
-  { tx: 27, ty: 5 }, // through the doorway into the Portfolio
-  { tx: 31, ty: 5, pause: 0.7, face: "up" }, // pedestal
-  { tx: 35, ty: 5, pause: 0.6, face: "up" }, // pedestal
-  { tx: 39, ty: 5, pause: 0.7, face: "up" }, // pedestal
-  { tx: 33, ty: 5, pause: 0.5, face: "down" },
-  { tx: 29, ty: 5 },
-  { tx: 24, ty: 5 },
-];
+function buildTour(rooms: RoomDef[]): Waypoint[] {
+  if (rooms.length === 0) return [{ tx: 1, ty: LANE_ROW }];
+
+  const tour: Waypoint[] = [];
+  // Outbound: pause twice per room, alternating which wall we admire.
+  rooms.forEach((room, i) => {
+    const near = room.originX + Math.round(room.cols * 0.3);
+    const far = room.originX + Math.round(room.cols * 0.7);
+    tour.push({ tx: near, ty: LANE_ROW, pause: 0.7, face: "up" });
+    tour.push({
+      tx: far,
+      ty: LANE_ROW,
+      pause: i % 2 === 0 ? 0.6 : 0.7,
+      face: i % 2 === 0 ? "down" : "up",
+    });
+  });
+  // Return leg: the same corridor with one unhurried pause per room, so the
+  // character ends where it began and the loop closes cleanly.
+  for (let i = rooms.length - 1; i >= 0; i--) {
+    const room = rooms[i];
+    tour.push({
+      tx: room.originX + Math.round(room.cols * 0.5),
+      ty: LANE_ROW,
+      pause: i === 0 ? 0 : 0.5,
+      face: "down",
+    });
+  }
+  return tour;
+}
 
 /** A relaxed cruise — a touch below full tilt so the stroll reads as unhurried. */
 const CRUISE = 0.82;
@@ -60,7 +73,8 @@ export type Autopilot = {
   stop: (input: InputState) => void;
 };
 
-export function createAutopilot(): Autopilot {
+export function createAutopilot(rooms: RoomDef[]): Autopilot {
+  const tour = buildTour(rooms);
   let i = 0;
   let dwell = 0;
 
@@ -68,7 +82,7 @@ export function createAutopilot(): Autopilot {
     active: true,
     steer(ch, input, dt) {
       if (!ap.active) return;
-      const wp = TOUR[i];
+      const wp = tour[i];
       const targetX = wp.tx * TILE_SIZE + TILE_SIZE / 2;
       const targetY = wp.ty * TILE_SIZE + TILE_SIZE / 2;
       const dx = targetX - ch.x;
@@ -89,7 +103,7 @@ export function createAutopilot(): Autopilot {
       dwell -= dt;
       if (dwell <= 0) {
         dwell = 0;
-        i = (i + 1) % TOUR.length;
+        i = (i + 1) % tour.length;
       }
     },
     stop(input) {

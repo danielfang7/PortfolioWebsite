@@ -1,4 +1,4 @@
-import { DOORWAYS, type Doorway } from "../scenes/world";
+import type { Doorway } from "../scenes/world";
 import { drawText, measureText, PIXEL_FONT_HEIGHT } from "./pixelFont";
 
 /**
@@ -31,16 +31,20 @@ function signLabel(roomName: string): string {
 /** Arch + light spill — drawn on the wall/floor layer, behind the actors. */
 export function drawDoorways(
   ctx: CanvasRenderingContext2D,
+  doorways: Doorway[],
   timeSec: number,
   reduced = false,
 ): void {
-  for (const d of DOORWAYS) drawDoorwayArch(ctx, d, timeSec, reduced);
+  for (const d of doorways) drawDoorwayArch(ctx, d, timeSec, reduced);
 }
 
 /** Hanging wayfinding signs — drawn after the actors so a desk never clips the
  * text. The signs read as overhead signage hung at the doorway plane. */
-export function drawDoorwaySigns(ctx: CanvasRenderingContext2D): void {
-  for (const d of DOORWAYS) {
+export function drawDoorwaySigns(
+  ctx: CanvasRenderingContext2D,
+  doorways: Doorway[],
+): void {
+  for (const d of doorways) {
     const signY = d.topPx - POST - 17;
     drawSign(ctx, `${signLabel(d.rightRoom)} >`, d.seamPx, signY, "right");
     drawSign(ctx, `< ${signLabel(d.leftRoom)}`, d.seamPx, signY, "left");

@@ -1,13 +1,21 @@
 import { TILE, TILE_SIZE, type TileId } from "../engine/tileAtlas";
 import type { Tilemap } from "../engine/tilemap";
-import type { Interactable } from "../engine/interactables";
+import type { Direction } from "../engine/character";
+import type { Interactable, InteractableKind } from "../engine/interactables";
 
 /**
- * The museum world: a row of viewport-sized rooms joined by doorways. Room 0 is
- * the Gallery (front-end experiments hang as paintings on the walls); room 1 is
- * the Workshop (shipped works sit on computer desks); room 2 is the Portfolio
- * (investments stand on lit pedestals). Each room is exactly the size of the
- * visible canvas so the camera can frame one room at a time.
+ * The museum world: a row of viewport-sized rooms joined by doorways, generated
+ * from the exhibits that need housing rather than hand-placed.
+ *
+ * A *wing* is a themed stretch of the museum devoted to one kind of exhibit —
+ * the Gallery hangs experiments as paintings, the Workshop sits works on
+ * computer desks, the Portfolio stands investments on lit pedestals. A wing
+ * occupies as many rooms as its exhibits need, so adding a ninth work grows the
+ * Workshop into a second room instead of silently dropping the overflow.
+ *
+ * Every room is exactly the size of the visible canvas, which is what lets the
+ * camera frame one room at a time and lets canvas-anchored DOM overlays get by
+ * with a fixed per-room offset.
  */
 
 /** Visible viewport in tiles — matches one room and the canvas size. */
@@ -17,6 +25,45 @@ export const VIEW_ROWS = 10;
 export const ROOM_COLS = VIEW_COLS;
 export const ROOM_ROWS = VIEW_ROWS;
 
+/** Rows kept open through the wall between rooms — the museum's central lane. */
+const DOOR_ROWS = [Math.floor(ROOM_ROWS / 2) - 1, Math.floor(ROOM_ROWS / 2)];
+
+/** The walkable corridor row that runs unbroken through every room. */
+export const LANE_ROW = DOOR_ROWS[1];
+
+export type Wing = {
+  id: string;
+  name: string;
+  kind: InteractableKind;
+  /** Faint floor wash + ambient pool colors that give the wing its identity. */
+  floorTint: string;
+  ambient: string;
+};
+
+export const WINGS: Wing[] = [
+  {
+    id: "gallery",
+    name: "The Gallery",
+    kind: "painting",
+    floorTint: "#0b1a2a",
+    ambient: "rgba(70, 90, 120, 0.16)",
+  },
+  {
+    id: "workshop",
+    name: "The Workshop",
+    kind: "computer",
+    floorTint: "#1f1608",
+    ambient: "rgba(120, 96, 56, 0.16)",
+  },
+  {
+    id: "portfolio",
+    name: "The Portfolio",
+    kind: "investment",
+    floorTint: "#1a1226",
+    ambient: "rgba(124, 92, 156, 0.16)",
+  },
+];
+
 export type RoomDef = {
   id: string;
   name: string;
@@ -24,50 +71,185 @@ export type RoomDef = {
   originX: number;
   cols: number;
   rows: number;
-  /** Faint floor wash + ambient pool colors that give each wing its identity. */
   floorTint: string;
   ambient: string;
+  wing: Wing;
+  /** Index into the wing's exhibit list where this room's exhibits begin. */
+  offset: number;
+  /** How many of the wing's exhibits this room holds. */
+  count: number;
 };
 
-export const ROOMS: RoomDef[] = [
-  {
-    id: "gallery",
-    name: "The Gallery",
-    originX: 0,
-    cols: ROOM_COLS,
-    rows: ROOM_ROWS,
-    floorTint: "#0b1a2a",
-    ambient: "rgba(70, 90, 120, 0.16)",
-  },
-  {
-    id: "workshop",
-    name: "The Workshop",
-    originX: ROOM_COLS,
-    cols: ROOM_COLS,
-    rows: ROOM_ROWS,
-    floorTint: "#1f1608",
-    ambient: "rgba(120, 96, 56, 0.16)",
-  },
-  {
-    id: "portfolio",
-    name: "The Portfolio",
-    originX: ROOM_COLS * 2,
-    cols: ROOM_COLS,
-    rows: ROOM_ROWS,
-    floorTint: "#1a1226",
-    ambient: "rgba(124, 92, 156, 0.16)",
-  },
-];
+/** How an exhibit of a given kind occupies the floor or wall. */
+type Footprint = {
+  /** Tiles wide, and the gap in tiles kept between neighbours. */
+  span: number;
+  gap: number;
+  width: number;
+  height: number;
+};
 
-export const WORLD_COLS = ROOMS.reduce((n, r) => n + r.cols, 0);
-export const WORLD_ROWS = ROOM_ROWS;
+const FOOTPRINTS: Record<InteractableKind, Footprint> = {
+  // Wall-hung, 2x1, one tile of bare wall between frames.
+  painting: { span: 2, gap: 1, width: 2, height: 1 },
+  // Floor-standing 2x2 desks, packed tight enough for four across.
+  computer: { span: 2, gap: 1, width: 2, height: 2 },
+  // Floor-standing 2x2 plinths, given more air so each reads as a monument.
+  investment: { span: 2, gap: 2, width: 2, height: 2 },
+};
 
-/** Spawn in the centre of the Workshop (works wing), surrounded by the desks,
- * with the doorway back to the Gallery as a discoverable west exit. */
-export const WORLD_SPAWN = { tileX: 20, tileY: 5 };
+/** Interior width of a room in tiles, excluding the perimeter walls. */
+function interiorCols(cols: number): number {
+  return cols - 2;
+}
 
-/** Rows kept open in the wall between the two rooms (a 2-tile-tall passage). */
-const DOOR_ROWS = [4, 5];
+/** How many exhibits of one kind fit in a single band across a room. */
+function perBand(kind: InteractableKind, cols = ROOM_COLS): number {
+  const { span, gap } = FOOTPRINTS[kind];
+  return Math.max(1, Math.floor((interiorCols(cols) + gap) / (span + gap)));
+}
+
+/** Exhibits of one kind that a single room can hold, across both bands. */
+export function roomCapacity(kind: InteractableKind): number {
+  return perBand(kind) * 2;
+}
+
+/**
+ * Start columns for `k` exhibits laid out in one band, centred in the room. A
+ * partially filled band stays centred rather than hugging the left wall, so a
+ * room holding three of a possible four still looks composed.
+ */
+function bandColumns(room: RoomDef, k: number): number[] {
+  const { span, gap } = FOOTPRINTS[room.wing.kind];
+  const used = k * span + Math.max(0, k - 1) * gap;
+  const start =
+    room.originX + 1 + Math.floor((interiorCols(room.cols) - used) / 2);
+  return Array.from({ length: k }, (_, i) => start + i * (span + gap));
+}
+
+export type Slot = {
+  tileX: number;
+  tileY: number;
+  width: number;
+  height: number;
+  face: Direction | null;
+};
+
+/**
+ * Exactly `room.count` exhibit slots, split across the room's two bands. The
+ * front band takes the extra when the count is odd, so the room fills evenly
+ * instead of stacking everything along one wall.
+ */
+export function slotsForRoom(room: RoomDef): Slot[] {
+  const n = room.count;
+  if (n <= 0) return [];
+  const cap = perBand(room.wing.kind, room.cols);
+  const first = Math.min(cap, Math.ceil(n / 2));
+  const second = Math.min(cap, n - first);
+  const { width, height } = FOOTPRINTS[room.wing.kind];
+
+  // Band rows and the direction a visitor faces to view each band.
+  let rows: Array<{ row: number; face: Direction | null }>;
+  switch (room.wing.kind) {
+    case "painting":
+      // Hung flush on the top and bottom walls.
+      rows = [
+        { row: 0, face: "up" },
+        { row: room.rows - 1, face: "down" },
+      ];
+      break;
+    case "computer":
+      // Pushed against the top and bottom walls, leaving the lane clear.
+      rows = [
+        { row: 1, face: null },
+        { row: room.rows - 3, face: null },
+      ];
+      break;
+    default:
+      // Plinths sit a tile further into the room than the desks do.
+      rows = [
+        { row: 2, face: null },
+        { row: room.rows - 4, face: null },
+      ];
+      break;
+  }
+
+  const slots: Slot[] = [];
+  [first, second].forEach((k, band) => {
+    for (const tileX of bandColumns(room, k)) {
+      slots.push({
+        tileX,
+        tileY: rows[band].row,
+        width,
+        height,
+        face: rows[band].face,
+      });
+    }
+  });
+  return slots;
+}
+
+/** Roman suffixes for the second and later rooms of a wing. */
+const NUMERALS = ["", " II", " III", " IV", " V", " VI", " VII", " VIII"];
+
+function roomName(wing: Wing, index: number, total: number): string {
+  if (total <= 1) return wing.name;
+  return wing.name + (NUMERALS[index] ?? ` ${index + 1}`);
+}
+
+/**
+ * Lays the museum out from exhibit counts: each wing claims the rooms it needs,
+ * placed left to right in wing order. Exhibits are spread evenly across a
+ * wing's rooms, so nine works read as two rooms of five and four rather than a
+ * full room followed by a nearly empty one.
+ */
+export function planRooms(counts: Partial<Record<InteractableKind, number>>): RoomDef[] {
+  const rooms: RoomDef[] = [];
+  let originX = 0;
+
+  for (const wing of WINGS) {
+    const total = counts[wing.kind] ?? 0;
+    const roomCount = Math.max(1, Math.ceil(total / roomCapacity(wing.kind)));
+    const base = Math.floor(total / roomCount);
+    const extra = total % roomCount;
+    let offset = 0;
+
+    for (let i = 0; i < roomCount; i++) {
+      const count = base + (i < extra ? 1 : 0);
+      rooms.push({
+        id: roomCount > 1 ? `${wing.id}-${i + 1}` : wing.id,
+        name: roomName(wing, i, roomCount),
+        originX,
+        cols: ROOM_COLS,
+        rows: ROOM_ROWS,
+        floorTint: wing.floorTint,
+        ambient: wing.ambient,
+        wing,
+        offset,
+        count,
+      });
+      offset += count;
+      originX += ROOM_COLS;
+    }
+  }
+
+  return rooms;
+}
+
+export function worldCols(rooms: RoomDef[]): number {
+  return rooms.reduce((n, r) => n + r.cols, 0);
+}
+
+/** Spawn in the middle of the first Workshop room, on the through-lane. */
+export function spawnTile(rooms: RoomDef[]): { tileX: number; tileY: number } {
+  const home =
+    rooms.find((r) => r.wing.kind === "computer") ?? rooms[0] ?? null;
+  if (!home) return { tileX: 1, tileY: LANE_ROW };
+  return {
+    tileX: home.originX + Math.floor(home.cols / 2),
+    tileY: LANE_ROW,
+  };
+}
 
 /**
  * A passage between two adjacent rooms, in world pixels. Used by the doorway
@@ -89,31 +271,34 @@ export type Doorway = {
 };
 
 /** Doorways between each adjacent room pair, derived from the room layout. */
-export const DOORWAYS: Doorway[] = ROOMS.slice(0, -1).map((room, r) => {
-  const rightWall = room.originX + room.cols - 1; // gallery's right wall col
-  const leftWall = ROOMS[r + 1].originX; // next room's left wall col
-  const topRow = Math.min(...DOOR_ROWS);
-  const botRow = Math.max(...DOOR_ROWS);
-  return {
-    leftPx: rightWall * TILE_SIZE,
-    rightPx: (leftWall + 1) * TILE_SIZE,
-    topPx: topRow * TILE_SIZE,
-    bottomPx: (botRow + 1) * TILE_SIZE,
-    seamPx: leftWall * TILE_SIZE,
-    leftRoom: room.name,
-    rightRoom: ROOMS[r + 1].name,
-  };
-});
+export function buildDoorways(rooms: RoomDef[]): Doorway[] {
+  return rooms.slice(0, -1).map((room, r) => {
+    const rightWall = room.originX + room.cols - 1;
+    const leftWall = rooms[r + 1].originX;
+    const topRow = Math.min(...DOOR_ROWS);
+    const botRow = Math.max(...DOOR_ROWS);
+    return {
+      leftPx: rightWall * TILE_SIZE,
+      rightPx: (leftWall + 1) * TILE_SIZE,
+      topPx: topRow * TILE_SIZE,
+      bottomPx: (botRow + 1) * TILE_SIZE,
+      seamPx: leftWall * TILE_SIZE,
+      leftRoom: room.name,
+      rightRoom: rooms[r + 1].name,
+    };
+  });
+}
 
 /** Pixel x where room `index` begins — used as the camera's snap target. */
-export function roomOriginPx(index: number): number {
-  return ROOMS[index].originX * TILE_SIZE;
+export function roomOriginPx(rooms: RoomDef[], index: number): number {
+  const clamped = Math.max(0, Math.min(rooms.length - 1, index));
+  return rooms[clamped].originX * TILE_SIZE;
 }
 
 /** Which room the given world-pixel x falls in. */
-export function roomIndexForX(worldX: number): number {
+export function roomIndexForX(rooms: RoomDef[], worldX: number): number {
   const i = Math.floor(worldX / (ROOM_COLS * TILE_SIZE));
-  return Math.max(0, Math.min(ROOMS.length - 1, i));
+  return Math.max(0, Math.min(rooms.length - 1, i));
 }
 
 /**
@@ -121,9 +306,12 @@ export function roomIndexForX(worldX: number): number {
  * walls, doorways carved between adjacent rooms, then the exhibit footprints
  * (paintings rewrite to WALL; desks stay floor but non-walkable).
  */
-export function createWorldScene(interactables: Interactable[]): Tilemap {
-  const w = WORLD_COLS;
-  const h = WORLD_ROWS;
+export function createWorldScene(
+  rooms: RoomDef[],
+  interactables: Interactable[],
+): Tilemap {
+  const w = worldCols(rooms);
+  const h = ROOM_ROWS;
   const tiles: TileId[] = new Array(w * h);
   const walkable: boolean[] = new Array(w * h).fill(true);
 
@@ -135,7 +323,7 @@ export function createWorldScene(interactables: Interactable[]): Tilemap {
   }
 
   // Per-room perimeter walls.
-  for (const room of ROOMS) {
+  for (const room of rooms) {
     const x0 = room.originX;
     const x1 = room.originX + room.cols - 1;
     for (let x = x0; x <= x1; x++) {
@@ -153,9 +341,9 @@ export function createWorldScene(interactables: Interactable[]): Tilemap {
   }
 
   // Carve doorways: open the two adjacent wall columns between each room pair.
-  for (let r = 0; r < ROOMS.length - 1; r++) {
-    const rightWall = ROOMS[r].originX + ROOMS[r].cols - 1;
-    const leftWall = ROOMS[r + 1].originX;
+  for (let r = 0; r < rooms.length - 1; r++) {
+    const rightWall = rooms[r].originX + rooms[r].cols - 1;
+    const leftWall = rooms[r + 1].originX;
     for (const y of DOOR_ROWS) {
       for (const x of [rightWall, leftWall]) {
         tiles[y * w + x] = TILE.FLOOR;

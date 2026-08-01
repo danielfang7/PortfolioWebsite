@@ -348,6 +348,28 @@ const creativeWorkJsonLd = {
               </ul>
             </div>
           )}
+
+          <!-- Deep link into the walkable museum, standing at this project's desk. -->
+          <a
+            href={`/lab?exhibit=${currentSlug}`}
+            class="group flex items-center gap-3 rounded-2xl border border-border-subtle bg-bg-surface p-5 hover:border-accent transition-colors duration-200"
+          >
+            <span
+              class="shrink-0 grid h-9 w-9 place-items-center rounded-lg border border-border-subtle text-accent group-hover:border-accent transition-colors duration-200"
+              aria-hidden="true"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="3" width="12" height="8" rx="1" stroke="currentColor" stroke-width="1.4" />
+                <path d="M6 13h4M8 11v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+              </svg>
+            </span>
+            <span class="min-w-0">
+              <span class="block text-sm text-text-primary">Visit in the museum</span>
+              <span class="block text-xs text-text-muted">
+                Walk up to this project in the Lab
+              </span>
+            </span>
+          </a>
         </aside>
 
       </div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createLoop } from "./engine/loop";
 import { createInput } from "./engine/input";
 import { createTileAtlas, TILE_SIZE } from "./engine/tileAtlas";
@@ -20,6 +20,7 @@ import {
   cancelNavigation,
   createNavigator,
   drawNavMarker,
+  exhibitViewpoint,
   navigateToExhibit,
   navigateToTile,
   steerNavigator,
@@ -52,13 +53,14 @@ import {
 } from "./engine/camera";
 import { buildWorldInteractables, type WorkRef, type InvestmentRef } from "./data";
 import {
+  buildDoorways,
   createWorldScene,
   roomIndexForX,
   roomOriginPx,
-  ROOMS,
+  spawnTile,
   VIEW_COLS,
   VIEW_ROWS,
-  WORLD_SPAWN,
+  type RoomDef,
 } from "./scenes/world";
 import WingBanner from "./ui/WingBanner";
 import LivePainting from "./paintings/LivePainting";
@@ -68,16 +70,6 @@ export const CANVAS_W = VIEW_COLS * TILE_SIZE; // 14 * 32 = 448
 export const CANVAS_H = VIEW_ROWS * TILE_SIZE; // 10 * 32 = 320
 export { TILE_SIZE };
 
-/** Per-room light rects, derived once from the world definition. */
-const ROOM_LIGHTS = ROOMS.map((r) => ({
-  x: r.originX,
-  y: 0,
-  cols: r.cols,
-  rows: r.rows,
-  floorTint: r.floorTint,
-  ambient: r.ambient,
-}));
-
 /** Activation radius for live painting mount (Manhattan tiles). */
 const LIVE_RADIUS = 3;
 
@@ -85,6 +77,15 @@ export type MuseumCanvasProps = {
   experiments: Experiment[];
   works: WorkRef[];
   investments: InvestmentRef[];
+  /** The planned floor plan. Owned by the host so the wayfinder can share it. */
+  rooms: RoomDef[];
+  /** Fired when the player crosses into a different room. */
+  onRoomChange?: (index: number) => void;
+  /**
+   * Slug of an exhibit to start in front of, from a shared `?exhibit=` link.
+   * Unknown or unreachable slugs fall back to the usual spawn.
+   */
+  initialExhibit?: string | null;
   onFocusChange?: (focused: Interactable | null) => void;
   /** Fired when the player activates the focused exhibit (E / tap). */
   onInteract?: (focused: Interactable) => void;
@@ -102,6 +103,9 @@ export function MuseumCanvas({
   experiments,
   works,
   investments,
+  rooms,
+  onRoomChange,
+  initialExhibit = null,
   onFocusChange,
   onInteract,
   paused = false,
@@ -115,7 +119,7 @@ export function MuseumCanvas({
   mutedRef.current = muted;
   const [livePainting, setLivePainting] = useState<Interactable | null>(null);
   const [roomIndex, setRoomIndex] = useState(() =>
-    roomIndexForX(WORLD_SPAWN.tileX * TILE_SIZE),
+    roomIndexForX(rooms, spawnTile(rooms).tileX * TILE_SIZE),
   );
   const [hasMoved, setHasMoved] = useState(false);
   const [isTouch] = useState(
@@ -129,6 +133,8 @@ export function MuseumCanvas({
   onInteractRef.current = onInteract;
   const onUserControlRef = useRef(onUserControl);
   onUserControlRef.current = onUserControl;
+  const onRoomChangeRef = useRef(onRoomChange);
+  onRoomChangeRef.current = onRoomChange;
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
   // Honours the OS "reduce motion" setting: ambient animation (strolling NPCs,
@@ -165,14 +171,46 @@ export function MuseumCanvas({
     const audio = createAudio(mutedRef.current);
     audioRef.current = audio;
     const charSprite = createCharacterSprite();
-    const interactables = buildWorldInteractables(experiments, works, investments);
+    const interactables = buildWorldInteractables(
+      rooms,
+      experiments,
+      works,
+      investments,
+    );
     const paintings = interactables.filter((i) => i.kind === "painting");
     const computers = interactables.filter((i) => i.kind === "computer");
     const pedestals = interactables.filter((i) => i.kind === "investment");
-    const tilemap = createWorldScene(interactables);
-    const npcs = createNpcs(tilemap, interactables);
-    const character = createCharacter(WORLD_SPAWN.tileX, WORLD_SPAWN.tileY);
-    const camera = createCamera(roomOriginPx(roomIndexForX(character.x)), 0);
+    const tilemap = createWorldScene(rooms, interactables);
+    const doorways = buildDoorways(rooms);
+    const npcs = createNpcs(tilemap, interactables, rooms);
+
+    // A shared `?exhibit=` link drops the visitor straight in front of the
+    // piece it names, already facing it, so the exhibit is focused (glow and
+    // interact prompt included) the moment the scene appears. Anything we can't
+    // place — unknown slug, exhibit walled in — quietly uses the usual spawn.
+    const target = initialExhibit
+      ? interactables.find((it) => it.slug === initialExhibit)
+      : undefined;
+    const viewpoint = target ? exhibitViewpoint(target, tilemap) : null;
+    const spawn = viewpoint ?? spawnTile(rooms);
+    const character = createCharacter(spawn.tileX, spawn.tileY);
+    if (viewpoint) character.facing = viewpoint.facing;
+
+    const startRoom = roomIndexForX(rooms, character.x);
+    // The room states were seeded from the default spawn; a deep link may have
+    // landed us in a different wing entirely.
+    setRoomIndex(startRoom);
+    onRoomChangeRef.current?.(startRoom);
+    const camera = createCamera(roomOriginPx(rooms, startRoom), 0);
+    // Per-room light rects, derived from the plan for this world.
+    const roomLights = rooms.map((r) => ({
+      x: r.originX,
+      y: 0,
+      cols: r.cols,
+      rows: r.rows,
+      floorTint: r.floorTint,
+      ambient: r.ambient,
+    }));
     const input = createInput(canvas);
     const touch = createTouchControls(canvas, input);
     const dust = new DustField();
@@ -200,7 +238,7 @@ export function MuseumCanvas({
     });
     // Attract mode: the character strolls a guided tour of the wings until the
     // visitor takes over (first pointer press, or a movement key once engaged).
-    const autopilot = attract ? createAutopilot() : null;
+    const autopilot = attract ? createAutopilot(rooms) : null;
 
     // Audio can't start until the visitor interacts (browser autoplay policy).
     // The first key or pointer brings the context to life and kicks off the hum.
@@ -232,7 +270,7 @@ export function MuseumCanvas({
     let prevLiveSlug: string | null = null;
     let prevFocusKey: string | null = null;
     let prevWalkHalf = 0;
-    let prevRoom = roomIndexForX(character.x);
+    let prevRoom = roomIndexForX(rooms, character.x);
     let movedOnce = false;
 
     const loop = createLoop({
@@ -280,11 +318,12 @@ export function MuseumCanvas({
 
         // Room-snap camera: when the player crosses a doorway, retarget the
         // camera to the new room's origin and let updateCamera glide it there.
-        const room = roomIndexForX(character.x);
+        const room = roomIndexForX(rooms, character.x);
         if (room !== prevRoom) {
           prevRoom = room;
-          setCameraTarget(camera, roomOriginPx(room), 0);
+          setCameraTarget(camera, roomOriginPx(rooms, room), 0);
           setRoomIndex(room);
+          onRoomChangeRef.current?.(room);
         }
         updateCamera(camera, dt);
 
@@ -351,13 +390,31 @@ export function MuseumCanvas({
         ctx.save();
         ctx.translate(-Math.round(camera.x), -Math.round(camera.y));
 
+        // Only the framed room and a tile of bleed are worth drawing. The world
+        // grows a room whenever a wing overflows, so every per-frame pass is
+        // clipped to what the camera can see rather than to the whole museum.
+        const view = {
+          x: camera.x,
+          y: camera.y,
+          w: canvas.width,
+          h: canvas.height,
+        };
+        const viewLeft = camera.x - TILE_SIZE;
+        const viewRight = camera.x + canvas.width + TILE_SIZE;
+        const onScreen = (it: Interactable) =>
+          (it.tileX + it.width) * TILE_SIZE >= viewLeft &&
+          it.tileX * TILE_SIZE <= viewRight;
+        const shownPaintings = paintings.filter(onScreen);
+        const shownPedestals = pedestals.filter(onScreen);
+        const shownComputers = computers.filter(onScreen);
+
         // Floor + light pools (under sprites so light reads as cast on the floor).
-        drawTilemap(ctx, tilemap, atlas);
-        drawFloorDecor(ctx, ROOM_LIGHTS);
-        drawAmbientFloor(ctx, ROOM_LIGHTS);
-        drawPaintingSpotlights(ctx, paintings);
-        drawFloorSpotlights(ctx, pedestals);
-        drawFloorSpotlights(ctx, computers, "#00d8ff");
+        drawTilemap(ctx, tilemap, atlas, view);
+        drawFloorDecor(ctx, roomLights);
+        drawAmbientFloor(ctx, roomLights);
+        drawPaintingSpotlights(ctx, shownPaintings);
+        drawFloorSpotlights(ctx, shownPedestals);
+        drawFloorSpotlights(ctx, shownComputers, "#00d8ff");
         drawPlayerGlow(ctx, character);
         // A pulsing selection ring on the floor marks "you" — drawn on the
         // floor so it reads as cast under the player, beneath every sprite.
@@ -366,10 +423,10 @@ export function MuseumCanvas({
         drawNavMarker(ctx, nav, time, reduced);
 
         // Doorways: arch, light spill, and the wayfinding signs between wings.
-        drawDoorways(ctx, time, reduced);
+        drawDoorways(ctx, doorways, time, reduced);
 
         // Paintings live on the walls — always behind the actors in the room.
-        for (const p of paintings) {
+        for (const p of shownPaintings) {
           drawPaintingSprite(
             ctx,
             p.tileX,
@@ -381,13 +438,13 @@ export function MuseumCanvas({
         }
 
         // Engraved nameplates sit with the exhibits, under the moving actors.
-        drawPlaques(ctx, interactables);
+        drawPlaques(ctx, interactables.filter(onScreen));
 
         // Depth sort the desks and the player by their floor baseline so the
         // character walks *behind* a desk when standing north of it, and in
         // front when below — cheap 2.5D occlusion.
         const actors: Array<{ baseline: number; draw: () => void }> = [
-          ...computers.map((c, i) => ({
+          ...computers.flatMap((c, i) => !onScreen(c) ? [] : [{
             baseline: (c.tileY + c.height) * TILE_SIZE,
             draw: () =>
               drawComputerSprite(
@@ -401,8 +458,8 @@ export function MuseumCanvas({
                 c.color ?? "#00d8ff",
                 c.title.charAt(0),
               ),
-          })),
-          ...pedestals.map((p, i) => ({
+          }]),
+          ...pedestals.flatMap((p, i) => !onScreen(p) ? [] : [{
             baseline: (p.tileY + p.height) * TILE_SIZE,
             draw: () =>
               drawInvestmentSprite(
@@ -416,7 +473,7 @@ export function MuseumCanvas({
                 animTime,
                 i * 2.1,
               ),
-          })),
+          }]),
           {
             baseline: character.y + 9,
             draw: () => drawCharacter(ctx, charSprite, character, animTime),
@@ -440,7 +497,7 @@ export function MuseumCanvas({
         for (const n of npcs) drawNpcBubble(ctx, n);
 
         // Doorway signs hang at the doorway plane, above the desks/player.
-        drawDoorwaySigns(ctx);
+        drawDoorwaySigns(ctx, doorways);
 
         if (focused) drawFocusGlow(ctx, focused, time, reduced);
         ctx.restore();
@@ -483,7 +540,7 @@ export function MuseumCanvas({
       audioRef.current = null;
       onFocusChangeRef.current?.(null);
     };
-  }, [experiments, works, investments, attract]);
+  }, [rooms, experiments, works, investments, attract, initialExhibit]);
 
   return (
     <>
@@ -511,7 +568,7 @@ export function MuseumCanvas({
           canvasH={CANVAS_H}
         />
       )}
-      <WingBanner key={roomIndex} name={ROOMS[roomIndex].name} />
+      <WingBanner key={roomIndex} name={rooms[roomIndex]?.name ?? ""} />
       <div
         aria-hidden="true"
         style={{
