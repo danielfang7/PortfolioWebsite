@@ -1,0 +1,176 @@
+---
+title: "Tool Results are Part of the Prompt (pt. 3)"
+date: 2026-08-18T09:00:00.000Z
+excerpt: "What comes back from a tool matters just as much as what goes in."
+tags: ["AI", "Engineering"]
+readingTime: "8 min read"
+---
+
+This is part 3 of my "Lessons from Building an AI Agent" series. Read part 1 [here](/blog/what-is-an-ai-agent-the-loop-explained) and part 2 [here](/blog/write-tool-schemas-ai-agents-reliably-use).
+
+After I made some changes to the schema for GladeKit (our game development AI agent) that we'd built in Part Two of my Lessons on Building an AI Agent series, the agent did get significantly better. That is until I saw one session where the model appeared to go completely haywire.
+
+Firstly, the model requested the scene hierarchy, which produced a huge block of nested JSON data. On the next couple of calls it was apparently even less capable of understanding the scene than previously. The model then began to incorrectly name things it had recently viewed. Finally, the model began to quote large pieces of the returned JSON back to me as well. Each call also became progressively slower.
+
+The model didn't fail, it just produced far too much information. And all of this was immediately put right back into the prompt.
+
+## A tool result is a prompt you write at runtime
+
+While schemas receive much of the attention because they are typically written by hand, tool results generally do not. They are generated at runtime over and over again and then quietly become part of the model's input. That was when I had the realization that the tool result is basically just another prompt being fed into the model.
+
+I had treated tool results as return values for months. Serialize the object, send it back, done. However, the model does not consume your result like an API caller consumes a return value. Your result gets added to the conversation history and then rides along with every single model call for the remainder of the turn. If your agent runs 15 iterations, that hierarchy dump you returned on iteration 2 gets re-sent, re-read, and re-paid-for 13 more times.
+
+As such, when designing a result you should not just focus on "what does my API return", but also think through "what does the model need to decide its next action"? Those are two extremely different questions, and not thinking it through is how agents quietly get worse.
+
+## One tool result, two readers
+
+A tool result often has two audiences, and they want opposite things.
+
+For many products (especially ours), the user's UI wants everything. Full script diffs, complete asset lists, and the whole action log. That detail is what makes the agent feel trustworthy. But the model wants almost none of that. The model wants actual signal.
+
+For a while I tried to find one format that served both, and it served neither. The fix was to stop compromising and just render every result twice from the same payload:
+
+```python
+def handle_tool_result(tool_name, raw_result):
+    model_view = format_for_model(tool_name, raw_result)  # capped, shaped, deduped
+    ui_view    = format_for_ui(tool_name, raw_result)     # rich: diffs, full lists
+
+    conversation.append(tool_message(model_view))
+    send_to_client(ui_view)
+```
+
+Splitting the two fixed a problem I had been trying to solve in the wrong place. I could make the UI as detailed as I wanted without dumping all of that detail into the model's context. And the model stopped having to dig through presentation data just to figure out what to do next.
+
+## Errors are instructions
+
+An error result is the highest leverage text in your entire system, because it's the one message the model is guaranteed to act on next.
+
+"Error: object not found" produces a guess. And yes, with LLMs a guess means a hallucination with confidence. But an error that names the recovery can actually produce the recovery.
+
+```json
+{
+  "success": false,
+  "error": "GameObject 'PlayerCtrl' not found in scene.",
+  "possible_solutions": [
+    "Call find_game_objects with nameContains='Player' to locate it",
+    "The object may be inactive. Pass includeInactive=true",
+    "If it should exist, create it first with create_game_object"
+  ]
+}
+```
+
+Compile errors are another good example. Our first version basically dumped the compiler output back into the conversation. On a real Unity project that can be enormous, and most of it doesn't help the model fix anything.
+
+Now we stop after 10 errors and more importantly, we include the nearby source code right there in the result and mark the exact line that failed. The model no longer has to make another tool call just to figure out what code the compiler is complaining about. Once we changed this, one shot fixes went up noticeably.
+
+Put simply: error messages are like tiny system prompts for the model's next move, so it's best to write and feed them back like prompts.
+
+## Cap everything, and give every cap an escape hatch
+
+Every read tool in our agent has a budget. The exact numbers matter less than the rule that goes with them of: never truncate silently. A truncated result must say what was cut AND how to get it back.
+
+```json
+{
+  "truncated": true,
+  "note": "Showing 200 of 1450 paths. Use find_game_objects (name filter) or list_children (subtree) to narrow.",
+  "paths": ["Player", "Main Camera", "..."]
+}
+```
+
+A truncation without an escape hatch is a dead end, and the model will respond to a dead end by guessing. But a truncation with an escape hatch is just pagination. The model reads the note, makes a narrower call, and moves on like nothing happened.
+
+Here are two small details we learned the hard way… First, put `truncated` and `note` at the top of the object, so if anything downstream chops the result again, the warning survives. Second, generate the recovery wording from one shared function. We had it copied and pasted across tools for a while and the copies drifted, so different tools taught the model different (and sometimes wrong) escape hatches.
+
+## Reads get shaped, writes get collapsed
+
+A read tool's result is data the model needs to reason about, so it earns a custom shaper. A write tool's result only needs to confirm what happened. So writes collapse to a single line: "Created cube 'Platform_01' at (5, 1, 0)". The model doesn't need the full serialized GameObject it just created. It created it!
+
+But watch out for the two sneaky paths around this rule, because we got bitten by both:
+
+- **The error field.** A tool that embeds an entire build log or scene dump inside its error message smuggled an unbounded payload past every cap you wrote.
+- **Write tools that echo their input.** A scaffolding tool that "confirms" by repeating every generated file body back is unbounded by design.
+
+Both of those are result formats, whether you designed them or not, so cap them as well.
+
+## Deduplicate before you truncate
+
+This one surprised me: the biggest wins usually weren't from cutting information, but instead were from cutting repetition.
+
+Here are two real examples from our AI agent:
+
+- Our `list_assets` result included a `message` field that was a comma joined list of every path… which were already in the `assets` array right next to it. Basically half the payload was pure duplication.
+- The materials query returned the same `shaderName` on every single row, so on a big render pipeline migration the redundancy could triple the payload.
+
+Essentially, truncation costs information but deduplication is free, so always dedupe first.
+
+## Cut the noise the model can't use
+
+Stack traces were our best example here. A raw Unity stack trace is mostly engine internal frames. These are frames the model can't see the source for and can't do anything about, and they make traces 3 to 5 times larger.
+
+So we just drop them to simplify it and keep the top handful of frames from the user's actual code, then append one line: "... (12 Unity-internal frames elided)".
+
+## Format for the model you actually have
+
+Our Godot scene tree originally came back as nested JSON because, well, that's how I or any engineer would want an API to return it. But weirdly enough the models hated it.
+
+Fast models would mix up node names and types or lose track of siblings in a large tree. Every once in a while they would confidently reference a node that wasn't there at all.
+
+So instead, we switched to flat indented text:
+
+```
+Main (Node2D)
+  Player (CharacterBody2D)
+    Sprite (Sprite2D)
+    Collider (CollisionShape2D)
+  Enemies (Node2D)
+```
+
+The misreads basically vanished. The models echo names and types verbatim now, because there's nothing to mis-parse. Structure that helps a parser can actively hurt a language model. Return the format the model reads correctly, not the one your code prefers.
+
+## Images are not text
+
+Recently, we gave our agent "eyes": a screenshot tool so it could look at the game view and check its own work. And our first implementation was embarrassingly literal as we took the base64 for the screenshot and shoved it straight into the tool result.
+
+Then our normal result cap kicked in and chopped the string in half. So instead of seeing an image, the model got a giant pile of useless text tokens.
+
+What fixed it was pretty simple: we stopped treating the image like text.
+
+The tool result became one short line saying the screenshot had been captured. The actual image went into the conversation separately, where the model could actually see it:
+
+```python
+if "image_base64" in result:
+    tool_result_text = "Screenshot captured. See attached image."
+    messages.append(user_image_message(result["image_base64"]))
+```
+
+That gave us a pretty simple rule: if it's an image, send an image. Trying to smuggle it through the text channel just burns context and can break the thing you wanted the model to see in the first place.
+
+## The part that comes back to bite you
+
+I'll be honest about the limit of everything above: all of this shaping only protects the current turn.
+
+Our client app stored the raw, unshaped tool results in its chat history. And on every later message, it sent that history back up. Which means every cap in this post was quietly bypassed by the resend, forever. We eventually had a conversation grow so bloated that a single request reached the API at over 2 million tokens. The provider rejected it twice and the user gave up and closed the session.
+
+I'll save the full failure mode for a future context budgeting post, because it got weird.
+
+The useful takeaway here is simpler in that shaping the result once isn't enough. You also have to look at what your client puts back into conversation history later. Or else the giant raw payload you thought you removed quietly sneaks back in.
+
+## The TLDR advice that may help
+
+- A tool result is a prompt your system writes at runtime. Design it, don't just serialize it
+- Render each result twice if needed: rich for the UI, minimal for the model
+- Errors are instructions. So name the fix and don't just report the failure
+- Cap every result, and make every truncation name its escape hatch
+- Reads get shaped, writes collapse to one confirming line
+- Deduplicate before you truncate. Repetition is free to cut
+- Return the format the model reads correctly, not the one your code prefers
+- Keep images out of the text channel
+- Remember that shaping only protects the current turn. Watch the history resend
+
+I used to spend most of my time thinking about the tool definition and barely any time thinking about what came back from it, but now I think that was backwards.
+
+Poorly structured tool results rarely cause a dramatic failure, and that's what makes this problem annoying. The agent still works, but just gets a little worse every loop.
+
+And eventually you find yourself blaming the model for something that was really just a formatting bug…
+
+*Coming next in the series: The Tool Explosion Problem — what happens when your neat 10-tool prototype turns into 280 tools and the model suddenly has to figure out which one to call.*
