@@ -12,13 +12,13 @@ const MONO =
 /**
  * A floor plan strip: one tick per room, grouped into wings, with the room the
  * visitor occupies lit up. The camera only ever frames one room, so without
- * this there is no way to tell a three-room museum from an eight-room one, or
+ * this there is no way to tell a two-room museum from an eight-room one, or
  * to know how much is left to see. Purely informational — the map is not a
  * shortcut, since walking the rooms is the point.
  */
 export function RoomWayfinder({ rooms, current }: Props) {
-  // A single room per wing is the old three-room museum, where the wing banner
-  // already says everything this strip would.
+  // A one-room museum has nothing to navigate between — the wing banner already
+  // says everything this strip would.
   if (rooms.length <= 1) return null;
 
   // Consecutive rooms sharing a wing render as one group.

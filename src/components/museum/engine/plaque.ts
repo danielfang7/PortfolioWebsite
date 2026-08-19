@@ -8,9 +8,9 @@ import { ROOM_COLS } from "../scenes/world";
  * makes the room read as a curated gallery before the visitor walks up. Text is
  * drawn with the 3x5 pixel font so it stays crisp under the pixelated upscale.
  *
- * Placement follows the exhibit's facing wall so the plate always sits on the
- * room-side of the artwork: paintings get a plate just off their frame, desks
- * get one on the floor in front.
+ * Placement follows the exhibit's facing side so the plate always sits on the
+ * room-side of the piece: free-standing desks and pedestals (face `null`) get
+ * their plate on the floor in front.
  */
 
 const SCALE = 1;

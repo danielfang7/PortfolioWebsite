@@ -4,13 +4,13 @@ import Museum from "@/components/museum/Museum";
 import LabGrid from "@/components/LabGrid.astro";
 import { getMuseumData } from "@/data/museum";
 
-const { experiments, works, investments, workEntries, investmentEntries } =
+const { works, investments, workEntries, investmentEntries } =
   await getMuseumData();
 ---
 
 <BaseLayout
   title="Lab"
-  description="Self-contained front-end experiments: shader effects, generative art, and novel UI patterns."
+  description="A playable pixel-art museum: walk the Workshop for shipped works and the Portfolio for companies I've backed."
 >
   <section class="section-padding" aria-labelledby="lab-heading">
     <div class="container-content">
@@ -18,7 +18,7 @@ const { experiments, works, investments, workEntries, investmentEntries } =
         <div class="flex items-center gap-3 mb-3">
           <span class="accent-line" aria-hidden="true" />
           <span class="text-sm font-medium tracking-widest text-accent uppercase">
-            Experiments
+            Works &amp; Investments
           </span>
         </div>
         <h1
@@ -29,17 +29,15 @@ const { experiments, works, investments, workEntries, investmentEntries } =
         </h1>
         <p class="text-text-secondary max-w-xl leading-relaxed">
           Click anywhere to walk there, or move with WASD and arrow keys (drag
-          to move on touch). Paintings are front end experiments, computer desks
-          are works, and pedestals are companies I've backed. Click an exhibit
-          to walk over and open it, or stand in front of anything glowing and
-          press E.
+          to move on touch). Computer desks are works I've built, and pedestals
+          are companies I've backed. Click an exhibit to walk over and open it,
+          or stand in front of anything glowing and press E.
         </p>
       </div>
 
       <div data-lab-pane="museum">
         <Museum
           client:only="react"
-          experiments={experiments}
           works={works}
           investments={investments}
         />
@@ -64,7 +62,6 @@ const { experiments, works, investments, workEntries, investmentEntries } =
           </button>
         </div>
         <LabGrid
-          experiments={experiments}
           works={workEntries}
           investments={investmentEntries}
         />

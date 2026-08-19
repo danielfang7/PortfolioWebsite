@@ -35,10 +35,10 @@ export function InteractPrompt({
   const roomOffsetX = Math.floor(worldX / canvasW) * canvasW;
   const anchorX = worldX - roomOffsetX;
 
-  // Paintings hang on the top wall, where there is no room overhead for the
-  // pill — it would spill out of the canvas and over the page header. When the
-  // headroom isn't there, hang the prompt under the exhibit instead. Roughly
-  // the pill's own height in canvas units; the canvas is upscaled by CSS.
+  // An exhibit tight against the top wall leaves no room overhead for the pill —
+  // it would spill out of the canvas and over the page header. When the headroom
+  // isn't there, hang the prompt under the exhibit instead. Roughly the pill's
+  // own height in canvas units; the canvas is upscaled by CSS.
   const CLEARANCE_PX = 26;
   const above = target ? target.tileY * tileSize - GAP_PX : 0;
   const flipBelow = Boolean(target) && above < CLEARANCE_PX;
@@ -102,9 +102,7 @@ export function InteractPrompt({
           >
             E
           </kbd>
-          <span>
-            {target.kind === "painting" ? "view" : "open"} {target.title}
-          </span>
+          <span>open {target.title}</span>
         </div>
       )}
     </div>

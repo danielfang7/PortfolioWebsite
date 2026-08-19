@@ -8,11 +8,9 @@ import SoundToggle from "./ui/SoundToggle";
 import ItemModal from "./ui/ItemModal";
 import RoomWayfinder from "./ui/RoomWayfinder";
 import { planRooms, roomIndexForX, spawnTile } from "./scenes/world";
-import type { Experiment } from "@/data/experiments";
 import type { WorkRef, InvestmentRef } from "./data";
 
 export type MuseumProps = {
-  experiments: Experiment[];
   works: WorkRef[];
   investments: InvestmentRef[];
   /**
@@ -30,7 +28,7 @@ declare global {
 
 const SOUND_PREF_KEY = "museumSoundOn";
 
-export function Museum({ experiments, works, investments, attract = false }: MuseumProps) {
+export function Museum({ works, investments, attract = false }: MuseumProps) {
   const [focus, setFocus] = useState<Interactable | null>(null);
   const [selected, setSelected] = useState<Interactable | null>(null);
   // Sound is opt-in: start muted, then honor the visitor's saved preference.
@@ -48,11 +46,10 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
   const rooms = useMemo(
     () =>
       planRooms({
-        painting: experiments.length,
         computer: works.length,
         investment: investments.length,
       }),
-    [experiments.length, works.length, investments.length],
+    [works.length, investments.length],
   );
   const [roomIndex, setRoomIndex] = useState(() =>
     roomIndexForX(rooms, spawnTile(rooms).tileX * TILE_SIZE),
@@ -115,10 +112,6 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
     });
   }
 
-  const expBySlug = useMemo(
-    () => new Map(experiments.map((e) => [e.slug, e])),
-    [experiments],
-  );
   const workBySlug = useMemo(
     () => new Map(works.map((w) => [w.slug, w])),
     [works],
@@ -134,17 +127,13 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
     }
   }
 
-  const selectedExperiment =
-    selected?.kind === "painting" ? expBySlug.get(selected.slug) : undefined;
   const selectedWork =
     selected?.kind === "computer" ? workBySlug.get(selected.slug) : undefined;
   const selectedInvestment =
     selected?.kind === "investment"
       ? investmentBySlug.get(selected.slug)
       : undefined;
-  const modalOpen = Boolean(
-    selectedExperiment || selectedWork || selectedInvestment,
-  );
+  const modalOpen = Boolean(selectedWork || selectedInvestment);
   const showAttractOverlay = attract && !controlled;
 
   return (
@@ -177,7 +166,6 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
         }}
       >
         <MuseumCanvas
-          experiments={experiments}
           works={works}
           investments={investments}
           rooms={rooms}
@@ -249,13 +237,6 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
         )}
       </div>
       <RoomWayfinder rooms={rooms} current={roomIndex} />
-      {selectedExperiment && (
-        <ItemModal
-          kind="painting"
-          experiment={selectedExperiment}
-          onClose={() => setSelected(null)}
-        />
-      )}
       {selectedWork && (
         <ItemModal
           kind="computer"
@@ -273,11 +254,6 @@ export function Museum({ experiments, works, investments, attract = false }: Mus
       <nav aria-label="Exhibits" className="sr-only">
         <h2>Exhibits</h2>
         <ul>
-          {experiments.map((e) => (
-            <li key={`lab-${e.slug}`}>
-              <a href={`/lab/${e.slug}`}>{e.title}</a>
-            </li>
-          ))}
           {works.map((w) => (
             <li key={`work-${w.slug}`}>
               <a href={`/works/${w.slug}`}>{w.title}</a>

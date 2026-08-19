@@ -8,10 +8,10 @@ import type { Interactable, InteractableKind } from "../engine/interactables";
  * from the exhibits that need housing rather than hand-placed.
  *
  * A *wing* is a themed stretch of the museum devoted to one kind of exhibit —
- * the Gallery hangs experiments as paintings, the Workshop sits works on
- * computer desks, the Portfolio stands investments on lit pedestals. A wing
- * occupies as many rooms as its exhibits need, so adding a ninth work grows the
- * Workshop into a second room instead of silently dropping the overflow.
+ * the Workshop sits works on computer desks, the Portfolio stands investments
+ * on lit pedestals. A wing occupies as many rooms as its exhibits need, so
+ * adding a ninth work grows the Workshop into a second room instead of
+ * silently dropping the overflow.
  *
  * Every room is exactly the size of the visible canvas, which is what lets the
  * camera frame one room at a time and lets canvas-anchored DOM overlays get by
@@ -41,13 +41,6 @@ export type Wing = {
 };
 
 export const WINGS: Wing[] = [
-  {
-    id: "gallery",
-    name: "The Gallery",
-    kind: "painting",
-    floorTint: "#0b1a2a",
-    ambient: "rgba(70, 90, 120, 0.16)",
-  },
   {
     id: "workshop",
     name: "The Workshop",
@@ -90,8 +83,6 @@ type Footprint = {
 };
 
 const FOOTPRINTS: Record<InteractableKind, Footprint> = {
-  // Wall-hung, 2x1, one tile of bare wall between frames.
-  painting: { span: 2, gap: 1, width: 2, height: 1 },
   // Floor-standing 2x2 desks, packed tight enough for four across.
   computer: { span: 2, gap: 1, width: 2, height: 2 },
   // Floor-standing 2x2 plinths, given more air so each reads as a monument.
@@ -148,31 +139,19 @@ export function slotsForRoom(room: RoomDef): Slot[] {
   const second = Math.min(cap, n - first);
   const { width, height } = FOOTPRINTS[room.wing.kind];
 
-  // Band rows and the direction a visitor faces to view each band.
-  let rows: Array<{ row: number; face: Direction | null }>;
-  switch (room.wing.kind) {
-    case "painting":
-      // Hung flush on the top and bottom walls.
-      rows = [
-        { row: 0, face: "up" },
-        { row: room.rows - 1, face: "down" },
-      ];
-      break;
-    case "computer":
-      // Pushed against the top and bottom walls, leaving the lane clear.
-      rows = [
-        { row: 1, face: null },
-        { row: room.rows - 3, face: null },
-      ];
-      break;
-    default:
-      // Plinths sit a tile further into the room than the desks do.
-      rows = [
-        { row: 2, face: null },
-        { row: room.rows - 4, face: null },
-      ];
-      break;
-  }
+  // Band rows: desks push right up against the top and bottom walls, plinths
+  // sit a tile further into the room. Both leave the central lane clear, and
+  // both are approachable from any side (`face: null`).
+  const rows: Array<{ row: number; face: Direction | null }> =
+    room.wing.kind === "computer"
+      ? [
+          { row: 1, face: null },
+          { row: room.rows - 3, face: null },
+        ]
+      : [
+          { row: 2, face: null },
+          { row: room.rows - 4, face: null },
+        ];
 
   const slots: Slot[] = [];
   [first, second].forEach((k, band) => {
@@ -304,7 +283,7 @@ export function roomIndexForX(rooms: RoomDef[], worldX: number): number {
 /**
  * Builds the world tilemap: a checkerboard marble floor, per-room perimeter
  * walls, doorways carved between adjacent rooms, then the exhibit footprints
- * (paintings rewrite to WALL; desks stay floor but non-walkable).
+ * (desks and pedestals stay floor tiles but are non-walkable).
  */
 export function createWorldScene(
   rooms: RoomDef[],
@@ -359,9 +338,7 @@ export function createWorldScene(
         const x = it.tileX + dx;
         const y = it.tileY + dy;
         if (x < 0 || y < 0 || x >= w || y >= h) continue;
-        const i = y * w + x;
-        if (it.kind === "painting") tiles[i] = TILE.WALL;
-        walkable[i] = false;
+        walkable[y * w + x] = false;
       }
     }
   }

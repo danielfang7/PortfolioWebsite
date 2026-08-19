@@ -1,12 +1,12 @@
 import { getCollection, type CollectionEntry } from "astro:content";
-import { experiments, type Experiment } from "./experiments";
 import type { WorkRef, InvestmentRef } from "@/components/museum/data";
 
 /**
- * Shared loader for the museum's exhibit data so the full Lab page and the
- * home-page preview stay perfectly in sync. Maps Astro content collections into
- * the lightweight refs the canvas engine consumes, and assigns each investment
- * a stable accent color (for its pedestal plaque + summary modal).
+ * Shared loader for the museum's exhibit data — works and investments — so the
+ * full Lab page and the home-page preview stay perfectly in sync. Maps Astro
+ * content collections into the lightweight refs the canvas engine consumes, and
+ * assigns each investment a stable accent color (for its pedestal plaque +
+ * summary modal).
  */
 
 const INVESTMENT_COLORS = [
@@ -35,7 +35,6 @@ const WORK_COLORS = [
 ];
 
 export type MuseumData = {
-  experiments: Experiment[];
   works: WorkRef[];
   investments: InvestmentRef[];
   /** Full collection entries, for the accessible list view. */
@@ -75,5 +74,5 @@ export async function getMuseumData(): Promise<MuseumData> {
     color: INVESTMENT_COLORS[i % INVESTMENT_COLORS.length],
   }));
 
-  return { experiments, works, investments, workEntries, investmentEntries };
+  return { works, investments, workEntries, investmentEntries };
 }

@@ -82,8 +82,8 @@ export function drawFloorDecor(
 
 /**
  * Per-room ambient: a faint floor wash that color-codes each wing, plus a soft
- * light pool in the room's centre. Gives the Gallery a cool cast and the
- * Workshop a warm one.
+ * light pool in the room's centre. Gives the Workshop a warm cast and the
+ * Portfolio a cool violet one.
  */
 export function drawAmbientFloor(
   ctx: CanvasRenderingContext2D,
@@ -114,47 +114,10 @@ export function drawAmbientFloor(
 }
 
 /**
- * Colored light pools cast from each painting onto the floor in front of it.
- * The pool direction follows which wall the painting hangs on, so the light
- * always spills into the room. Drawn additively for a soft gallery-spotlight
- * feel, tinted by each experiment's accent.
- */
-export function drawPaintingSpotlights(
-  ctx: CanvasRenderingContext2D,
-  paintings: Interactable[],
-): void {
-  ctx.save();
-  ctx.globalCompositeOperation = "lighter";
-  for (const p of paintings) {
-    const color = p.color ?? "#00d8ff";
-    // Centre of the painting footprint.
-    const cx = (p.tileX + p.width / 2) * TILE_SIZE;
-    const cy = (p.tileY + p.height / 2) * TILE_SIZE;
-    // Push the light pool ~1.5 tiles into the room based on facing wall.
-    const off = TILE_SIZE * 1.6;
-    let lx = cx;
-    let ly = cy;
-    if (p.face === "up") ly = cy + off;
-    else if (p.face === "down") ly = cy - off;
-    else if (p.face === "left") lx = cx + off;
-    else if (p.face === "right") lx = cx - off;
-
-    const r = TILE_SIZE * 2.2;
-    const grad = ctx.createRadialGradient(lx, ly, 0, lx, ly, r);
-    grad.addColorStop(0, hexToRgba(color, 0.22));
-    grad.addColorStop(0.5, hexToRgba(color, 0.08));
-    grad.addColorStop(1, hexToRgba(color, 0));
-    ctx.fillStyle = grad;
-    ctx.fillRect(lx - r, ly - r, r * 2, r * 2);
-  }
-  ctx.restore();
-}
-
-/**
  * Accent light pools cast on the floor around each free-standing exhibit — the
  * Portfolio's pedestals and the Workshop's desks. A soft downlight that grounds
- * the object and color-codes it by company or project. Drawn additively in the
- * same floor pass as the painting spotlights.
+ * the object and color-codes it by company or project. Drawn additively over
+ * the floor, before any sprite, so it reads as light cast on the marble.
  */
 export function drawFloorSpotlights(
   ctx: CanvasRenderingContext2D,
