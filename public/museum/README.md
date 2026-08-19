@@ -9,7 +9,6 @@ build and ship the MVP.
 ```
 tiles/                  tileset PNGs (e.g. 32x32 sheet), if/when we swap off procedural
 character/              character sprite sheet (4-dir walk cycle)
-thumbs/experiments/     pixel-art-ified thumbnails for experiment paintings
 thumbs/works/           pixel-art-ified thumbnails for work computer screens
 ```
 
@@ -30,8 +29,7 @@ here. Attribute in this README if CC-BY.
 
 ## Thumbnails
 
-The `thumbs/experiments/` and `thumbs/works/` slots are unused by the MVP —
-paintings go live (hybrid mode) and work desk "screens" render the existing
-`/public/images/works/*.png` assets with pixelated scaling. If we later want
-dedicated pixelated thumbnails, drop them here as 64×48 PNGs named
+The `thumbs/works/` slot is unused today — work desk "screens" render the
+existing `/public/images/works/*.png` assets with pixelated scaling. If we later
+want dedicated pixelated thumbnails, drop them here as 64×48 PNGs named
 `{slug}.png` and wire them through the same loader.

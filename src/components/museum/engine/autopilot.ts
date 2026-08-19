@@ -5,11 +5,11 @@ import { LANE_ROW, type RoomDef } from "../scenes/world";
 
 /**
  * Attract-mode autopilot: walks the player character on a slow guided loop
- * through all three wings — Workshop → Gallery → Workshop → Portfolio — pausing
- * to face an exhibit here and there, like an arcade demo reel. It drives the
- * character by writing into the same analog input axis the touch joystick uses,
- * so the real movement + collision code does the actual walking. The host hands
- * control to the visitor (and calls `stop`) on their first interaction.
+ * through the wings — out through the Workshop to the Portfolio and back —
+ * pausing to face an exhibit here and there, like an arcade demo reel. It
+ * drives the character by writing into the same analog input axis the joystick
+ * uses, so the real movement + collision code does the actual walking. The host
+ * hands control to the visitor (and calls `stop`) on their first interaction.
  */
 
 type Waypoint = {
@@ -24,9 +24,9 @@ type Waypoint = {
 /**
  * Builds the tour route from the room layout. It runs along the central
  * corridor (the doorway lane carved open across every room), so the path never
- * collides with a desk, painting, or pedestal no matter how many rooms the
- * museum has. Walks the full length of the museum admiring exhibits on the way
- * out, then strolls back to the start so the loop repeats seamlessly.
+ * collides with a desk or pedestal no matter how many rooms the museum has.
+ * Walks the full length of the museum admiring exhibits on the way out, then
+ * strolls back to the start so the loop repeats seamlessly.
  */
 function buildTour(rooms: RoomDef[]): Waypoint[] {
   if (rooms.length === 0) return [{ tx: 1, ty: LANE_ROW }];

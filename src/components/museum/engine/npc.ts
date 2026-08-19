@@ -153,7 +153,8 @@ function tileCenter(tx: number, ty: number): { x: number; y: number } {
 function viewSpotFor(it: Interactable, map: Tilemap): ViewSpot | null {
   const cx = it.tileX + Math.floor(it.width / 2);
   const cy = it.tileY + Math.floor(it.height / 2);
-  // Desks (face null) are admired from below; paintings from their facing side.
+  // Desks and pedestals (face null) are admired from below; anything with a
+  // fixed facing is admired from that side.
   const face: Direction = it.face ?? "up";
   let tx = cx;
   let ty = cy;

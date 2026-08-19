@@ -1,6 +1,6 @@
 import type { Character, Direction } from "./character";
 
-export type InteractableKind = "painting" | "computer" | "investment";
+export type InteractableKind = "computer" | "investment";
 
 export type Interactable = {
   kind: InteractableKind;
@@ -9,7 +9,7 @@ export type Interactable = {
   /** Anchor (top-left) tile. */
   tileX: number;
   tileY: number;
-  /** Size in tiles. Paintings are 2x1/1x2, desks and pedestals are 2x2. */
+  /** Size in tiles. Desks and pedestals are both 2x2. */
   width: number;
   height: number;
   /**
@@ -74,35 +74,4 @@ export function focusedInteractable(
     return it;
   }
   return null;
-}
-
-/**
- * Nearest interactable within `radius` Manhattan tiles of the player (measured
- * to the closest tile of the interactable's footprint).
- */
-export function nearbyInteractable(
-  ch: Character,
-  interactables: Interactable[],
-  tileSize: number,
-  radius = 3,
-): Interactable | null {
-  const pTileX = Math.floor(ch.x / tileSize);
-  const pTileY = Math.floor(ch.y / tileSize);
-  let best: Interactable | null = null;
-  let bestDist = Infinity;
-  for (const it of interactables) {
-    const dist = footprintDist(pTileX, pTileY, it);
-    if (dist > radius) continue;
-    if (dist < bestDist) {
-      bestDist = dist;
-      best = it;
-    }
-  }
-  return best;
-}
-
-function footprintDist(px: number, py: number, it: Interactable): number {
-  const dx = Math.max(0, it.tileX - px, px - (it.tileX + it.width - 1));
-  const dy = Math.max(0, it.tileY - py, py - (it.tileY + it.height - 1));
-  return dx + dy;
 }

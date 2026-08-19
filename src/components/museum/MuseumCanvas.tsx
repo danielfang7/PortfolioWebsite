@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createLoop } from "./engine/loop";
 import { createInput } from "./engine/input";
 import { createTileAtlas, TILE_SIZE } from "./engine/tileAtlas";
@@ -13,7 +13,6 @@ import {
 import {
   focusedInteractable,
   interactableAtTile,
-  nearbyInteractable,
   type Interactable,
 } from "./engine/interactables";
 import {
@@ -26,7 +25,6 @@ import {
   steerNavigator,
 } from "./engine/navigation";
 import { createPointerControls } from "./engine/pointer";
-import { drawPaintingSprite } from "./engine/paintingSprite";
 import { drawComputerSprite } from "./engine/computerSprite";
 import { drawInvestmentSprite } from "./engine/investmentSprite";
 import { drawPlaques } from "./engine/plaque";
@@ -36,7 +34,6 @@ import {
   drawAmbientFloor,
   drawFloorDecor,
   drawFloorSpotlights,
-  drawPaintingSpotlights,
   drawPlayerGlow,
   drawDust,
   drawVignette,
@@ -63,18 +60,12 @@ import {
   type RoomDef,
 } from "./scenes/world";
 import WingBanner from "./ui/WingBanner";
-import LivePainting from "./paintings/LivePainting";
-import type { Experiment } from "@/data/experiments";
 
 export const CANVAS_W = VIEW_COLS * TILE_SIZE; // 14 * 32 = 448
 export const CANVAS_H = VIEW_ROWS * TILE_SIZE; // 10 * 32 = 320
 export { TILE_SIZE };
 
-/** Activation radius for live painting mount (Manhattan tiles). */
-const LIVE_RADIUS = 3;
-
 export type MuseumCanvasProps = {
-  experiments: Experiment[];
   works: WorkRef[];
   investments: InvestmentRef[];
   /** The planned floor plan. Owned by the host so the wayfinder can share it. */
@@ -100,7 +91,6 @@ export type MuseumCanvasProps = {
 };
 
 export function MuseumCanvas({
-  experiments,
   works,
   investments,
   rooms,
@@ -117,7 +107,6 @@ export function MuseumCanvas({
   const audioRef = useRef<MuseumAudio | null>(null);
   const mutedRef = useRef(muted);
   mutedRef.current = muted;
-  const [livePainting, setLivePainting] = useState<Interactable | null>(null);
   const [roomIndex, setRoomIndex] = useState(() =>
     roomIndexForX(rooms, spawnTile(rooms).tileX * TILE_SIZE),
   );
@@ -171,13 +160,7 @@ export function MuseumCanvas({
     const audio = createAudio(mutedRef.current);
     audioRef.current = audio;
     const charSprite = createCharacterSprite();
-    const interactables = buildWorldInteractables(
-      rooms,
-      experiments,
-      works,
-      investments,
-    );
-    const paintings = interactables.filter((i) => i.kind === "painting");
+    const interactables = buildWorldInteractables(rooms, works, investments);
     const computers = interactables.filter((i) => i.kind === "computer");
     const pedestals = interactables.filter((i) => i.kind === "investment");
     const tilemap = createWorldScene(rooms, interactables);
@@ -267,7 +250,6 @@ export function MuseumCanvas({
     }
 
     let focused: Interactable | null = null;
-    let prevLiveSlug: string | null = null;
     let prevFocusKey: string | null = null;
     let prevWalkHalf = 0;
     let prevRoom = roomIndexForX(rooms, character.x);
@@ -353,19 +335,6 @@ export function MuseumCanvas({
           onFocusChangeRef.current?.(focused);
         }
 
-        // Live-painting activation: nearest painting within LIVE_RADIUS tiles.
-        const near = nearbyInteractable(
-          character,
-          paintings,
-          TILE_SIZE,
-          LIVE_RADIUS,
-        );
-        const nearSlug = near?.slug ?? null;
-        if (nearSlug !== prevLiveSlug) {
-          prevLiveSlug = nearSlug;
-          setLivePainting(near);
-        }
-
         if (input.state.interact) {
           input.clearInteract();
           if (focused) {
@@ -404,7 +373,6 @@ export function MuseumCanvas({
         const onScreen = (it: Interactable) =>
           (it.tileX + it.width) * TILE_SIZE >= viewLeft &&
           it.tileX * TILE_SIZE <= viewRight;
-        const shownPaintings = paintings.filter(onScreen);
         const shownPedestals = pedestals.filter(onScreen);
         const shownComputers = computers.filter(onScreen);
 
@@ -412,7 +380,6 @@ export function MuseumCanvas({
         drawTilemap(ctx, tilemap, atlas, view);
         drawFloorDecor(ctx, roomLights);
         drawAmbientFloor(ctx, roomLights);
-        drawPaintingSpotlights(ctx, shownPaintings);
         drawFloorSpotlights(ctx, shownPedestals);
         drawFloorSpotlights(ctx, shownComputers, "#00d8ff");
         drawPlayerGlow(ctx, character);
@@ -424,18 +391,6 @@ export function MuseumCanvas({
 
         // Doorways: arch, light spill, and the wayfinding signs between wings.
         drawDoorways(ctx, doorways, time, reduced);
-
-        // Paintings live on the walls — always behind the actors in the room.
-        for (const p of shownPaintings) {
-          drawPaintingSprite(
-            ctx,
-            p.tileX,
-            p.tileY,
-            p.width,
-            p.height,
-            p.color ?? null,
-          );
-        }
 
         // Engraved nameplates sit with the exhibits, under the moving actors.
         drawPlaques(ctx, interactables.filter(onScreen));
@@ -540,7 +495,7 @@ export function MuseumCanvas({
       audioRef.current = null;
       onFocusChangeRef.current?.(null);
     };
-  }, [rooms, experiments, works, investments, attract, initialExhibit]);
+  }, [rooms, works, investments, attract, initialExhibit]);
 
   return (
     <>
@@ -561,13 +516,6 @@ export function MuseumCanvas({
           borderRadius: "0.75rem",
         }}
       />
-      {livePainting && (
-        <LivePainting
-          painting={livePainting}
-          canvasW={CANVAS_W}
-          canvasH={CANVAS_H}
-        />
-      )}
       <WingBanner key={roomIndex} name={rooms[roomIndex]?.name ?? ""} />
       <div
         aria-hidden="true"

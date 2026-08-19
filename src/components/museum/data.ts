@@ -1,4 +1,3 @@
-import type { Experiment } from "@/data/experiments";
 import type { Interactable } from "./engine/interactables";
 import { slotsForRoom, type RoomDef } from "./scenes/world";
 
@@ -32,11 +31,10 @@ export type InvestmentRef = {
 /**
  * Places every exhibit into the rooms its wing was allotted. The layout planner
  * sized those rooms from these same counts, so each room gets exactly as many
- * slots as it has exhibits — nothing can be silently dropped for want of a wall.
+ * slots as it has exhibits — nothing can be silently dropped for want of floor.
  */
 export function buildWorldInteractables(
   rooms: RoomDef[],
-  experiments: Experiment[],
   works: WorkRef[],
   investments: InvestmentRef[] = [],
 ): Interactable[] {
@@ -44,27 +42,6 @@ export function buildWorldInteractables(
 
   for (const room of rooms) {
     const slots = slotsForRoom(room);
-
-    if (room.wing.kind === "painting") {
-      experiments
-        .slice(room.offset, room.offset + room.count)
-        .forEach((exp, i) => {
-          const slot = slots[i];
-          if (!slot) return;
-          result.push({
-            kind: "painting",
-            slug: exp.slug,
-            title: exp.title,
-            tileX: slot.tileX,
-            tileY: slot.tileY,
-            width: slot.width,
-            height: slot.height,
-            face: slot.face,
-            color: exp.color,
-          });
-        });
-      continue;
-    }
 
     if (room.wing.kind === "computer") {
       works.slice(room.offset, room.offset + room.count).forEach((work, i) => {

@@ -1,6 +1,6 @@
 # danielfang.me
 
-Personal site for **Daniel Fang** — works, lab experiments, investments, and writing.
+Personal site for **Daniel Fang** — works, investments, and writing.
 
 Live at [danielfang.me](https://danielfang.me).
 
@@ -28,13 +28,12 @@ src/
 ├── layouts/         # BaseLayout (meta, nav, footer)
 ├── components/      # Nav, Footer, HeroSection, WorksCarousel, LabGrid,
 │   ├── case-studies/    #   interactive case studies for select works
-│   ├── lab/             #   shader / particle experiments
-│   └── museum/          #   museum-style media components
+│   └── museum/          #   playable pixel-art museum (canvas engine + UI)
 ├── content/
 │   ├── works/       # Project entries (Markdown + frontmatter)
 │   ├── blog/        # Posts (MDX)
 │   └── investments/ # Investment entries (JSON)
-├── data/            # Static data (e.g. experiments index)
+├── data/            # Static data (e.g. the museum's exhibit loader)
 ├── scripts/         # Client-side enhancements (magnetic CTA, etc.)
 └── styles/          # global.css — tokens, base, utilities
 
@@ -60,8 +59,7 @@ public/              # Static assets — favicon, og image, images, videos, muse
 | `/` | Landing — hero, works carousel, timeline |
 | `/works` | Full works list |
 | `/works/:slug` | Project detail with media gallery and optional interactive case study |
-| `/lab` | Generative experiments (shaders, particles, vertex fields) |
-| `/lab/:experiment` | Individual experiment page |
+| `/lab` | Playable pixel-art museum — works as desks, investments as pedestals |
 | `/blog` | Writing index |
 | `/blog/:slug` | Post (MDX) |
 | `/investments` | Investment portfolio |

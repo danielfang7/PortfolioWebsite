@@ -2,7 +2,7 @@
 import Museum from "@/components/museum/Museum";
 import { getMuseumData } from "@/data/museum";
 
-const { experiments, works, investments } = await getMuseumData();
+const { works, investments } = await getMuseumData();
 ---
 
 <section
@@ -27,9 +27,8 @@ const { experiments, works, investments } = await getMuseumData();
           A playable museum of my work
         </h2>
         <p class="text-sm sm:text-base text-text-secondary leading-relaxed">
-          Walk a pixel art gallery where paintings are frontend experiments,
-          desks are shipped works, and pedestals are companies I've backed. Take
-          control and explore - or
+          Walk a pixel art gallery where desks are shipped works and pedestals
+          are companies I've backed. Take control and explore - or
           <a
             href="/lab"
             class="text-text-primary underline underline-offset-4 decoration-border hover:decoration-accent transition-colors"
@@ -63,7 +62,6 @@ const { experiments, works, investments } = await getMuseumData();
 
     <Museum
       client:visible
-      experiments={experiments}
       works={works}
       investments={investments}
       attract={true}

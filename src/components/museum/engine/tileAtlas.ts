@@ -1,11 +1,10 @@
 export const TILE_SIZE = 32;
 
 /**
- * Base tile palette. Paintings and computers are sprites drawn over wall/floor
- * tiles (see paintingSprite.ts, computerSprite.ts). Painting footprint tiles
- * are stored as WALL; computer footprint tiles stay FLOOR. Both are marked
- * non-walkable in the scene builder. FLOOR/FLOOR_ALT alternate in a
- * checkerboard for a polished gallery-marble look.
+ * Base tile palette. Desks and pedestals are sprites drawn over floor tiles
+ * (see computerSprite.ts, investmentSprite.ts); their footprint tiles stay
+ * FLOOR and are marked non-walkable in the scene builder. FLOOR/FLOOR_ALT
+ * alternate in a checkerboard for a polished gallery-marble look.
  */
 export const TILE = {
   FLOOR: 0,

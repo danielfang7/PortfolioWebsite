@@ -1,10 +1,7 @@
-import { Suspense, useEffect, useRef, useState } from "react";
-import type { Experiment } from "@/data/experiments";
+import { useEffect, useRef, useState } from "react";
 import type { WorkRef, InvestmentRef } from "../data";
-import { LIVE_PAINTINGS } from "../paintings/paintingRegistry";
 
 type Props =
-  | { kind: "painting"; experiment: Experiment; onClose: () => void }
   | { kind: "computer"; work: WorkRef; onClose: () => void }
   | { kind: "investment"; investment: InvestmentRef; onClose: () => void };
 
@@ -32,7 +29,6 @@ type View = {
   subtitle?: string;
   /** Header preview. */
   preview:
-    | { type: "live"; Comp: React.LazyExoticComponent<React.ComponentType> }
     | { type: "image"; src: string }
     | { type: "logo"; src: string }
     | { type: "none" };
@@ -40,22 +36,6 @@ type View = {
 };
 
 function buildView(props: Props): View {
-  if (props.kind === "painting") {
-    const e = props.experiment;
-    const Comp = LIVE_PAINTINGS[e.slug];
-    return {
-      kindLabel: "Experiment",
-      title: e.title,
-      description: e.description,
-      year: e.year,
-      tags: e.tech,
-      accent: e.color || ACCENT,
-      href: `/lab/${e.slug}`,
-      ctaLabel: "View experiment",
-      preview: Comp ? { type: "live", Comp } : { type: "none" },
-      external: [],
-    };
-  }
   if (props.kind === "computer") {
     const w = props.work;
     const external: ExternalLink[] = [];
@@ -166,7 +146,7 @@ export function ItemModal(props: Props) {
           transition: "transform 240ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >
-        {/* Preview header — live experiment, work thumbnail, or company logo. */}
+        {/* Preview header — work thumbnail or company logo. */}
         <div
           style={{
             position: "relative",
@@ -180,11 +160,7 @@ export function ItemModal(props: Props) {
             background: `radial-gradient(circle at 50% 40%, ${accent}1f, #08080a 72%)`,
           }}
         >
-          {v.preview.type === "live" ? (
-            <Suspense fallback={null}>
-              <v.preview.Comp />
-            </Suspense>
-          ) : v.preview.type === "image" ? (
+          {v.preview.type === "image" ? (
             <picture>
               <source srcSet={toWebp(v.preview.src)} type="image/webp" />
               <img

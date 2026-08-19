@@ -3,7 +3,7 @@ import { drawText, measureText, PIXEL_FONT_HEIGHT } from "./pixelFont";
 
 /**
  * A lit stone pedestal carrying a framed "portfolio plaque" — the Portfolio
- * wing's counterpart to the Gallery's paintings and the Workshop's desks. The
+ * wing's counterpart to the Workshop's desks. The
  * plinth is drawn in neutral marble so the accent-tinted plaque (with the
  * company's initial) reads as the highlighted object, color-coded per company.
  * Sized for a 2x2 footprint to match the desks as a headline exhibit.
