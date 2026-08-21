@@ -12,7 +12,7 @@ interface Props {
 }
 
 const {
-  title = "Daniel Fang — Founder, Engineer, Investor",
+  title = "Daniel Fang - Founder, Engineer, Investor",
   description = "Founder and engineer building thoughtful digital experiences. Showcasing creative projects, investment activity, and written content.",
   ogImage = "/og-default.svg",
   noindex = false,
@@ -21,7 +21,7 @@ const {
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const fullTitle = title.includes("Daniel Fang")
   ? title
-  : `${title} — Daniel Fang`;
+  : `${title} - Daniel Fang`;
 
 // Cloudflare Web Analytics — privacy-first, cookieless. Token is set via the
 // PUBLIC_CF_BEACON_TOKEN env var (in Netlify) so it stays out of source.
