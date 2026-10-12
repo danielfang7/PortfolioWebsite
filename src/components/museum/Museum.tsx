@@ -6,6 +6,7 @@ import InteractPrompt from "./ui/InteractPrompt";
 import ListViewToggle from "./ui/ListViewToggle";
 import SoundToggle from "./ui/SoundToggle";
 import ItemModal from "./ui/ItemModal";
+import PointerHint from "./ui/PointerHint";
 import RoomWayfinder from "./ui/RoomWayfinder";
 import { planRooms, roomIndexForX, spawnTile } from "./scenes/world";
 import type { WorkRef, InvestmentRef } from "./data";
@@ -36,9 +37,6 @@ export function Museum({ works, investments, attract = false }: MuseumProps) {
   // Attract mode only: tracks whether the visitor has taken control yet, so the
   // "click to take control" overlay can fade away on their first interaction.
   const [controlled, setControlled] = useState(false);
-  // Touch devices have no keyboard, so the attract overlay swaps "WASD" copy for
-  // tap/drag wording. Resolved after mount to avoid an SSR hydration mismatch.
-  const [coarsePointer, setCoarsePointer] = useState(false);
 
   // The floor plan grows with the collection: each wing claims as many rooms as
   // its exhibits need. Owned here so the canvas and the wayfinder below it read
@@ -83,14 +81,6 @@ export function Museum({ works, investments, attract = false }: MuseumProps) {
       /* history unavailable — sharing just falls back to the plain /lab URL */
     }
   }, [selected, attract]);
-
-  useEffect(() => {
-    try {
-      setCoarsePointer(window.matchMedia("(pointer: coarse)").matches);
-    } catch {
-      /* matchMedia unavailable — assume a precise pointer */
-    }
-  }, []);
 
   useEffect(() => {
     try {
@@ -229,9 +219,11 @@ export function Museum({ works, investments, attract = false }: MuseumProps) {
                   animation: "museum-attract-pulse 1.6s ease-in-out infinite",
                 }}
               />
-              {coarsePointer
-                ? "Tap to take control · drag to move"
-                : "Click to take control · click to walk"}
+              {/* Touch devices have no keyboard, so they get tap/drag wording. */}
+              <PointerHint
+                touch="Tap to take control · drag to move"
+                mouse="Click to take control · click to walk"
+              />
             </span>
           </div>
         )}

@@ -60,6 +60,7 @@ import {
   type RoomDef,
 } from "./scenes/world";
 import WingBanner from "./ui/WingBanner";
+import PointerHint from "./ui/PointerHint";
 
 export const CANVAS_W = VIEW_COLS * TILE_SIZE; // 14 * 32 = 448
 export const CANVAS_H = VIEW_ROWS * TILE_SIZE; // 10 * 32 = 320
@@ -111,14 +112,6 @@ export function MuseumCanvas({
     roomIndexForX(rooms, spawnTile(rooms).tileX * TILE_SIZE),
   );
   const [hasMoved, setHasMoved] = useState(false);
-  // Starts false to match the server render (the home page's LabPreview is
-  // server-rendered), then switches after mount. Reading the media query in
-  // the initializer made touch devices render different hint text on their
-  // first pass, so React discarded the server HTML with a hydration error.
-  const [isTouch, setIsTouch] = useState(false);
-  useEffect(() => {
-    setIsTouch(window.matchMedia("(pointer: coarse)").matches);
-  }, []);
   const onFocusChangeRef = useRef(onFocusChange);
   onFocusChangeRef.current = onFocusChange;
   const onInteractRef = useRef(onInteract);
@@ -544,9 +537,12 @@ export function MuseumCanvas({
           WebkitBackdropFilter: "blur(4px)",
         }}
       >
-        {isTouch
-          ? "Drag to move · tap an exhibit to open"
-          : "Click to walk · WASD / arrows · E to interact"}
+        {/* Picked by CSS, not state: reading the pointer type during render made
+            touch devices disagree with the server-rendered home page preview. */}
+        <PointerHint
+          touch="Drag to move · tap an exhibit to open"
+          mouse="Click to walk · WASD / arrows · E to interact"
+        />
       </div>
     </>
   );
