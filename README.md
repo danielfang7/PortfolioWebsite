@@ -15,6 +15,7 @@ Live at [danielfang.me](https://danielfang.me).
 | Styling | [Tailwind CSS](https://tailwindcss.com) + CSS custom properties for design tokens |
 | Animation | [GSAP](https://gsap.com) (ScrollTrigger) and [Lenis](https://lenis.darkroom.engineering) for smooth scroll |
 | Content | Astro Content Collections — Markdown or MDX for works, MDX for blog, JSON for investments |
+| Testing | [Vitest](https://vitest.dev) + [Testing Library](https://testing-library.com), run in CI and before every Netlify deploy (see [TESTING.md](TESTING.md)) |
 | Deployment | [Netlify](https://netlify.com) |
 
 ---
@@ -38,6 +39,7 @@ src/
 └── styles/          # global.css — tokens, base, utilities
 
 public/              # Static assets — favicon, og image, images, videos, museum
+tests/               # Vitest suites (see TESTING.md)
 ```
 
 ---
@@ -49,6 +51,9 @@ public/              # Static assets — favicon, og image, images, videos, muse
 | `npm run dev` | Start dev server at `http://localhost:4321` |
 | `npm run build` | Production build → `dist/` |
 | `npm run preview` | Preview the production build locally |
+| `npm test` | Run the Vitest suite once (see [TESTING.md](TESTING.md)) |
+
+Use the Node version pinned in `.nvmrc` (`nvm use`). `npm test` fails on any other major, and GitHub Actions and Netlify read the same file.
 
 ---
 
@@ -79,7 +84,7 @@ public/              # Static assets — favicon, og image, images, videos, muse
 
 Works, blog posts, and investments are defined as content collections in `src/content/`. See `src/content/config.ts` for the schema of each collection.
 
-- **Works** — Add a `.md` file under `src/content/works/`, or a `.mdx` file when the write-up embeds React components. Required frontmatter: `title`, `description`, `role`, `year`, `stack`, `thumbnail`. Set `featured: true` to surface on the home carousel. Full walkthrough: [docs/adding-works.md](docs/adding-works.md).
+- **Works** — Add a `.md` file under `src/content/works/`, or a `.mdx` file when the write-up embeds React components. Required frontmatter: `title`, `description`, `role`, `year`, `stack`, `thumbnail`, plus a unique `order` (`npm test` enforces it). Set `featured: true` to surface on the home carousel. Full walkthrough: [docs/adding-works.md](docs/adding-works.md).
 - **Blog** — Add a `.mdx` file under `src/content/blog/` with `title`, `date`, `excerpt`, and optional `tags`.
 - **Investments** — Add a `.json` file under `src/content/investments/`.
 

@@ -1,9 +1,8 @@
+# Node version comes from .nvmrc, shared with the GitHub Actions test workflow.
+# Tests run first so a red suite fails the deploy, including direct pushes to main.
 [build]
-  command = "npm run build"
+  command = "npm test && npm run build"
   publish = "dist"
-
-[build.environment]
-  NODE_VERSION = "20"
 
 [[redirects]]
   from = "/*"

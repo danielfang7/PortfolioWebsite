@@ -1,0 +1,21 @@
+type PointerHintProps = {
+  /** Copy for a coarse primary pointer: phones and tablets used by touch. */
+  touch: string;
+  /** Copy for a fine primary pointer: a mouse or trackpad. */
+  mouse: string;
+};
+
+/**
+ * Renders both strings and lets a `(pointer: coarse)` media query show one.
+ * Choosing in CSS rather than state keeps the server markup right on the first
+ * paint (the home page's preview is server-rendered and hydrates late) and
+ * leaves nothing for hydration to disagree about.
+ */
+export default function PointerHint({ touch, mouse }: PointerHintProps) {
+  return (
+    <>
+      <span className="[@media(pointer:coarse)]:hidden">{mouse}</span>
+      <span className="hidden [@media(pointer:coarse)]:inline">{touch}</span>
+    </>
+  );
+}
