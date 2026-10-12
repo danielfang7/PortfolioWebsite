@@ -10,7 +10,7 @@ images:
 videos:
   - "/videos/works/GladeCore_Demo_Video.mp4"
 featured: true
-order: 2
+order: 4
 caseStudy: "gladecore"
 ---
 

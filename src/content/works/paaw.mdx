@@ -1,0 +1,117 @@
+---
+title: "Paaw"
+description: "Pet adoption platform connecting adopters with 4,000+ shelters"
+role: "CTO"
+year: "2026"
+stack: ["Next.js", "React", "TypeScript", "Node.js", "MongoDB", "Stripe", "Vercel AI SDK", "OpenAI", "Cloudflare", "AWS App Runner", "ECS", "Postmark"]
+thumbnail: "/images/works/Paaw_ProjectImage.jpg"
+media:
+  - type: "image"
+    src: "/images/works/Paaw_ProjectImage.jpg"
+    label: "Paaw"
+  - type: "image"
+    src: "/images/works/Paaw_Home.jpg"
+    label: "paaw.co"
+  - type: "image"
+    src: "/images/works/Paaw_Search.jpg"
+    label: "Search with the radius map"
+  - type: "image"
+    src: "/images/works/Paaw_Oscar.jpg"
+    label: "Oscar, the AI adoption assistant"
+  - type: "image"
+    src: "/images/works/Paaw_PetProfile.jpg"
+    label: "Pet profile"
+  - type: "image"
+    src: "/images/works/Paaw_Mobile.jpg"
+    label: "Paaw on mobile"
+  - type: "image"
+    src: "/images/works/Paaw_Essentials.jpg"
+    label: "Essentials for pets"
+liveUrl: "https://paaw.co"
+employer: true
+featured: true
+order: 3
+caseStudy: "paaw"
+---
+
+import { StatRow } from "@/components/case-studies/StatRow";
+import { PaawPlatform } from "@/components/case-studies/PaawPlatform";
+import { PaawOscarFlow } from "@/components/case-studies/PaawOscarFlow";
+import { PaawImpactChart } from "@/components/case-studies/PaawImpactChart";
+
+## Overview
+
+Paaw is a pet adoption marketplace connecting adopters with shelters and rescues in the United States, France, Spain and Belgium. More than 4,000 shelters list their animals for free, and over 120,000 pets have found homes through Paaw since 2022.
+
+I joined as CTO in July 2026 and work across the whole platform: the adopter journey from the first search to the first week at home, the tools shelters use to list animals and respond, payments, Oscar (Paaw's AI adoption assistant), and the reliability and infrastructure underneath. Since joining I've merged 264 pull requests into the web app, I've also shipped changes across six other services and tools, from the data API and auth to the scheduled jobs.
+
+<StatRow
+  accent="#F0438C"
+  stats={[
+    { value: "264", label: "pull requests merged into the web app" },
+    { value: "7", label: "repositories, from the web app to scheduled jobs" },
+    { value: "0 → 340+", label: "test files in the web app, behind a CI gate" },
+    { value: "120K+", label: "pets adopted through Paaw since 2022" },
+  ]}
+/>
+
+## The Problem
+
+Adoption is a funnel that leaks at every step. Adopters have to find a pet that is actually nearby, trust the listing, and reach a shelter that will reply. Shelters are understaffed, and a slow reply can lose an adopter. And the moment after "message sent" is where most platforms go quiet. Underneath all of that, the site had to stay fast under heavy search traffic, and when I started it had no automated tests and no CI gate.
+
+## What I Built
+
+- **Faster, smarter search**: radius-over-map search, live filters, city and breed landing pages, and ranking that rewards shelters that actually answer adopters.
+- **Oscar, the AI adoption assistant**: taken from a stranded prototype to a production assistant that finds pets, answers questions and follows up on requests, with deterministic ranking, version-stamped prompts and an eval gate.
+- **A contact and payments flow that doesn't lose people**: I fixed a bug that silently dropped free requests, rebuilt donations into a single payment step, and built the paid Express Contact checkout server-side.
+- **Welcome Home**: a post-adoption essentials catalogue and insurance partnerships, with safety rules enforced by tests.
+- **Tools for shelters**: a redesigned dashboard, response badges, and reminder emails in each shelter's own language.
+- **Reliability, performance and SEO**: I led the response to a database-stall incident, took search from seconds to sub-second, moved pages and images onto the edge cache, and cut 220K redundant URLs from the sitemaps.
+
+## How the Platform Fits Together
+
+<PaawPlatform client:visible />
+
+The public site is a Next.js app behind Cloudflare. It reads the catalogue straight from MongoDB and writes through a small set of Node services for data, accounts and uploads. Scheduled jobs on ECS import listings nightly, pay out shelters, and send reminder and lifecycle emails.
+
+## Selected Projects
+
+### Search that finds pets nearby, from shelters that reply
+
+I rebuilt the animal search, the shelter directory and the public shelter pages. A radius bar now sits over the map, filters apply as you change them, breed search is scoped to the species, and the results widen their radius instead of running out. Ranking used to give a flat boost to every shelter that had activated its account. When I measured it, activation alone predicted nothing: many activated shelters had never replied to a single request, yet got the same boost as the most responsive ones. I replaced the boost with a ladder tied to measured reply rates. In simulation, the median distance of Atlanta's first page of results halved, from 14.9 km to 7.4 km, because the lift stopped going to shelters that never answer.
+
+### Oscar, the AI adoption assistant
+
+Oscar began as a prototype that had drifted hundreds of commits behind main. I ported it onto the current codebase and rebuilt it on the Vercel AI SDK, with tools created per request so they only ever see that visitor's context. Then I built the product around it: a docked panel, a full-screen results board, awareness of the pet page you're on, a proactive "peek" card after engaged browsing, a companion that tracks the status of your requests after you contact a shelter, and food recommendations matched to the life stage of a signed-in visitor's own pets.
+
+<PaawOscarFlow />
+
+The most important catch came before launch: shelter phone numbers buried in listing descriptions could have reached the model, and Oscar could have repeated numbers that belong behind each shelter's own contact flow. I wrote a dedicated redactor and validated it on 14,000+ real listings. Zero dialable numbers survived, and microchip numbers, which look a lot like phone numbers, were left untouched.
+
+### Reliability: from a restart loop to sub-second search
+
+Early on, healthy instances were being restarted under load. The health check opened a brand-new database connection, with a full TLS handshake, on every probe, which took about 3 seconds against a 5-second timeout. I made it a pure liveness probe that answers in 2–17 ms.
+
+Later, when database load spiked, I led the response. The fixes: one database client with a bounded pool and timeouts, pages that stopped calling their own API over HTTP, single-flight cache fills, bounded third-party calls, a shared Redis cache, and search reads moved to secondaries with hinted indexes. After that, pet pages and images moved onto the Cloudflare edge cache, with a purge whenever a pet is adopted or edited.
+
+<PaawImpactChart />
+
+The edge cache now serves 83% of image requests, and bytes served from the origin fell by 63%.
+
+### Contact and payments
+
+Contacting a shelter is the core conversion, and it had a silent leak: a client-side state race let some free requests take the paid branch, where they never reached the shelter. A ref fixed it.
+
+I rebuilt the donation window so a one-time gift and monthly support confirm in a single Payment Element step, with the one-time amount carried into the subscription's first invoice. I also restored Cash App Pay and fixed two Stripe accounts loading on the same page. Express Contact, the paid tier where Paaw follows up with the shelter for you, now runs its checkout end to end on the server. The payment success page, shared by donations and Express Contact, now handles every state: processing, retry, a declined card, and auto-continue. A deliverability check confirms a shelter can receive messages before an adopter pays to reach it.
+
+### Welcome Home and partners
+
+After a request is sent, adopters land on Essentials for pets: a curated partner catalogue with prices refreshed daily, budget filters and search. Safety rules live in tests, not in someone's memory. For example, products that are toxic to cats can never appear on a cat. Insurance partners are swapped behind one config with a geographic gate, and every outbound click goes through a ledger so commissions can be reconciled.
+
+### SEO at scale
+
+The sitemaps were submitting four untranslated copies of every listing, plus thousands of pages for pets that had already been adopted. I cut the submitted set from 269,756 URLs to 48,430 (−82%), gave English a single canonical URL, and fixed the six bugs behind failed Search Console validations. I also expanded the city and breed landing pages across US metros, and added structured About and FAQ entities and an `llms.txt` for AI search.
+
+### Foundations
+
+When I arrived, the web app had no tests and no CI gate. I added the first suite and the gate, and the app now has 340+ test files plus an LLM eval suite for Oscar. I also set up an isolated staging environment with Stripe in test mode, a way to replay the post-contact flow without emailing a real shelter, and security hardening across the web app and the backend services.

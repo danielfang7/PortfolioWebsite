@@ -14,7 +14,7 @@ Live at [danielfang.me](https://danielfang.me).
 | UI | [React 18](https://react.dev) for interactive components |
 | Styling | [Tailwind CSS](https://tailwindcss.com) + CSS custom properties for design tokens |
 | Animation | [GSAP](https://gsap.com) (ScrollTrigger) and [Lenis](https://lenis.darkroom.engineering) for smooth scroll |
-| Content | Astro Content Collections — Markdown for works, MDX for blog, JSON for investments |
+| Content | Astro Content Collections — Markdown or MDX for works, MDX for blog, JSON for investments |
 | Deployment | [Netlify](https://netlify.com) |
 
 ---
@@ -30,7 +30,7 @@ src/
 │   ├── case-studies/    #   interactive case studies for select works
 │   └── museum/          #   playable pixel-art museum (canvas engine + UI)
 ├── content/
-│   ├── works/       # Project entries (Markdown + frontmatter)
+│   ├── works/       # Project entries (Markdown or MDX + frontmatter)
 │   ├── blog/        # Posts (MDX)
 │   └── investments/ # Investment entries (JSON)
 ├── data/            # Static data (e.g. the museum's exhibit loader)
@@ -79,7 +79,7 @@ public/              # Static assets — favicon, og image, images, videos, muse
 
 Works, blog posts, and investments are defined as content collections in `src/content/`. See `src/content/config.ts` for the schema of each collection.
 
-- **Works** — Add a `.md` file under `src/content/works/`. Required frontmatter: `title`, `description`, `role`, `year`, `stack`, `thumbnail`. Set `featured: true` to surface on the home carousel.
+- **Works** — Add a `.md` file under `src/content/works/`, or a `.mdx` file when the write-up embeds React components. Required frontmatter: `title`, `description`, `role`, `year`, `stack`, `thumbnail`. Set `featured: true` to surface on the home carousel. Full walkthrough: [docs/adding-works.md](docs/adding-works.md).
 - **Blog** — Add a `.mdx` file under `src/content/blog/` with `title`, `date`, `excerpt`, and optional `tags`.
 - **Investments** — Add a `.json` file under `src/content/investments/`.
 

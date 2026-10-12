@@ -10,7 +10,7 @@ videos:
   - "/videos/works/CursedCrown_CinematicTrailer.mp4"
   - "/videos/works/CursedCrown_GDCGameplayVideo.mp4"
 featured: false
-order: 3
+order: 5
 ---
 
 ## Overview

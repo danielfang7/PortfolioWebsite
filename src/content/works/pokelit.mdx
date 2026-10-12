@@ -1,0 +1,111 @@
+---
+title: "Pokelit"
+description: "Pokémon TCG collector's app with raw and graded prices from real sales"
+role: "Founder"
+year: "2026"
+stack: ["Python", "FastAPI", "Postgres", "DuckDB", "SwiftUI", "React", "TypeScript", "Claude API", "Stripe", "StoreKit 2"]
+thumbnail: "/images/works/Pokelit_ProjectImage.jpg"
+media:
+  - type: "image"
+    src: "/images/works/Pokelit_ProjectImage.jpg"
+    label: "Pokelit on iPhone"
+  - type: "image"
+    src: "/images/works/Pokelit_Landing.jpg"
+    label: "pokelit.com"
+  - type: "image"
+    src: "/images/works/Pokelit_ScanAndPrice.jpg"
+    label: "Scan, price and slab comps"
+  - type: "image"
+    src: "/images/works/Pokelit_GradeAndOutlook.jpg"
+    label: "Grade check, outlook and Japanese cards"
+  - type: "image"
+    src: "/images/works/Pokelit_Binder.jpg"
+    label: "Portfolio, binder and order import"
+liveUrl: "https://pokelit.com"
+featured: true
+order: 2
+caseStudy: "pokelit"
+---
+
+import { StatRow } from "@/components/case-studies/StatRow";
+import { PokelitReturnsChart } from "@/components/case-studies/PokelitReturnsChart";
+import { PokelitScanFlow } from "@/components/case-studies/PokelitScanFlow";
+
+## Overview
+
+Pokelit is a collector's app for the Pokémon Trading Card Game, on iPhone and the web. You scan a card or a graded slab, it goes into your binder, and every night the app reprices it from real sales: raw cards by condition, slabs by grader and grade (PSA, CGC and BGS), in English and Japanese. On top of the prices, a model gives a one- and two-year outlook for the cards it can rate, and tells you the most you can pay for a card and still come out ahead after every cost.
+
+It started on September 7, 2026 as a research question: does buying Pokémon cards actually make money once you count every cost? Five weeks later it was a consumer product: a Python data platform, a FastAPI backend, a React web app and a native SwiftUI app, with Free, Plus and Pro subscriptions across Stripe and the App Store. The web app is live at pokelit.com and version 1.0 is with App Store review.
+
+<StatRow
+  accent="#F5C518"
+  stats={[
+    { value: "69.6K", label: "cards priced every night" },
+    { value: "57M", label: "price observations since 2022" },
+    { value: "1.9M", label: "sold listings read and classified" },
+    { value: "35 days", label: "527 commits and 400 logged decisions" },
+  ]}
+/>
+
+## The Problem
+
+Collectors price their cards from a patchwork: a price guide or two, screenshots of eBay sold listings, and gut feel. Graded slabs are harder still. The same card at PSA 9 and PSA 10 can differ by an order of magnitude, sales are thin, and listing titles are messy enough that a naive search mixes in the wrong card, the wrong grade, or a whole lot.
+
+The "cards as an investment" conversation almost never counts costs either. Before building anything user-facing, I built the study that measures them: every price move net of the entry spread, sales tax, shipping, venue fees, the haircut from actually selling, and capital gains. The answer shaped the whole product.
+
+<PokelitReturnsChart client:visible={{ rootMargin: "400px" }} />
+
+A randomly chosen card held for a year gained 38% on paper and kept under 5% after costs. Costs matter more than which card you pick. So the product leads with honest prices, a 24-month holding plan instead of flips, and **the most to pay**: the highest entry price that still clears the bar after every fee, solved per card for buying in person and online.
+
+## What I Built
+
+- **A nightly data platform** that ingests daily prices for English and Japanese cards into a Parquet lake, reads graded sales from eBay and Fanatics Collect, reprices every card and every user's binder, and publishes to the serving database and the static site. Every step is idempotent, and a missed night is backfilled from archived payloads.
+- **A pricing and outlook model**: a point-in-time feature engine with 42 features, a scorecard ranker that beat gradient-boosted trees on the same folds, and a public scorecard where each month's picks are locked in advance and scored after all costs.
+- **Scan**: on-device OCR and a deterministic catalogue matcher, with Claude vision only as a fallback reader. It handles cards and slabs, including the grader, grade and cert number on a slab label.
+- **Grade check**: photos of the front and back become measured centering, a chance for each PSA grade, and whether grading pays after fees.
+- **The collector's tools**: binder, watchlist, portfolio value over time, market movers, order-screenshot import for TCGplayer and eBay, and CSV import from other trackers.
+- **Two native clients, one account**: a SwiftUI iPhone app and a React web app over one FastAPI service, with plans billed through Stripe or StoreKit 2 and reconciled onto the same account.
+- **A blog drafted by an agent and fact-checked by another**: posts written nightly from the lake's numbers, with every figure traced back to a computed fact before it publishes.
+
+## Technical Architecture
+
+### A lake that can't see the future
+
+Every price observation carries the moment it became knowable, and a single SQL view is the only door any feature may read through. That makes point-in-time correctness a property of one query instead of a discipline spread across forty. It paid off early: a historical backfill had stamped 38.8M rows with their download time instead of their publication time, and the first point-in-time feature came back empty. The fix repaired the data rather than only the writer, and added a check that no row claims to be known before its own day.
+
+### A model that's allowed to say "moderate"
+
+The ranker is a shrunk log-odds points table, not a tree ensemble. On identical walk-forward folds with a full horizon-length gap, trees reached 49.2% precision@20 against the scorecard's 63.5%. The panel is too short for a model that has to discover interactions on its own, so the useful ones are specified by hand. The model also grades its own evidence, and "moderate" is the highest confidence this data can support, so that is what the outlook says.
+
+The study also set the holding plan. On the seven entry months that carry both labels, the model's out-of-sample picks returned a 22% median net at twelve months and 73% at twenty-four, because costs are paid once per round trip:
+
+<StatRow
+  accent="#F5C518"
+  stats={[
+    { value: "+22%", label: "median net return of the picks after 12 months" },
+    { value: "+73%", label: "the same picks after 24 months" },
+    { value: "40% → 5%", label: "share of picks that lost money" },
+  ]}
+/>
+
+The numbers are upfront about their limits. The data covers a single rising market, so each month's picks are hashed and committed before they're revealed, then scored in public a year later, win or lose. All 400 decisions are logged with the measurement behind them, and several retract an earlier, better-looking number.
+
+### Scan: the model reads, the matcher decides
+
+<PokelitScanFlow client:visible />
+
+A wrong auto-confirm would put the wrong printing in someone's binder, so identification is deliberately conservative: a clear winner or a second read, never a guess. Keeping the model as a reader rather than a decider also keeps it cheap and testable. Most scans never call it, and the matcher's behaviour is pinned by fixtures instead of prompts.
+
+Grade check is classical computer vision, not ML. The phone straightens the card to a fixed physical scale. The server then walks each border in a perceptual color space to find the cut and the print edge, coping with side lighting, vignettes, silver borders, sleeves and shadows. Every failure was reproduced on synthetic cards and turned into a test. It reads borders to within 0.06 mm on fixtures, and vectorizing the walk cut it from 465 ms to 109 ms. The measurements also show its limits: centering alone barely separates a 10 from a 9 on modern cards, so the per-grade chances are labelled an estimate.
+
+### Reading 1.9 million sale titles
+
+Graded prices are only as good as the sales behind them. A rule-based reader classifies every sold listing: this card, another card, another grade, a lot, a raw card sold as a "PSA 10 candidate", or a reprint that reuses the original number. The verdict is stored with the sale, so the whole history can be re-read when the rules improve, without another paid call. On its first night it found that 36% of stored sales were the wrong card. A later pass on Japanese promo numbering raised the share of Japanese PSA 10 sales read as their card from 70% to 83%, and a random sample of the gains was checked by eye. The slab price follows a trend-or-recency rule with outlier guards, merged across sale sources and deduplicated by listing.
+
+### Serving, clients and billing
+
+The request path never touches the lake. Nightly jobs publish into Postgres, and a FastAPI service reads it with row-level security applied per request from the user's JWT, across 25 tables. One account spans both stores: Stripe webhooks (checked with their signing secret) and App Store server notifications (a signed payload verified against Apple's root CA) are applied only if they're newer than the stored state, so the two never fight. Shared golden fixtures keep the Swift and TypeScript clients computing the same figures. Tests also keep the design-system tokens identical across web and iOS.
+
+### Built to be trusted
+
+About 150K lines across Python, TypeScript and Swift, roughly a third of it tests: 2,300+ tests across three stacks, with the Python suite run with sockets disabled so no test can reach the network. Every nightly step is idempotent and migrations are checksummed. The health ping is withheld unless the whole night succeeded, because a watchdog that pings on a partial run has effectively been switched off without anyone deciding to. Imports from other apps match 97.4% of real Collectr rows outright, and a random 100 of those were checked by eye.

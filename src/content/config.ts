@@ -26,9 +26,11 @@ const works = defineCollection({
     liveUrl: z.string().url().optional(),
     sourceUrl: z.string().url().optional(),
     featured: z.boolean().default(false),
+    /** Built as an employee: JSON-LD names me contributor, not author, and omits dateCreated and sameAs (the product is not mine). */
+    employer: z.boolean().default(false),
     order: z.number().default(99),
     /** Identifier for the interactive case study component to render on the detail page. */
-    caseStudy: z.string().optional(),
+    caseStudy: z.enum(["gladecore", "gladekit", "pokelit", "paaw"]).optional(),
   }),
 });
 
