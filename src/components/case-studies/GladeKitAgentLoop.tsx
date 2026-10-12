@@ -57,6 +57,7 @@ export function GladeKitAgentLoop() {
 
   return (
     <>
+      {/* React 18 SSR escapes text inside <style>: keep quotes, angle brackets and ampersands out of this CSS. */}
       <style>{`
         @keyframes glkPulse {
           0%, 100% { opacity: 0.5; transform: scale(1); }
@@ -79,7 +80,7 @@ export function GladeKitAgentLoop() {
           cursor: pointer;
         }
         .glk-card:hover { transform: translateY(-2px); }
-        .glk-card[aria-pressed="true"] { transform: translateY(-3px); }
+        .glk-card[aria-pressed=true] { transform: translateY(-3px); }
         .glk-detail {
           animation: glkFadeIn 0.18s ease forwards;
         }

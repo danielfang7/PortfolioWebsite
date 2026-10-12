@@ -80,6 +80,7 @@ export function GladeCorePipeline() {
 
   return (
     <>
+      {/* React 18 SSR escapes text inside <style>: keep quotes, angle brackets and ampersands out of this CSS. */}
       <style>{`
         @keyframes glcFlowRight {
           0%   { left: -10px; opacity: 0; }
@@ -104,7 +105,7 @@ export function GladeCorePipeline() {
           cursor: pointer;
         }
         .glc-node:hover { transform: translateY(-2px); }
-        .glc-node[aria-pressed="true"] { transform: translateY(-3px); }
+        .glc-node[aria-pressed=true] { transform: translateY(-3px); }
         .glc-detail {
           animation: glcFadeIn 0.18s ease forwards;
         }
