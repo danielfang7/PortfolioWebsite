@@ -9,5 +9,8 @@ import { expect, it } from "vitest";
 
 it("runs on the Node major pinned in .nvmrc", () => {
   const pinned = readFileSync(".nvmrc", "utf8").trim();
-  expect(process.versions.node.split(".")[0], `.nvmrc pins Node ${pinned}`).toBe(pinned);
+  // Accepts 24, v24 and 24.11.1; an alias like lts/* has no major to compare.
+  const major = pinned.match(/^v?(\d+)/)?.[1];
+  expect(major, `.nvmrc should start with a Node version, got "${pinned}"`).toBeDefined();
+  expect(process.versions.node.split(".")[0], `.nvmrc pins Node ${pinned}`).toBe(major);
 });

@@ -35,16 +35,32 @@ const works: WorkRef[] = [
 // client:only, so this is the only server-rendered museum.
 const ui = () => <Museum works={works} investments={[]} attract />;
 
-/** Renders like the Astro build server, which has no browser globals at all. */
+// The browser globals a component is likely to read while rendering. The Astro
+// build server has none of them; jsdom defines hundreds more, so this list is a
+// floor, not a full model of Node.
+const BROWSER_GLOBALS = [
+  "window", "self", "document", "navigator", "location", "history", "screen",
+  "localStorage", "sessionStorage", "matchMedia", "getComputedStyle",
+  "innerWidth", "innerHeight", "devicePixelRatio", "ontouchstart",
+  "requestAnimationFrame", "cancelAnimationFrame",
+];
+
+/** Renders like the Astro build server, with the browser globals above hidden. */
 function serverRender(el: ReactElement) {
-  for (const name of ["window", "document", "navigator", "localStorage", "sessionStorage", "matchMedia"]) {
-    vi.stubGlobal(name, undefined);
-  }
+  for (const name of BROWSER_GLOBALS) vi.stubGlobal(name, undefined);
   try {
     return renderToString(el);
   } finally {
     vi.unstubAllGlobals();
   }
+}
+
+/** Makes navigator look like a phone too, for touch checks that skip matchMedia. */
+function pretendToBeAPhone() {
+  vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile/15E148",
+  );
+  Object.defineProperty(navigator, "maxTouchPoints", { value: 5, configurable: true });
 }
 
 function setMediaQueries(matches: boolean) {
@@ -77,20 +93,22 @@ describe("museum hydration", () => {
     await act(async () => root?.unmount());
     root = undefined;
     vi.restoreAllMocks();
+    delete (navigator as { maxTouchPoints?: number }).maxTouchPoints;
     localStorage.clear();
     document.body.innerHTML = "";
   });
 
   it.each([
-    ["a touch screen with reduced motion (every media query matches)", true, false],
+    ["a phone with reduced motion (every media query matches)", true, false],
     ["a mouse (no media query matches)", false, false],
     ["a returning visitor who turned sound on", false, true],
-  ])("hydrates the server markup for %s", async (_name, matches, soundOn) => {
+  ])("hydrates the server markup for %s", async (_name, phone, soundOn) => {
     const container = document.createElement("div");
     container.innerHTML = serverRender(ui());
     document.body.appendChild(container);
 
-    setMediaQueries(matches);
+    setMediaQueries(phone);
+    if (phone) pretendToBeAPhone();
     if (soundOn) localStorage.setItem("museumSoundOn", "1");
     const errors: unknown[] = [];
     await act(async () => {
@@ -101,6 +119,8 @@ describe("museum hydration", () => {
     // React 18 warns about attribute and text mismatches through console.error, once
     // per module load, so any call at all fails the row that caused it.
     expect(consoleError).not.toHaveBeenCalled();
+    // The stored preference was read, so this row really is a returning visitor.
+    screen.getByRole("button", { name: soundOn ? "Turn museum sound off" : "Turn museum sound on" });
   });
 
   it("ships both hints in the server markup, picked by a (pointer: coarse) media query", () => {

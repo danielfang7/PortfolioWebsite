@@ -8,5 +8,8 @@ export default getViteConfig({
   test: {
     include: ["tests/**/*.test.{ts,tsx}"],
     environment: "node",
+    // Node 25+ defines its own global localStorage, which hides jsdom's and is
+    // undefined without --localstorage-file. Keep jsdom's.
+    poolOptions: { forks: { execArgv: ["--no-experimental-webstorage"] } },
   },
 });
