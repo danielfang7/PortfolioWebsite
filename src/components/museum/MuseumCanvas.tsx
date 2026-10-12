@@ -111,11 +111,18 @@ export function MuseumCanvas({
     roomIndexForX(rooms, spawnTile(rooms).tileX * TILE_SIZE),
   );
   const [hasMoved, setHasMoved] = useState(false);
-  const [isTouch] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(pointer: coarse)").matches,
-  );
+  // Starts false to match the server render (the home page's LabPreview is
+  // server-rendered), then switches after mount. Reading the media query in
+  // the initializer made touch devices render different hint text on their
+  // first pass, so React discarded the server HTML with a hydration error.
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    try {
+      setIsTouch(window.matchMedia("(pointer: coarse)").matches);
+    } catch {
+      /* matchMedia unavailable: keep the precise-pointer hint */
+    }
+  }, []);
   const onFocusChangeRef = useRef(onFocusChange);
   onFocusChangeRef.current = onFocusChange;
   const onInteractRef = useRef(onInteract);
