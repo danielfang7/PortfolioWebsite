@@ -1,7 +1,7 @@
 type PointerHintProps = {
-  /** Copy for touch screens, where there is no keyboard. */
+  /** Copy for a coarse primary pointer: phones and tablets used by touch. */
   touch: string;
-  /** Copy for a mouse or trackpad. */
+  /** Copy for a fine primary pointer: a mouse or trackpad. */
   mouse: string;
 };
 
