@@ -13,7 +13,7 @@ npm test            # vitest run
 npx vitest          # watch mode
 ```
 
-GitHub Actions (`.github/workflows/test.yml`) runs `npm test` then `npm run build` on every PR and push to main. Netlify's build command is `npm test && npm run build`, so a red suite also fails the deploy. Both read the Node version from `.nvmrc`.
+GitHub Actions (`.github/workflows/test.yml`) runs `npm test` then `npm run build` on every PR and push to main. Netlify's build command is `npm test && npm run build`, so a red suite also fails the deploy. Both read the Node version from `.nvmrc`, and `tests/node-version.test.ts` fails if the running Node major differs (a `NODE_VERSION` set in Netlify's UI would override the file).
 
 ## Layers
 
