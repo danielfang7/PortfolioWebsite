@@ -117,11 +117,7 @@ export function MuseumCanvas({
   // first pass, so React discarded the server HTML with a hydration error.
   const [isTouch, setIsTouch] = useState(false);
   useEffect(() => {
-    try {
-      setIsTouch(window.matchMedia("(pointer: coarse)").matches);
-    } catch {
-      /* matchMedia unavailable: keep the precise-pointer hint */
-    }
+    setIsTouch(window.matchMedia("(pointer: coarse)").matches);
   }, []);
   const onFocusChangeRef = useRef(onFocusChange);
   onFocusChangeRef.current = onFocusChange;
