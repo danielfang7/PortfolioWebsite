@@ -31,6 +31,8 @@ public/images/works/<your-image-name>.webp
 
 Every PNG or JPG needs a `.webp` sibling with the same base name. `Picture.astro` and the gallery lightbox swap the extension and serve the WebP first, with the PNG/JPG as the fallback, and nothing in the build creates the WebP for you. Reference the PNG/JPG path in frontmatter, never the `.webp`.
 
+`npm test` checks these rules for every work (`tests/works-content.test.ts`): each `thumbnail`, `images`, `videos` and `media` path starts with `/` (a relative path 404s under `/works/<slug>/`) and exists under `public/`, and each PNG/JPG has a `.webp` sibling no larger than itself.
+
 **Recommended:** square or 16:9 image, at least 800×800 px.
 
 ---
@@ -100,7 +102,7 @@ Deeper technical narrative...
 | `everglade.md` | 9 |
 | `tcg-extraction.md` | 10 |
 
-Set `order` to the next available number, or shift existing orders if you want to insert somewhere in the middle.
+Set `order` to the next available number, or shift existing orders if you want to insert somewhere in the middle. Every work needs its own `order`: `npm test` fails when one is missing or two works share a value.
 
 ---
 
@@ -134,6 +136,8 @@ Then visit:
 - `http://localhost:4321/works` — carousel and archive grid
 - `http://localhost:4321/works/<slug>` — detail page
 
+Before pushing, run `npm test` on the Node version in `.nvmrc` (see [TESTING.md](../TESTING.md)). Netlify runs it before every deploy, so a failing works check (Steps 1 and 3) blocks the release.
+
 ---
 
 ## Frontmatter reference
@@ -154,7 +158,7 @@ Then visit:
 | `sourceUrl` | string (URL) | no | Link to source code |
 | `featured` | boolean | no | Defaults to `false` |
 | `employer` | boolean | no | Defaults to `false`. Set `true` for work built as an employee: the page's JSON-LD names you `contributor` instead of `author` and omits `dateCreated` and `sameAs` |
-| `order` | number | no | Sort position, defaults to `99` |
+| `order` | number | yes | Sort position, unique across works. The schema defaults it to `99`, but `npm test` fails when it is missing or shared |
 | `caseStudy` | `"gladecore"` \| `"gladekit"` \| `"pokelit"` \| `"paaw"` | no | Interactive case study rendered on the detail page. A new value needs adding to the enum in `src/content/config.ts`, plus a label in `caseStudyLabels` and a render branch in `src/pages/works/[slug].astro` |
 
 ---
