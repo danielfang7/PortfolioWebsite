@@ -4,6 +4,8 @@ import { getCollection } from "astro:content";
 import Picture from "@/components/Picture.astro";
 import { GladeCorePipeline } from "@/components/case-studies/GladeCorePipeline";
 import { GladeKitAgentLoop } from "@/components/case-studies/GladeKitAgentLoop";
+import { PokelitSystem } from "@/components/case-studies/PokelitSystem";
+import { PaawJourney } from "@/components/case-studies/PaawJourney";
 
 export async function getStaticPaths() {
   const works = (await getCollection("works")).sort(
@@ -73,6 +75,16 @@ const galleryItems: GalleryItem[] = rawMedia.map((m) => ({
   label: m.label,
 }));
 
+type CaseStudy = NonNullable<typeof work.data.caseStudy>;
+// Exhaustive over the schema enum: a new case study fails type-checking until it has a label.
+const caseStudyLabels: Record<CaseStudy, string> = {
+  gladecore: "LLM Inference Pipeline",
+  gladekit: "System Architecture",
+  pokelit: "System Architecture",
+  paaw: "The Adoption Journey",
+};
+const caseStudyLabel = work.data.caseStudy ? caseStudyLabels[work.data.caseStudy] : "";
+
 const workCanonicalUrl = `https://danielfang.me/works/${currentSlug}`;
 const creativeWorkJsonLd = {
   "@context": "https://schema.org",
@@ -80,14 +92,16 @@ const creativeWorkJsonLd = {
   name: work.data.title,
   description: work.data.description,
   url: workCanonicalUrl,
-  author: {
+  // Employer works: I'm a contributor, not the author, and the year and live site describe my tenure,
+  // not this CreativeWork, so dateCreated and sameAs are omitted.
+  [work.data.employer ? "contributor" : "author"]: {
     "@type": "Person",
     name: "Daniel Fang",
     url: "https://danielfang.me",
   },
-  dateCreated: work.data.year,
+  ...(work.data.employer ? {} : { dateCreated: work.data.year }),
   keywords: work.data.stack.join(", "),
-  ...(work.data.liveUrl ? { sameAs: work.data.liveUrl } : {}),
+  ...(work.data.liveUrl && !work.data.employer ? { sameAs: work.data.liveUrl } : {}),
 };
 ---
 
@@ -253,7 +267,7 @@ const creativeWorkJsonLd = {
         <div class="flex items-center gap-3 mb-8">
           <span class="accent-line" aria-hidden="true" />
           <span class="text-sm font-medium tracking-widest text-accent uppercase">
-            {work.data.caseStudy === "gladecore" ? "LLM Inference Pipeline" : "System Architecture"}
+            {caseStudyLabel}
           </span>
         </div>
 
@@ -262,6 +276,12 @@ const creativeWorkJsonLd = {
         )}
         {work.data.caseStudy === "gladekit" && (
           <GladeKitAgentLoop client:visible />
+        )}
+        {work.data.caseStudy === "pokelit" && (
+          <PokelitSystem client:visible />
+        )}
+        {work.data.caseStudy === "paaw" && (
+          <PaawJourney client:visible />
         )}
       </section>
     )}
