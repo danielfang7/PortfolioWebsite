@@ -9,13 +9,15 @@
 ## Running
 
 ```bash
-npm test            # vitest run (CI runs this, then npm run build)
+npm test            # vitest run
 npx vitest          # watch mode
 ```
 
+GitHub Actions (`.github/workflows/test.yml`) runs `npm test` then `npm run build` on every PR and push to main. Netlify's build command is `npm test && npm run build`, so a red suite also fails the deploy. Both read the Node version from `.nvmrc`.
+
 ## Layers
 
-- **Unit / component** (`tests/*.test.tsx`): render a component the way Astro does. Server-render with `renderToString`, then hydrate with `hydrateRoot` in jsdom when the behaviour depends on the browser.
+- **Unit / component** (`tests/*.test.tsx`): render a component the way Astro does. Server-render with `renderToString` while `window` is stubbed out (the build server has none), then hydrate with `hydrateRoot` in jsdom when the behaviour depends on the browser.
 - **Content** (`tests/*.test.ts`, node environment): read `src/content/` and `public/` and check invariants the build does not, such as image siblings and unique `order` values.
 - **Build** (`npm run build`): Astro validates content collection schemas and renders every page; CI runs it after the tests.
 - **E2E**: none yet. Browser-level checks (layout at phone widths, console errors) are done by hand with Playwright; a Playwright suite would be the next layer.
@@ -26,4 +28,5 @@ npx vitest          # watch mode
 - Components that need a DOM start with `// @vitest-environment jsdom`; everything else runs in node.
 - Start each test file with a value card: what it protects, the regression that makes it fail, why existing coverage misses it, and what green does not prove.
 - jsdom lacks canvas 2D and the Web Animations API: stub `HTMLCanvasElement.prototype.getContext` and `Element.prototype.animate` in the test, never in product code.
+- jsdom also ignores CSS media queries. Copy that depends on the device (see `museum/ui/PointerHint.tsx`) is chosen in CSS, so tests check the markup and a real browser checks what shows.
 - A bug fix lands with a test that fails before the fix and passes after.
