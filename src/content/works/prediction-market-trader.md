@@ -8,7 +8,7 @@ thumbnail: "/images/works/PredictionMarketTrader_ProjectImage.png"
 images:
   - "/images/works/PredictionMarketTrader_ProjectImage.png"
 featured: false
-order: 4
+order: 6
 ---
 
 ## Overview

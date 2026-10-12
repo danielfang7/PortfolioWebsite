@@ -8,7 +8,7 @@ thumbnail: "/images/works/TCGExtraction_ProjectImage.png"
 images:
   - "/images/works/TCGExtraction_ExampleImage.png"
 featured: false
-order: 8
+order: 10
 ---
 
 ## Overview
