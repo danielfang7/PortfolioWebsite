@@ -6,6 +6,8 @@
 // GladeKitAgentLoop and GladeCorePipeline; seam=none (public components);
 // no_claim=other hydration causes.
 
+import { readFileSync, readdirSync } from "node:fs";
+import { basename, join } from "node:path";
 import { createElement, type ComponentType } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -45,6 +47,14 @@ const cases: [string, ComponentType<any>, object][] = [
 ];
 
 describe("inline <style> survives React 18 SSR unescaped", () => {
+  it("covers every component that ships an inline <style>", () => {
+    const withStyle = (readdirSync("src/components", { recursive: true }) as string[])
+      .filter((f) => f.endsWith(".tsx") && readFileSync(join("src/components", f), "utf8").includes("<style"))
+      .map((f) => basename(f, ".tsx"));
+    const covered = new Set(cases.map(([name]) => name));
+    expect(withStyle.filter((name) => !covered.has(name)), "add these to `cases`").toEqual([]);
+  });
+
   it.each(cases)("%s", (_name, Component, props) => {
     const html = renderToString(createElement(Component, props));
     const css = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]);
