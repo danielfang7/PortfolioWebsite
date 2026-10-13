@@ -14,6 +14,8 @@ dist/
 .DS_Store
 *.log
 .netlify/
+# gstack's local state. .gstack/pregate.json is tracked anyway (added with
+# `git add -f`; ignore rules never apply to tracked files).
 .gstack/
 TODOS.md
 .claude/

@@ -1,0 +1,103 @@
+{
+  "$schema": "https://github.com/garrytan/gstack/docs/pregate.md#pregate-v1",
+  "runner": "npx vitest run {files}",
+  "dependencies": {
+    "package.json": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/node-flags.test.ts",
+      "tests/node-version.test.ts",
+      "tests/pointer-hint-css.test.ts",
+      "tests/pregate-policy.test.ts",
+      "tests/works-content.test.ts"
+    ],
+    "package-lock.json": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/node-flags.test.ts",
+      "tests/node-version.test.ts",
+      "tests/pointer-hint-css.test.ts",
+      "tests/pregate-policy.test.ts",
+      "tests/works-content.test.ts"
+    ],
+    "vitest.config.ts": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/node-flags.test.ts",
+      "tests/node-version.test.ts",
+      "tests/pointer-hint-css.test.ts",
+      "tests/pregate-policy.test.ts",
+      "tests/works-content.test.ts"
+    ],
+    "tests/support/**": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/node-flags.test.ts",
+      "tests/node-version.test.ts",
+      "tests/pointer-hint-css.test.ts",
+      "tests/pregate-policy.test.ts",
+      "tests/works-content.test.ts"
+    ],
+    "astro.config.mjs": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/pointer-hint-css.test.ts"
+    ],
+    "tsconfig.json": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx"
+    ],
+    ".nvmrc": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/node-flags.test.ts",
+      "tests/node-version.test.ts",
+      "tests/pointer-hint-css.test.ts",
+      "tests/pregate-policy.test.ts",
+      "tests/works-content.test.ts"
+    ],
+    "tailwind.config.mjs": [
+      "tests/pointer-hint-css.test.ts"
+    ],
+    "src/components/**": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/pointer-hint-css.test.ts"
+    ],
+    "src/content/works/**": [
+      "tests/works-content.test.ts"
+    ],
+    "src/content/config.ts": [
+      "tests/works-content.test.ts"
+    ],
+    "public/images/**": [
+      "tests/works-content.test.ts"
+    ],
+    "public/videos/**": [
+      "tests/works-content.test.ts"
+    ],
+    "src/pages/**": [],
+    "src/layouts/**": [],
+    "src/styles/**": [],
+    "src/scripts/**": [],
+    "src/data/**": [],
+    "src/content/**": [],
+    "public/**": [],
+    ".github/workflows/**": [],
+    ".gitignore": [],
+    ".gstack/pregate.json": [
+      "tests/pregate-policy.test.ts"
+    ],
+    ".env.example": [],
+    "netlify.toml": [],
+    "*.md": [],
+    "docs/**": []
+  },
+  "selection": {},
+  "warn": [],
+  "strays": {
+    "allow": [
+      ".gstack"
+    ]
+  }
+}
