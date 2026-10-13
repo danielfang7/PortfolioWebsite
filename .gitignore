@@ -14,7 +14,9 @@ dist/
 .DS_Store
 *.log
 .netlify/
-.gstack/
+# gstack's local state stays out; its reviewed pre-ship policy is tracked
+.gstack/*
+!.gstack/pregate.json
 TODOS.md
 .claude/
 CLAUDE.md

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://github.com/garrytan/gstack/docs/pregate.md#pregate-v1",
+  "runner": "npx vitest run {files}",
+  "dependencies": {
+    "package.json": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/node-flags.test.ts",
+      "tests/node-version.test.ts",
+      "tests/pointer-hint-css.test.ts",
+      "tests/works-content.test.ts"
+    ],
+    "package-lock.json": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/node-flags.test.ts",
+      "tests/node-version.test.ts",
+      "tests/pointer-hint-css.test.ts",
+      "tests/works-content.test.ts"
+    ],
+    "vitest.config.ts": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/node-flags.test.ts",
+      "tests/node-version.test.ts",
+      "tests/pointer-hint-css.test.ts",
+      "tests/works-content.test.ts"
+    ],
+    ".nvmrc": ["tests/node-version.test.ts"],
+    "tailwind.config.mjs": ["tests/pointer-hint-css.test.ts"],
+    "src/components/**": ["tests/inline-style-escaping.test.tsx", "tests/pointer-hint-css.test.ts"],
+    "src/content/works/**": ["tests/works-content.test.ts"],
+    "public/images/**": ["tests/works-content.test.ts"],
+    "public/videos/**": ["tests/works-content.test.ts"],
+    ".github/workflows/**": [],
+    ".gitignore": [],
+    ".gstack/pregate.json": [],
+    "netlify.toml": [],
+    "*.md": [],
+    "docs/**": []
+  },
+  "selection": {},
+  "warn": [],
+  "strays": {
+    "allow": []
+  }
+}
