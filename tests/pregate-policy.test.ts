@@ -8,21 +8,30 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const deps: Record<string, string[]> = JSON.parse(readFileSync(".gstack/pregate.json", "utf8")).dependencies;
-const tests = (readdirSync("tests", { recursive: true }) as string[])
-  .filter((f) => /\.test\.tsx?$/.test(f))
-  .map((f) => `tests/${f}`)
-  .sort();
 // A change to any of these reaches every test, so each lists the whole suite.
 const SHARED = ["package.json", "package-lock.json", "vitest.config.ts", ".nvmrc", "tests/support/**"];
 
-describe(".gstack/pregate.json", () => {
+// Read inside each test, so a skipped run never touches the file.
+function policy() {
+  const deps: Record<string, string[]> = JSON.parse(readFileSync(".gstack/pregate.json", "utf8")).dependencies;
+  const tests = (readdirSync("tests", { recursive: true }) as string[])
+    .filter((f) => /\.test\.tsx?$/.test(f))
+    .map((f) => `tests/${f}`)
+    .sort();
+  return { deps, tests };
+}
+
+// The policy is tooling for gstack's pre-ship check, so it should never block a site
+// deploy. Netlify sets NETLIFY=true; GitHub Actions still runs this on every PR.
+describe.skipIf(process.env.NETLIFY === "true")(".gstack/pregate.json", () => {
   it("names only test files that exist", () => {
+    const { deps, tests } = policy();
     const listed = [...new Set(Object.values(deps).flat())];
     expect(listed.filter((t) => !tests.includes(t))).toEqual([]);
   });
 
   it.each(SHARED)("%s selects every test", (key) => {
+    const { deps, tests } = policy();
     expect([...(deps[key] ?? [])].sort()).toEqual(tests);
   });
 });
