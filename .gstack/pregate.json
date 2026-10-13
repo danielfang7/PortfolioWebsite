@@ -8,6 +8,7 @@
       "tests/node-flags.test.ts",
       "tests/node-version.test.ts",
       "tests/pointer-hint-css.test.ts",
+      "tests/pregate-policy.test.ts",
       "tests/works-content.test.ts"
     ],
     "package-lock.json": [
@@ -16,6 +17,7 @@
       "tests/node-flags.test.ts",
       "tests/node-version.test.ts",
       "tests/pointer-hint-css.test.ts",
+      "tests/pregate-policy.test.ts",
       "tests/works-content.test.ts"
     ],
     "vitest.config.ts": [
@@ -24,6 +26,7 @@
       "tests/node-flags.test.ts",
       "tests/node-version.test.ts",
       "tests/pointer-hint-css.test.ts",
+      "tests/pregate-policy.test.ts",
       "tests/works-content.test.ts"
     ],
     "tests/support/**": [
@@ -32,6 +35,7 @@
       "tests/node-flags.test.ts",
       "tests/node-version.test.ts",
       "tests/pointer-hint-css.test.ts",
+      "tests/pregate-policy.test.ts",
       "tests/works-content.test.ts"
     ],
     "astro.config.mjs": [
@@ -49,6 +53,7 @@
       "tests/node-flags.test.ts",
       "tests/node-version.test.ts",
       "tests/pointer-hint-css.test.ts",
+      "tests/pregate-policy.test.ts",
       "tests/works-content.test.ts"
     ],
     "tailwind.config.mjs": [
@@ -80,7 +85,9 @@
     "public/**": [],
     ".github/workflows/**": [],
     ".gitignore": [],
-    ".gstack/pregate.json": [],
+    ".gstack/pregate.json": [
+      "tests/pregate-policy.test.ts"
+    ],
     ".env.example": [],
     "netlify.toml": [],
     "*.md": [],
