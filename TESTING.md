@@ -19,6 +19,7 @@ GitHub Actions (`.github/workflows/test.yml`) runs `npm test` then `npm run buil
 
 - **Unit / component** (`tests/*.test.tsx`): render a component the way Astro does. Server-render with `renderToString` while browser globals (`window`, `document`, `navigator`, storage, `matchMedia` and the rest of the list in `tests/museum-hydration.test.tsx`) are stubbed out, since the build server has none, then hydrate with `hydrateRoot` in jsdom when the behaviour depends on the browser.
 - **Content** (`tests/*.test.ts`, node environment): read `src/content/` and `public/` and check invariants the build does not, such as root media paths, image siblings and unique `order` values. `tests/node-version.test.ts` also runs here and checks the Node major against `.nvmrc`.
+- **CSS** (`tests/pointer-hint-css.test.ts`, node environment): runs the project's Tailwind config over `src/` and checks the `(pointer: coarse)` rules `PointerHint` depends on are emitted after `.hidden`.
 - **Build** (`npm run build`): Astro validates content collection schemas and renders every page; CI runs it after the tests.
 - **E2E**: none yet. Browser-level checks (layout at phone widths, console errors) are done by hand with Playwright; a Playwright suite would be the next layer.
 
@@ -28,5 +29,7 @@ GitHub Actions (`.github/workflows/test.yml`) runs `npm test` then `npm run buil
 - Components that need a DOM start with `// @vitest-environment jsdom`; everything else runs in node.
 - Start each test file with a value card: what it protects, the regression that makes it fail, why existing coverage misses it, and what green does not prove.
 - jsdom lacks canvas 2D and the Web Animations API: stub `HTMLCanvasElement.prototype.getContext` and `Element.prototype.animate` in the test, never in product code.
-- jsdom also ignores CSS media queries. Copy that depends on the device (see `src/components/museum/ui/PointerHint.tsx`) is chosen in CSS, so tests check the markup and a real browser checks what shows.
+- jsdom also ignores CSS media queries. Copy that depends on the device (see `src/components/museum/ui/PointerHint.tsx`) is chosen in CSS, so tests check the markup and that Tailwind emits the rule, and a real browser checks what shows.
+- `vitest.config.ts` passes Node flags through `tests/support/node-flags.ts`, which drops any flag the running Node does not know; an unknown flag kills every worker before a test can explain why.
+- `.gstack/pregate.json` maps files to the tests that cover them for gstack's pre-ship check. Add a new test file to the entries that should select it, and give files no test covers an empty list.
 - A bug fix lands with a test that fails before the fix and passes after.
