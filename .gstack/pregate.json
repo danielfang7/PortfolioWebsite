@@ -26,15 +26,45 @@
       "tests/pointer-hint-css.test.ts",
       "tests/works-content.test.ts"
     ],
+    "tests/support/**": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/node-flags.test.ts",
+      "tests/node-version.test.ts",
+      "tests/pointer-hint-css.test.ts",
+      "tests/works-content.test.ts"
+    ],
+    "astro.config.mjs": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/pointer-hint-css.test.ts"
+    ],
+    "tsconfig.json": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx"
+    ],
     ".nvmrc": ["tests/node-version.test.ts"],
     "tailwind.config.mjs": ["tests/pointer-hint-css.test.ts"],
-    "src/components/**": ["tests/inline-style-escaping.test.tsx", "tests/pointer-hint-css.test.ts"],
+    "src/components/**": [
+      "tests/inline-style-escaping.test.tsx",
+      "tests/museum-hydration.test.tsx",
+      "tests/pointer-hint-css.test.ts"
+    ],
     "src/content/works/**": ["tests/works-content.test.ts"],
+    "src/content/config.ts": ["tests/works-content.test.ts"],
     "public/images/**": ["tests/works-content.test.ts"],
     "public/videos/**": ["tests/works-content.test.ts"],
+    "src/pages/**": [],
+    "src/layouts/**": [],
+    "src/styles/**": [],
+    "src/scripts/**": [],
+    "src/data/**": [],
+    "src/content/**": [],
+    "public/**": [],
     ".github/workflows/**": [],
     ".gitignore": [],
     ".gstack/pregate.json": [],
+    ".env.example": [],
     "netlify.toml": [],
     "*.md": [],
     "docs/**": []
@@ -42,6 +72,6 @@
   "selection": {},
   "warn": [],
   "strays": {
-    "allow": []
+    "allow": [".gstack"]
   }
 }

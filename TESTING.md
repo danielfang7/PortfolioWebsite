@@ -31,5 +31,5 @@ GitHub Actions (`.github/workflows/test.yml`) runs `npm test` then `npm run buil
 - jsdom lacks canvas 2D and the Web Animations API: stub `HTMLCanvasElement.prototype.getContext` and `Element.prototype.animate` in the test, never in product code.
 - jsdom also ignores CSS media queries. Copy that depends on the device (see `src/components/museum/ui/PointerHint.tsx`) is chosen in CSS, so tests check the markup and that Tailwind emits the rule, and a real browser checks what shows.
 - `vitest.config.ts` passes Node flags through `tests/support/node-flags.ts`, which drops any flag the running Node does not know; an unknown flag kills every worker before a test can explain why.
-- `.gstack/pregate.json` maps files to the tests that cover them for gstack's pre-ship check. Add a new test file to the entries that should select it, and give files no test covers an empty list.
+- `.gstack/pregate.json` maps files to the tests that cover them for gstack's pre-ship check. Its import graph does not follow the `@/` alias, so a test that imports through `@/` must be listed by hand under the paths it covers. Give files only the build covers an empty list. The file is tracked although `.gstack/` is ignored; recreate it with `git add -f`.
 - A bug fix lands with a test that fails before the fix and passes after.
