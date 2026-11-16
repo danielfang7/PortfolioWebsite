@@ -62,7 +62,8 @@
     "src/components/**": [
       "tests/inline-style-escaping.test.tsx",
       "tests/museum-hydration.test.tsx",
-      "tests/pointer-hint-css.test.ts"
+      "tests/pointer-hint-css.test.ts",
+      "tests/works-content.test.ts"
     ],
     "src/content/works/**": [
       "tests/works-content.test.ts"
