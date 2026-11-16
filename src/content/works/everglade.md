@@ -7,7 +7,7 @@ stack: ["Unity", "C#", "Local LLM inference"]
 thumbnail: "/images/works/Everglade_ProjectImage.png"
 images: ["/images/works/Everglade_ExampleImage.png"]
 featured: false
-order: 9
+order: 11
 ---
 
 ## Overview

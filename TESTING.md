@@ -18,7 +18,7 @@ GitHub Actions (`.github/workflows/test.yml`) runs `npm test` then `npm run buil
 ## Layers
 
 - **Unit / component** (`tests/*.test.tsx`): render a component the way Astro does. Server-render with `renderToString` while browser globals (`window`, `document`, `navigator`, storage, `matchMedia` and the rest of the list in `tests/museum-hydration.test.tsx`) are stubbed out, since the build server has none, then hydrate with `hydrateRoot` in jsdom when the behaviour depends on the browser.
-- **Content** (`tests/*.test.ts`, node environment): read `src/content/` and `public/` and check invariants the build does not, such as root media paths, image siblings and unique `order` values. `tests/node-version.test.ts` also runs here and checks the Node major against `.nvmrc`.
+- **Content** (`tests/*.test.ts`, node environment): read `src/content/` and `public/` and check invariants the build does not, such as root media paths, image siblings, unique `order` values and work titles the museum's pixel font can draw. `tests/node-version.test.ts` also runs here and checks the Node major against `.nvmrc`.
 - **CSS** (`tests/pointer-hint-css.test.ts`, node environment): runs the project's Tailwind config over `src/` and checks the `(pointer: coarse)` rules `PointerHint` depends on are emitted after `.hidden`.
 - **Build** (`npm run build`): Astro validates content collection schemas and renders every page; CI runs it after the tests.
 - **E2E**: none yet. Browser-level checks (layout at phone widths, console errors) are done by hand with Playwright; a Playwright suite would be the next layer.

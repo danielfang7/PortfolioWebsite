@@ -9,7 +9,7 @@ images:
   - "/images/works/FitCheck_ProjectImage.png"
 liveUrl: "https://fitcheck.app"
 featured: true
-order: 7
+order: 9
 ---
 
 ## Overview
