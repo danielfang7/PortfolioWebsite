@@ -8,13 +8,14 @@ This guide walks through everything needed to add a new project to the Works car
 
 Each project is a single Markdown (`.md`) or MDX (`.mdx`) file in `src/content/works/`. Astro's content collection picks it up automatically — no component edits or imports required.
 
-The file drives two places on the site:
+The file drives these places on the site:
 
 | Location | URL | Source |
 |---|---|---|
 | Works carousel (hero) | `/` and `/works` | `src/components/WorksCarousel.astro` |
 | Full archive grid | `/works` | `src/pages/works/index.astro` |
 | Project detail page | `/works/<slug>` | `src/pages/works/[slug].astro` |
+| Pixel museum desk and nameplate | `/lab`, previewed on `/` | `src/data/museum.ts` |
 
 ---
 
@@ -83,6 +84,8 @@ What problem does it solve?
 Deeper technical narrative...
 ```
 
+The museum engraves `title` on a nameplate in a 3×5 pixel font (`src/components/museum/engine/pixelFont.ts`) that draws only the letters A to Z (in either case), digits, spaces and `- & . : ? / > <`. Any other character (an apostrophe, comma, `!` or accented letter, say) would leave a blank gap on the plate, so `npm test` fails on it. Add the missing glyph to `GLYPHS` in that file, or reword the title.
+
 ---
 
 ## Step 3 — Set the `order` field
@@ -138,7 +141,7 @@ Then visit:
 - `http://localhost:4321/works` — carousel and archive grid
 - `http://localhost:4321/works/<slug>` — detail page
 
-Before pushing, run `npm test` on the Node version in `.nvmrc` (see [TESTING.md](../TESTING.md)). Netlify runs it before every deploy, so a failing works check (Steps 1 and 3) blocks the release.
+Before pushing, run `npm test` on the Node version in `.nvmrc` (see [TESTING.md](../TESTING.md)). Netlify runs it before every deploy, so a failing works check (Steps 1 to 3) blocks the release.
 
 ---
 
@@ -146,7 +149,7 @@ Before pushing, run `npm test` on the Node version in `.nvmrc` (see [TESTING.md]
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `title` | string | yes | Project name |
+| `title` | string | yes | Project name. A to Z, digits, spaces and `- & . : ? / > <` only, so the museum nameplate can draw it (see Step 2) |
 | `description` | string | yes | Short description (cards, meta) |
 | `role` | string | yes | Your role on the project |
 | `year` | string | yes | Year completed / launched |
