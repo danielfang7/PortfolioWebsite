@@ -96,11 +96,13 @@ Deeper technical narrative...
 | `paaw.mdx` | 3 |
 | `gladecore.md` | 4 |
 | `cursed-crown.md` | 5 |
-| `prediction-market-trader.md` | 6 |
-| `fitcheck.md` | 7 |
-| `vibe-learning.md` | 8 |
-| `everglade.md` | 9 |
-| `tcg-extraction.md` | 10 |
+| `mesovibe.md` | 6 |
+| `food-or-friend.md` | 7 |
+| `prediction-market-trader.md` | 8 |
+| `fitcheck.md` | 9 |
+| `vibe-learning.md` | 10 |
+| `everglade.md` | 11 |
+| `tcg-extraction.md` | 12 |
 
 Set `order` to the next available number, or shift existing orders if you want to insert somewhere in the middle. Every work needs its own `order`: `npm test` fails when one is missing or two works share a value.
 
