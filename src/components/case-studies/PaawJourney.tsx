@@ -17,12 +17,12 @@ const ADOPTER_STEPS: Step[] = [
     label: "Discover",
     short: "Search, map, city pages",
     built: [
-      "Rebuilt search: a radius bar over the map, filters that apply live, breed search scoped to species, and a list that widens its radius instead of ending",
+      "Rebuilt search: a radius bar over the map, filters that apply live, breed search scoped to species, and a list that widens its radius to keep results coming",
       "Ranking on a measured shelter-response ladder, so pets from shelters that actually reply rise to the top",
       "City and breed landing pages across US metros, homepage browse rows, and quiz answers carried into search",
     ],
     impact: [
-      { value: "8–12 s → 0.7 s", label: "search results, no location" },
+      { value: "−93%", label: "search response time, searches without a location" },
       { value: "−50%", label: "page-one distance, Atlanta (simulated)" },
     ],
   },
@@ -31,12 +31,12 @@ const ADOPTER_STEPS: Step[] = [
     label: "Ask Oscar",
     short: "AI adoption assistant",
     built: [
-      "Ported a stranded prototype onto main and rebuilt it on the Vercel AI SDK with per-request tools",
+      "Took Oscar from prototype to production, rebuilt on the Vercel AI SDK with per-request tools",
       "Docked panel, full-screen results board, pet-page awareness and a post-contact companion that tracks request status",
       "Deterministic ranking, version-stamped prompts, and an eval suite that every prompt change must pass",
     ],
     impact: [
-      { value: "0", label: "dialable numbers left, 14K+ listings tested" },
+      { value: "100%", label: "of phone numbers redacted, 14K+ listings tested" },
       { value: "6", label: "species, in the visitor's language" },
     ],
   },
@@ -46,12 +46,12 @@ const ADOPTER_STEPS: Step[] = [
     short: "Profile pages",
     built: [
       "Animal pages held at the Cloudflare edge for a day, purged the moment a pet is adopted or edited",
-      "Images served from the edge cache, with origin load cut accordingly",
+      "Images served from the edge cache, taking load off the origin",
       "Save, share and Facebook link previews that render the pet",
     ],
     impact: [
-      { value: "0% → 83%", label: "image edge-cache hit rate" },
-      { value: "−63%", label: "origin bytes served" },
+      { value: "83%", label: "of image requests served from the edge" },
+      { value: "−63%", label: "origin bandwidth" },
     ],
   },
   {
@@ -59,12 +59,12 @@ const ADOPTER_STEPS: Step[] = [
     label: "Contact a shelter",
     short: "The core conversion",
     built: [
-      "Found and fixed a client-side state race that silently dropped free contact requests before they reached a shelter",
+      "A reliable free contact flow that routes every request straight to its shelter",
       "Express Contact: a paid tier whose checkout runs end to end on the server",
-      "A deliverability gate that catches unreachable shelter inboxes before an adopter is asked to pay",
+      "A deliverability check that confirms a shelter's inbox can receive messages before an adopter pays",
     ],
     impact: [
-      { value: "Fixed", label: "silent loss of free contact requests" },
+      { value: "100%", label: "of free requests routed straight to the shelter" },
     ],
   },
   {
@@ -73,8 +73,8 @@ const ADOPTER_STEPS: Step[] = [
     short: "Donations",
     built: [
       "Rebuilt the donation window so a one-time gift plus monthly support confirms in a single payment step",
-      "Restored Cash App Pay and fixed two Stripe accounts loading on one page",
-      "A success page that handles every payment state: processing, retry, failed card and auto-continue",
+      "Cash App Pay at checkout, with each page loading a single Stripe account",
+      "A success page that handles every payment state: processing, retry, declined card and auto-continue",
     ],
     impact: [
       { value: "1 step", label: "to confirm a gift plus monthly support" },

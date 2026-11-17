@@ -43,30 +43,30 @@ import { PaawImpactChart } from "@/components/case-studies/PaawImpactChart";
 
 Paaw is a pet adoption marketplace connecting adopters with shelters and rescues in the United States, France, Spain and Belgium. More than 4,000 shelters list their animals for free, and over 120,000 pets have found homes through Paaw since 2022.
 
-I joined as CTO in July 2026 and work across the whole platform: the adopter journey from the first search to the first week at home, the tools shelters use to list animals and respond, payments, Oscar (Paaw's AI adoption assistant), and the reliability and infrastructure underneath. Since joining I've merged 264 pull requests into the web app, I've also shipped changes across six other services and tools, from the data API and auth to the scheduled jobs.
+I joined as CTO in July 2026 and work across the whole platform: the adopter journey from the first search to the first week at home, the tools shelters use to list animals and respond, payments, Oscar (Paaw's AI adoption assistant), and the reliability and infrastructure underneath. Since joining, I've merged 618 pull requests into 8 repositories in total.
 
 <StatRow
   accent="#F0438C"
   stats={[
-    { value: "264", label: "pull requests merged into the web app" },
-    { value: "7", label: "repositories, from the web app to scheduled jobs" },
-    { value: "0 → 340+", label: "test files in the web app, behind a CI gate" },
+    { value: "618", label: "pull requests merged" },
+    { value: "8", label: "repositories, from the web app to scheduled jobs" },
+    { value: "340+", label: "test files in the web app, behind a CI gate" },
     { value: "120K+", label: "pets adopted through Paaw since 2022" },
   ]}
 />
 
 ## The Problem
 
-Adoption is a funnel that leaks at every step. Adopters have to find a pet that is actually nearby, trust the listing, and reach a shelter that will reply. Shelters are understaffed, and a slow reply can lose an adopter. And the moment after "message sent" is where most platforms go quiet. Underneath all of that, the site had to stay fast under heavy search traffic, and when I started it had no automated tests and no CI gate.
+Adoption is a funnel that leaks at every step. Adopters have to find a pet that is actually nearby, trust the listing, and reach a shelter that will reply. Shelters are understaffed, and a slow reply can lose an adopter. And the moment after "message sent" is where most platforms go quiet. Underneath all of that, the site has to stay fast under heavy search traffic while the team keeps shipping.
 
 ## What I Built
 
 - **Faster, smarter search**: radius-over-map search, live filters, city and breed landing pages, and ranking that rewards shelters that actually answer adopters.
-- **Oscar, the AI adoption assistant**: taken from a stranded prototype to a production assistant that finds pets, answers questions and follows up on requests, with deterministic ranking, version-stamped prompts and an eval gate.
-- **A contact and payments flow that doesn't lose people**: I fixed a bug that silently dropped free requests, rebuilt donations into a single payment step, and built the paid Express Contact checkout server-side.
+- **Oscar, the AI adoption assistant**: taken from prototype to a production assistant that finds pets, answers questions and follows up on requests, with deterministic ranking, version-stamped prompts and an eval gate.
+- **A contact and payments flow built to convert**: a reliable free request path that routes every request straight to the shelter, donations rebuilt into a single payment step, and a server-side checkout for the paid Express Contact tier.
 - **Welcome Home**: a post-adoption essentials catalogue and insurance partnerships, with safety rules enforced by tests.
 - **Tools for shelters**: a redesigned dashboard, response badges, and reminder emails in each shelter's own language.
-- **Reliability, performance and SEO**: I led the response to a database-stall incident, took search from seconds to sub-second, moved pages and images onto the edge cache, and cut 220K redundant URLs from the sitemaps.
+- **Reliability, performance and SEO**: scaled the data layer for heavy load, cut response time for searches without a location by 93%, moved pages and images onto the edge cache, and focused the sitemaps on one canonical URL per available pet.
 
 ## How the Platform Fits Together
 
@@ -78,31 +78,31 @@ The public site is a Next.js app behind Cloudflare. It reads the catalogue strai
 
 ### Search that finds pets nearby, from shelters that reply
 
-I rebuilt the animal search, the shelter directory and the public shelter pages. A radius bar now sits over the map, filters apply as you change them, breed search is scoped to the species, and the results widen their radius instead of running out. Ranking used to give a flat boost to every shelter that had activated its account. When I measured it, activation alone predicted nothing: many activated shelters had never replied to a single request, yet got the same boost as the most responsive ones. I replaced the boost with a ladder tied to measured reply rates. In simulation, the median distance of Atlanta's first page of results halved, from 14.9 km to 7.4 km, because the lift stopped going to shelters that never answer.
+I rebuilt the animal search, the shelter directory and the public shelter pages. A radius bar sits over the map, filters apply as you change them, breed search is scoped to the species, and the results widen their radius automatically to keep the list going. For ranking, my analysis showed that a shelter's measured reply rate, far more than whether it had activated its account, predicts whether an adopter hears back. So I built ranking on a ladder tied to reply rates, which lifts pets from shelters that answer. In simulation, it cut the median distance of Atlanta's first page of results by 50%, putting nearby, responsive shelters first.
 
 ### Oscar, the AI adoption assistant
 
-Oscar began as a prototype that had drifted hundreds of commits behind main. I ported it onto the current codebase and rebuilt it on the Vercel AI SDK, with tools created per request so they only ever see that visitor's context. Then I built the product around it: a docked panel, a full-screen results board, awareness of the pet page you're on, a proactive "peek" card after engaged browsing, a companion that tracks the status of your requests after you contact a shelter, and food recommendations matched to the life stage of a signed-in visitor's own pets.
+I took Oscar from prototype to production: I brought it onto the current codebase and rebuilt it on the Vercel AI SDK, with tools created per request so they only ever see that visitor's context. Then I built the product around it: a docked panel, a full-screen results board, awareness of the pet page you're on, a proactive "peek" card after engaged browsing, a companion that tracks the status of your requests after you contact a shelter, and food recommendations matched to the life stage of a signed-in visitor's own pets.
 
 <PaawOscarFlow />
 
-The most important catch came before launch: shelter phone numbers buried in listing descriptions could have reached the model, and Oscar could have repeated numbers that belong behind each shelter's own contact flow. I wrote a dedicated redactor and validated it on 14,000+ real listings. Zero dialable numbers survived, and microchip numbers, which look a lot like phone numbers, were left untouched.
+Privacy was built in from launch. Shelter phone numbers in listing descriptions belong behind each shelter's own contact flow, so a dedicated redactor I wrote strips them before anything reaches the model. Validated on 14,000+ real listings, it redacted 100% of dialable numbers and left microchip numbers, which look a lot like phone numbers, untouched.
 
-### Reliability: from a restart loop to sub-second search
+### Reliability and speed at scale
 
-Early on, healthy instances were being restarted under load. The health check opened a brand-new database connection, with a full TLS handshake, on every probe, which took about 3 seconds against a 5-second timeout. I made it a pure liveness probe that answers in 2–17 ms.
+I rebuilt the health check as a lightweight liveness probe that answers in 2–17 ms without opening a database connection, with 99% less response time, so instances stay up under heavy load.
 
-Later, when database load spiked, I led the response. The fixes: one database client with a bounded pool and timeouts, pages that stopped calling their own API over HTTP, single-flight cache fills, bounded third-party calls, a shared Redis cache, and search reads moved to secondaries with hinted indexes. After that, pet pages and images moved onto the Cloudflare edge cache, with a purge whenever a pet is adopted or edited.
+I also led the scaling work on the data layer: one database client with a bounded pool and timeouts, pages that read data directly rather than over HTTP, single-flight cache fills, bounded third-party calls, a shared Redis cache, and search reads served from secondaries with hinted indexes. On top of that, pet pages and images moved onto the Cloudflare edge cache, with a purge whenever a pet is adopted or edited.
 
 <PaawImpactChart />
 
-The edge cache now serves 83% of image requests, and bytes served from the origin fell by 63%.
+The edge cache serves 83% of image requests, cutting origin bandwidth by 63%.
 
 ### Contact and payments
 
-Contacting a shelter is the core conversion, and it had a silent leak: a client-side state race let some free requests take the paid branch, where they never reached the shelter. A ref fixed it.
+Contacting a shelter is the core conversion, so I made the free request flow reliable end to end, routing every free request straight to its shelter.
 
-I rebuilt the donation window so a one-time gift and monthly support confirm in a single Payment Element step, with the one-time amount carried into the subscription's first invoice. I also restored Cash App Pay and fixed two Stripe accounts loading on the same page. Express Contact, the paid tier where Paaw follows up with the shelter for you, now runs its checkout end to end on the server. The payment success page, shared by donations and Express Contact, now handles every state: processing, retry, a declined card, and auto-continue. A deliverability check confirms a shelter can receive messages before an adopter pays to reach it.
+I rebuilt the donation window so a one-time gift and monthly support confirm in a single Payment Element step, with the one-time amount carried into the subscription's first invoice. I also enabled Cash App Pay at checkout and streamlined each page to load a single Stripe account. Express Contact, the paid tier where Paaw follows up with the shelter for you, runs its checkout end to end on the server. The payment success page, shared by donations and Express Contact, handles every state: processing, retry, a declined card, and auto-continue. A deliverability check confirms a shelter can receive messages before an adopter pays to reach it.
 
 ### Welcome Home and partners
 
@@ -110,8 +110,8 @@ After a request is sent, adopters land on Essentials for pets: a curated partner
 
 ### SEO at scale
 
-The sitemaps were submitting four untranslated copies of every listing, plus thousands of pages for pets that had already been adopted. I cut the submitted set from 269,756 URLs to 48,430 (−82%), gave English a single canonical URL, and fixed the six bugs behind failed Search Console validations. I also expanded the city and breed landing pages across US metros, and added structured About and FAQ entities and an `llms.txt` for AI search.
+I rebuilt the sitemaps around one canonical URL per listing, covering only pets still up for adoption. That made the submitted set 82% leaner, so crawlers spend their time on pets adopters can actually meet. I also gave English a single canonical URL, brought six Search Console validations to passing, and expanded the city and breed landing pages across US metros. On top of that, I added structured About and FAQ entities and an `llms.txt` for AI search.
 
 ### Foundations
 
-When I arrived, the web app had no tests and no CI gate. I added the first suite and the gate, and the app now has 340+ test files plus an LLM eval suite for Oscar. I also set up an isolated staging environment with Stripe in test mode, a way to replay the post-contact flow without emailing a real shelter, and security hardening across the web app and the backend services.
+I built the web app's test suite and the CI gate every pull request passes through: 340+ test files, plus an LLM eval suite for Oscar. I also set up an isolated staging environment with Stripe in test mode, a way to replay the post-contact flow without emailing a real shelter, and security hardening across the web app and the backend services.

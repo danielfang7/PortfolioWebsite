@@ -1,10 +1,7 @@
 interface Row {
   label: string;
-  before: string;
-  after: string;
-  /** after ÷ before, 0..1 */
-  ratio: number;
-  change: string;
+  /** Measured reduction in whole percent, rounded down from the measurements noted beside each row (a range uses its midpoint). */
+  reduction: number;
   how: string;
 }
 
@@ -13,57 +10,39 @@ const GROUPS: { name: string; rows: Row[] }[] = [
     name: "Speed under load",
     rows: [
       {
-        label: "Search results, no location",
-        before: "8–12 s",
-        after: "0.7 s",
-        ratio: 0.07,
-        change: "−93%",
-        how: "Index-served queries read from secondaries instead of an in-memory sort on the primary",
+        label: "Search response time, no location",
+        reduction: 93, // 8–12 s to 0.7 s
+        how: "Queries served from indexes on read replicas",
       },
       {
         label: "Documents read per search",
-        before: "60,251",
-        after: "5,285",
-        ratio: 5285 / 60251,
-        change: "−91%",
-        how: "New compound indexes, pinned with hints so the planner can't regress",
+        reduction: 91, // 60,251 to 5,285
+        how: "New compound indexes, pinned with query hints to keep plans stable",
       },
       {
-        label: "Radius count query",
-        before: "247 ms",
-        after: "48 ms",
-        ratio: 48 / 247,
-        change: "−81%",
-        how: "Counts inside a radius moved onto a 2dsphere index (Philadelphia, 80 km)",
+        label: "Radius count query time",
+        reduction: 80, // 247 ms to 48 ms
+        how: "Counts inside a radius served from a 2dsphere geospatial index (Philadelphia, 80 km)",
       },
       {
-        label: "Health check response",
-        before: "~3,000 ms",
-        after: "2–17 ms",
-        ratio: 10 / 3000,
-        change: "−99%",
-        how: "A pure liveness probe, so a slow database could no longer get healthy instances restarted",
+        label: "Health check response time",
+        reduction: 99, // ~3,000 ms to 2–17 ms
+        how: "A lightweight liveness probe that answers without opening a database connection",
       },
     ],
   },
   {
-    name: "Weight and crawl hygiene",
+    name: "Page weight and crawl efficiency",
     rows: [
       {
-        label: "Sitemap URLs submitted",
-        before: "269,756",
-        after: "48,430",
-        ratio: 48430 / 269756,
-        change: "−82%",
-        how: "One URL per listing instead of four untranslated copies, adopted pets dropped",
+        label: "Sitemap size",
+        reduction: 82, // 269,756 to 48,430 URLs
+        how: "One canonical URL per listing, covering only pets still up for adoption",
       },
       {
-        label: "Blog header images",
-        before: "141.2 MB",
-        after: "15.2 MB",
-        ratio: 15.2 / 141.2,
-        change: "−89%",
-        how: "Camera originals resized and recompressed; worst image 5.6 MB to 124 KB",
+        label: "Blog header image weight",
+        reduction: 89, // 141.2 MB to 15.2 MB
+        how: "Images resized and recompressed for the web, the largest by 97%",
       },
     ],
   },
@@ -93,9 +72,9 @@ export function PaawImpactChart() {
         .pic-row:hover { background: #ffffff06; }
         .pic-list:has(.pic-row:hover) .pic-row:not(:hover) { opacity: 0.55; }
       `}</style>
-      <div style={{ fontSize: "14px", fontWeight: 600, color: "#F0F0F0" }}>Before and after</div>
+      <div style={{ fontSize: "14px", fontWeight: 600, color: "#F0F0F0" }}>Performance gains</div>
       <div style={{ fontSize: "12px", color: "#888", marginTop: "3px", marginBottom: "14px" }}>
-        Each bar is the new value as a share of the old one. Shorter is better.
+        Each bar is the reduction achieved. Longer is better.
       </div>
 
       {GROUPS.map((g) => (
@@ -116,9 +95,8 @@ export function PaawImpactChart() {
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "10px", flexWrap: "wrap" }}>
                   <span style={{ fontSize: "13px", color: "#F0F0F0", fontWeight: 500 }}>{r.label}</span>
-                  <span style={{ fontSize: "12px", color: "#888", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
-                    {r.before} → <span style={{ color: "#F0F0F0", fontWeight: 600 }}>{r.after}</span>
-                    <span style={{ marginLeft: "8px", color: "#F0F0F0" }}>{r.change}</span>
+                  <span style={{ fontSize: "13px", color: "#F0F0F0", fontWeight: 600, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+                    −{r.reduction}%
                   </span>
                 </div>
                 <div style={{ position: "relative", height: "8px", marginTop: "7px", borderRadius: "4px", background: TRACK }}>
@@ -128,7 +106,7 @@ export function PaawImpactChart() {
                       left: 0,
                       top: 0,
                       bottom: 0,
-                      width: `max(4px, ${(r.ratio * 100).toFixed(2)}%)`,
+                      width: `${r.reduction}%`,
                       borderRadius: "4px",
                       background: FILL,
                     }}
@@ -142,7 +120,7 @@ export function PaawImpactChart() {
       ))}
 
       <div style={{ fontSize: "11px", color: "#888", marginTop: "6px", lineHeight: 1.5 }}>
-        Measured before and after each change, on production data or a production build.
+        Each reduction measured on production data or a production build.
       </div>
     </div>
   );
