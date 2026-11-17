@@ -4,7 +4,7 @@
 
 ## Framework
 
-[Vitest](https://vitest.dev) 3, configured through Astro's Vite config (`vitest.config.ts` uses `getViteConfig`), so tests resolve the same `@/` alias and JSX setup as the site. React components are tested with `react-dom/server`, `react-dom/client` and [Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
+[Vitest](https://vitest.dev) 3, configured through Astro's Vite config (`vitest.config.ts` uses `getViteConfig`), so tests resolve the same `@/` alias and JSX setup as the site. React components are tested with `react-dom/server`, `react-dom/client` and [Testing Library](https://testing-library.com/docs/react-testing-library/intro/). Astro components are rendered with Astro's container API.
 
 ## Running
 
@@ -18,6 +18,7 @@ GitHub Actions (`.github/workflows/test.yml`) runs `npm test` then `npm run buil
 ## Layers
 
 - **Unit / component** (`tests/*.test.tsx`): render a component the way Astro does. Server-render with `renderToString` while browser globals (`window`, `document`, `navigator`, storage, `matchMedia` and the rest of the list in `tests/museum-hydration.test.tsx`) are stubbed out, since the build server has none, then hydrate with `hydrateRoot` in jsdom when the behaviour depends on the browser.
+- **Astro component** (`tests/hero-section.test.ts`, node environment): render an `.astro` component to HTML with `experimental_AstroContainer` from `astro/container`, using renderers from `loadRenderers` (`astro:container`) and `getContainerRenderer` from `@astrojs/react`, then parse the HTML with `JSDOM` to check the structure a browser builds from it. `astro:container` only resolves through Astro's Vite config, which `vitest.config.ts` loads.
 - **Content** (`tests/*.test.ts`, node environment): read `src/content/` and `public/` and check invariants the build does not, such as root media paths, image siblings, unique `order` values and work titles the museum's pixel font can draw. `tests/node-version.test.ts` also runs here and checks the Node major against `.nvmrc`.
 - **CSS** (`tests/pointer-hint-css.test.ts`, node environment): runs the project's Tailwind config over `src/` and checks the `(pointer: coarse)` rules `PointerHint` depends on are emitted after `.hidden`.
 - **Build** (`npm run build`): Astro validates content collection schemas and renders every page; CI runs it after the tests.
@@ -26,7 +27,7 @@ GitHub Actions (`.github/workflows/test.yml`) runs `npm test` then `npm run buil
 ## Conventions
 
 - Files live in `tests/` and end in `.test.ts` or `.test.tsx`.
-- Components that need a DOM start with `// @vitest-environment jsdom`; everything else runs in node.
+- Components that need a DOM start with `// @vitest-environment jsdom`; everything else runs in node. A test that only parses rendered HTML builds its own `JSDOM` from the markup and stays in node (see `tests/hero-section.test.ts`).
 - Start each test file with a value card: what it protects, the regression that makes it fail, why existing coverage misses it, and what green does not prove.
 - jsdom lacks canvas 2D and the Web Animations API: stub `HTMLCanvasElement.prototype.getContext` and `Element.prototype.animate` in the test, never in product code.
 - jsdom also ignores CSS media queries. Copy that depends on the device (see `src/components/museum/ui/PointerHint.tsx`) is chosen in CSS, so tests check the markup and that Tailwind emits the rule, and a real browser checks what shows.
