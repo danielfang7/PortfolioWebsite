@@ -3,6 +3,7 @@
   "runner": "npx vitest run {files}",
   "dependencies": {
     "package.json": [
+      "tests/hero-section.test.ts",
       "tests/inline-style-escaping.test.tsx",
       "tests/museum-hydration.test.tsx",
       "tests/node-flags.test.ts",
@@ -12,6 +13,7 @@
       "tests/works-content.test.ts"
     ],
     "package-lock.json": [
+      "tests/hero-section.test.ts",
       "tests/inline-style-escaping.test.tsx",
       "tests/museum-hydration.test.tsx",
       "tests/node-flags.test.ts",
@@ -21,6 +23,7 @@
       "tests/works-content.test.ts"
     ],
     "vitest.config.ts": [
+      "tests/hero-section.test.ts",
       "tests/inline-style-escaping.test.tsx",
       "tests/museum-hydration.test.tsx",
       "tests/node-flags.test.ts",
@@ -30,6 +33,7 @@
       "tests/works-content.test.ts"
     ],
     "tests/support/**": [
+      "tests/hero-section.test.ts",
       "tests/inline-style-escaping.test.tsx",
       "tests/museum-hydration.test.tsx",
       "tests/node-flags.test.ts",
@@ -48,6 +52,7 @@
       "tests/museum-hydration.test.tsx"
     ],
     ".nvmrc": [
+      "tests/hero-section.test.ts",
       "tests/inline-style-escaping.test.tsx",
       "tests/museum-hydration.test.tsx",
       "tests/node-flags.test.ts",
@@ -60,6 +65,7 @@
       "tests/pointer-hint-css.test.ts"
     ],
     "src/components/**": [
+      "tests/hero-section.test.ts",
       "tests/inline-style-escaping.test.tsx",
       "tests/museum-hydration.test.tsx",
       "tests/pointer-hint-css.test.ts",

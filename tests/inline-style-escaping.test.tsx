@@ -8,8 +8,9 @@
 
 import { readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
+import { JSDOM } from "jsdom";
 import { createElement, type ComponentType } from "react";
-import { renderToString } from "react-dom/server";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { GladeCorePipeline } from "@/components/case-studies/GladeCorePipeline";
 import { GladeKitAgentLoop } from "@/components/case-studies/GladeKitAgentLoop";
@@ -62,6 +63,29 @@ describe("inline <style> survives React 18 SSR unescaped", () => {
     expect(css.length).toBeGreaterThan(0);
     for (const block of css) {
       expect(block).not.toMatch(/&(quot|#x27|#39|gt|lt|amp);/);
+    }
+  });
+});
+
+// Value: protects=each PaawImpactChart row prints its reduction as a whole percent from 0 to 100,
+// the unit its bar width also uses; fails_when=a reduction is entered as a fraction (0.93, the
+// removed ratio field's unit), an unrounded quotient (80.57), over 100, or goes missing;
+// why_new=the test above renders the chart but reads only its <style>, and TypeScript allows any
+// number; seam=none; no_claim=that each figure matches its measurement or that the bar's drawn
+// length matches the figure (layout: check in a browser).
+describe("PaawImpactChart", () => {
+  it("prints each row's reduction as a whole percent from 0 to 100", () => {
+    const { document } = new JSDOM(renderToStaticMarkup(createElement(PaawImpactChart))).window;
+    const rows = [...document.querySelectorAll("[role=listitem], li")];
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      // The figure is the element reading "−N%"; the label and the note under the bar are separate elements.
+      const figure = [...row.querySelectorAll("*")]
+        .map((el) => el.textContent?.trim() ?? "")
+        .find((text) => /^[−-].*%$/.test(text));
+      const percent = figure?.slice(1, -1).trim() ?? "";
+      expect(percent, `${row.textContent}`).toMatch(/^\d{1,3}$/);
+      expect(Number(percent), `${row.textContent}`).toBeLessThanOrEqual(100);
     }
   });
 });

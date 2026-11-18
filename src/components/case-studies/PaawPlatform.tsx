@@ -58,7 +58,7 @@ const LAYERS: Layer[] = [
         tech: "Next.js 15 · React 19",
         color: "#00D8FF",
         role: "Server-rendered public site and adopter app; reads the catalogue directly and calls services for writes. Hosts Oscar's chat API.",
-        mine: "264 merged PRs: search, payments, Oscar, SEO, i18n, security hardening, the first test suite and CI gate.",
+        mine: "312 merged PRs: search, payments, Oscar, SEO, i18n, security hardening, the test suite and CI gate.",
       },
     ],
   },
@@ -108,7 +108,7 @@ const LAYERS: Layer[] = [
         tech: "Payments · Connect",
         color: "#34D399",
         role: "Donations, Express Contact, subscriptions, and payouts to shelters, across US and EU accounts.",
-        mine: "Single-step donation checkout, server-built Express sessions, and Cash App Pay restored.",
+        mine: "Single-step donation checkout, server-built Express sessions, and Cash App Pay at checkout.",
       },
       {
         id: "ai",

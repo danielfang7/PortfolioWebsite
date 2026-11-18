@@ -2,6 +2,12 @@
 import { HeroParticleField } from "@/components/HeroParticleField";
 import Picture from "@/components/Picture.astro";
 
+const heroStats = [
+  { value: "10k+", label: "GitHub commits in the last 3 years" },
+  { value: "30k+", label: "users on AI dev tools I built" },
+  { value: "1.7M+", label: "unique visitors on a platform I scaled" },
+];
+
 const socialLinks = [
   {
     label: "GitHub",
@@ -26,7 +32,7 @@ const socialLinks = [
 
 <section
   id="hero"
-  class="relative min-h-screen max-h-[1100px] flex flex-col justify-center overflow-hidden"
+  class="relative min-h-screen lg:max-h-[1100px] flex flex-col justify-center overflow-hidden"
   aria-label="Introduction"
 >
   <!-- Particle field background (hidden on mobile for performance) -->
@@ -64,15 +70,31 @@ const socialLinks = [
           <em class="not-italic gradient-text"> Stay inspired and keep building. </em>
         </h1>
 
-        <!-- Subtext -->
-        <p
+        <!-- Subtext: one-line bio, then the numbers behind it -->
+        <div
           id="hero-subtext"
-          class="anim-fade-up text-base md:text-lg text-text-secondary max-w-lg leading-relaxed mb-10"
+          class="anim-fade-up max-w-lg mb-10"
           style="animation-delay: 200ms;"
         >
-          Berkeley finance grad turned YC founder, self-taught engineer, and PM. I build products
-          from 0 to 1 and back early-stage founders.
-        </p>
+          <p class="text-base md:text-lg text-text-secondary leading-relaxed text-pretty">
+            Berkeley finance grad turned YC founder, self-taught engineer, and PM. I build products
+            from scratch and scale them. I angel invest in early stage startups.
+          </p>
+          <ul class="mt-7 grid grid-cols-3" role="list">
+            {
+              heroStats.map(({ value, label }) => (
+                <li class="pl-4 border-l border-white/10 first:pl-0 first:border-l-0">
+                  <span class="block font-display lining-nums text-2xl md:text-3xl font-bold text-text-primary leading-none tracking-tight">
+                    {value}
+                  </span>
+                  <span class="block mt-2 text-xs md:text-[13px] text-text-secondary leading-snug">
+                    {label}
+                  </span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
 
         <!-- CTAs + Social links -->
         <div
